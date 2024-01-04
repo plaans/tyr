@@ -1,0 +1,40 @@
+---
+stages:
+  - Static Analysis
+  - Tests
+  - Release
+
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  paths:
+    - .cache/pip
+    - .venv
+
+default:
+  image: node:latest
+  interruptible: true
+
+.python-job:
+  image: python:latest
+  before_script:
+    - python --version ; pip --version 
+    - pip install virtualenv
+    - virtualenv .venv
+    - source .venv/bin/activate
+    - pip install -r requirements/dev.txt
+
+# ============================================================================ #
+#                                    Release                                   #
+# ============================================================================ #
+
+
+Semantic Release:
+  stage: Release
+  image: node:latest
+  before_script:
+    - npm install --save-dev semantic-release @semantic-release/gitlab-config
+  script:
+    - npx semantic-release
