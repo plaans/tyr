@@ -39,12 +39,12 @@ Semantic Release:
   script:
     - npx semantic-release
 
-Update Repo:
-  stage: Release
-  needs:
-    - Semantic Release
-  script:
-    - git remote add gitlab_origin https://oauth2:$ACCESS_TOKEN@gitlab.laas.fr/rgodet1/tyr.git
-    - git add .
-    - git commit -m "chore(bump) version"
-    - git push gitlab_origin HEAD:$CI_COMMIT_REF_NAME -o ci.skip
+# Update Repo:
+#   stage: Release
+#   needs:
+#     - Semantic Release
+#   script:
+#     - git remote add gitlab_origin https://oauth2:$ACCESS_TOKEN@gitlab.laas.fr/rgodet1/tyr.git
+#     - git add .
+#     - git commit -m "chore(bump) version"
+#     - git push gitlab_origin HEAD:$CI_COMMIT_REF_NAME -o ci.skip
