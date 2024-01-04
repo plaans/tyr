@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [1.0.0-ci.10](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.0.0-ci.9...v1.0.0-ci.10) (2024-1-4)
+
+
+### Features
+
+* try to change date ([8f301f3](https://gitlab.laas.fr/rgodet1/tyr/commit/8f301f3db2999a3a8d8aa562feb980af3da485d1))
+
 # [1.0.0-ci.9](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.0.0-ci.8...v1.0.0-ci.9) (2024-1-4)
 
 
