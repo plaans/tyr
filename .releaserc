@@ -6,8 +6,27 @@
     {"name": "ci/semantic-release", "prerelease": "ci"}
   ],
   "plugins": [
-    "@semantic-release/commit-analyzer",
+    [
+      "@semantic-release/commit-analyzer",
+      {
+        "preset": "conventionalcommits",
+        "releaseRules": [
+          { "type": "docs", "scope": "README", "release": "patch" },
+          { "type": "refactor", "release": "patch" }
+        ]
+      }
+    ],
     "@semantic-release/release-notes-generator",
-    "@semantic-release/gitlab"
+    "@semantic-release/changelog",
+    [
+      "@semantic-release/gitlab",
+      {
+        "assets": [
+          { "path": "CHANGELOG.md", "label": "CHANGELOG" },
+          { "path": "LICENSE.md", "label": "LICENSE" },
+          { "path": "README.md", "label": "README" }
+        ]
+      }
+    ]
   ]
 }
