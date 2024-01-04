@@ -1,0 +1,15 @@
+-r base.txt
+
+bandit
+black
+flake8
+flake8-pyproject
+isort
+mypy
+pylint
+
+py # pytest-parallel's dependency
+pytest
+pytest-cov
+pytest-mock
+pytest-parallel
