@@ -35,6 +35,6 @@ Semantic Release:
   stage: Release
   image: node:latest
   before_script:
-    - npm install --save-dev semantic-release @semantic-release/gitlab-config
+    - npm install --save-dev semantic-release @semantic-release/changelog @semantic-release/gitlab-config
   script:
     - npx semantic-release
