@@ -3,6 +3,6 @@
   "branches": [
     "master",
     {"name": "develop", "prerelease": true},
-    {"name": "*", "prerelease": true}
+    {"name": "ci/semantic-release", "prerelease": true}
   ]
 }
