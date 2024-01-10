@@ -2,6 +2,7 @@ from threading import Thread
 
 import pytest
 
+from tests.utils import assert_is_singleton
 from tyr import Singleton
 
 
@@ -12,9 +13,7 @@ class ChildSingleton(Singleton):
 class TestSingleton:
     @pytest.mark.parametrize("klass", [Singleton, ChildSingleton])
     def test_singlethread_singleton(self, klass):
-        instance1 = klass()
-        instance2 = klass()
-        assert instance1 is instance2
+        assert_is_singleton(klass)
 
     @pytest.mark.parametrize("klass", [Singleton, ChildSingleton])
     def test_multithread_singleton(self, klass):
