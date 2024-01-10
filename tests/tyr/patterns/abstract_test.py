@@ -1,5 +1,4 @@
-import pytest
-
+from tests.utils import assert_is_abstract, assert_is_not_abstract
 from tyr import Abstract
 
 
@@ -13,12 +12,10 @@ class ChildB(ChildA):
 
 class TestAbstract:
     def test_instantiation_raises_error(self):
-        with pytest.raises(TypeError):
-            Abstract()
+        assert_is_abstract(Abstract)
 
     def test_child_instantiation_raises_error(self):
-        with pytest.raises(TypeError):
-            ChildA()
+        assert_is_abstract(ChildA)
 
     def test_subchild_instantiation_is_ok(self):
-        ChildB()
+        assert_is_not_abstract(ChildB)
