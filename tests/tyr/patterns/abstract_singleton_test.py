@@ -1,4 +1,8 @@
-from tests.utils import assert_is_abstract, assert_is_not_abstract, assert_is_singleton
+from tests.utils.asserts import (
+    assert_is_abstract,
+    assert_is_not_abstract,
+    assert_is_singleton,
+)
 from tyr import Abstract, AbstractSingletonMeta, Singleton
 
 

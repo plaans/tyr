@@ -2,7 +2,7 @@ from threading import Thread
 
 import pytest
 
-from tests.utils import assert_is_singleton
+from tests.utils.asserts import assert_is_singleton
 from tyr import Singleton
 
 

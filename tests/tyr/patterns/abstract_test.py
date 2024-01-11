@@ -1,4 +1,4 @@
-from tests.utils import assert_is_abstract, assert_is_not_abstract
+from tests.utils.asserts import assert_is_abstract, assert_is_not_abstract
 from tyr import Abstract
 
 
