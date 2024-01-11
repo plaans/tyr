@@ -1,6 +1,7 @@
 from . import abstract as a
 from . import singleton as s
 from .abstract import Abstract
+from .lazy import Lazy
 from .singleton import Singleton
 
 
