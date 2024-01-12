@@ -1,12 +1,14 @@
 # Tyr: Task Planner Comparison Tool
 
-[![Pipeline](https://gitlab.laas.fr/rgodet1/tyr/badges/master/pipeline.svg?key_text=Pipeline)](https://gitlab.laas.fr/rgodet1/tyr/-/pipelines)
-[![Test coverage](https://gitlab.laas.fr/rgodet1/tyr/badges/master/coverage.svg?key_text=Coverage)](https://gitlab.laas.fr/rgodet1/tyr/-/graphs/master/charts)
-[![Latest release](https://gitlab.laas.fr/rgodet1/tyr/-/badges/release.svg)](https://gitlab.laas.fr/rgodet1/tyr/-/releases)
+[![pipeline](https://gitlab.laas.fr/rgodet1/tyr/badges/master/pipeline.svg)](https://gitlab.laas.fr/rgodet1/tyr/-/pipelines)
+[![coverage](https://gitlab.laas.fr/rgodet1/tyr/badges/master/coverage.svg)](https://gitlab.laas.fr/rgodet1/tyr/-/graphs/master/charts)
+[![Latest Release](https://gitlab.laas.fr/rgodet1/tyr/-/badges/release.svg)](https://gitlab.laas.fr/rgodet1/tyr/-/releases)
 
-[![Python 3.8](https://img.shields.io/badge/python-3.8-blue.svg)](https://www.python.org/downloads/release/python-380/)
-[![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/)
-[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/release/python-3120/)
+[![python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg?logo=python)](https://www.python.org/)
+[![code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![type checker: mypy](https://img.shields.io/badge/%20type_checker-mypy-%231674b1)](https://github.com/python/mypy)
+[![semantic-release: conventionalcommits](https://img.shields.io/badge/semantic--release-conventionalcommits-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
+
 
 ## Overview
 
