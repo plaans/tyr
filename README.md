@@ -20,7 +20,6 @@ This project aims to provide a understanding analysis of task planners' performa
     - [Installing the Dependencies](#installing-the-dependencies)
 - [Configuration](#configuration)
   - [Domains](#domains)
-  - [Variants](#variants)
 - [License](#license)
 - [Contact](#contact)
 
@@ -56,8 +55,7 @@ You can also run `just install dev`.
 
 ## Domains
 
-A **domain**, e.g., *Rovers*, is made of **variants**, e.g., *hierarchical* and *temporal*.
-Each variant contains a set of **problems** and each problem has a set of **versions**.
+A **domain** contains a set of **problems** and each problem has a set of **versions**.
 The different versions are used to make a same problem compatible for different planners.
 
 To add a new domain to the analysis process, create a class inheriting from `tyr.AbstractDomain` and with a name finishing by *Domain*.
@@ -72,11 +70,11 @@ class RoversDomain(AbstractDomain):
   pass
 ```
 
-For each variant supported by this domain, a method `build_<variant>_problem_<version>` must be added to that class.
-This method takes a problem instance and must returns the unified planning problem associated with this variant and this version.
+For each version of the domain, a method `build_problem_<version>` must be added to that class.
+This method takes a problem instance and must returns the unified planning problem associated with this version.
 It can also return `None` if no problem can be created.
 
-For example, to create the *base* version of the *hierarchical* variant, you can do:
+For example, to create the *base* version of the domain, you can do:
 
 ```python
 # file: src/tyr/problem/rovers.py
@@ -86,28 +84,11 @@ from tyr import AbstractDomain, Problem
 
 
 class RoversDomain(AbstractDomain):
-  def build_hierarchical_problem_base(self, pb: Problem) -> Optional[UProblem]:
+  def build_problem_base(self, pb: Problem) -> Optional[UProblem]:
     return UProblem("base problem to create")
 ```
 
 A full example can be found in [`tests/integration/problem/domain.py`](https://gitlab.laas.fr/rgodet1/tyr/-/blob/master/tests/integration/problem/domain.py).
-
-## Variants
-
-A new variant can be defined by adding a class inheriting from `tyr.AbstractVariant` and with a name finishing by *Variant*.
-The class must be defined inside the `tyr.problem` module.
-For example, you can create the variant *hierarchical* with:
-
-```python
-# file: src/tyr/problem/variants.py
-from tyr import AbstractVariant
-
-class HierarchicalVariant(AbstractVariant):
-  pass
-```
-
-There is nothing more to do.
-The variant is defined by a class in order to be able to add features in the future, as getters defining characteristics of the variant in order for the planners to know if they can support it.
 
 # License
 
