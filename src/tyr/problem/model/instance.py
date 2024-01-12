@@ -5,7 +5,7 @@ from unified_planning.shortcuts import AbstractProblem
 from tyr.patterns import Lazy
 
 if TYPE_CHECKING:
-    from tyr.problem.model.variant import AbstractVariant
+    from tyr.problem.model.domain import AbstractDomain
 
 
 class ProblemInstance:
@@ -16,9 +16,9 @@ class ProblemInstance:
     The value of this versions are lazy, so the unified planning problem is only build when needed.
     """
 
-    def __init__(self, variant: "AbstractVariant", uid: str) -> None:
+    def __init__(self, domain: "AbstractDomain", uid: str) -> None:
         self._uid = uid
-        self._variant = variant
+        self._domain = domain
         self._versions: Dict[str, Lazy[AbstractProblem]] = {}
 
     @property
@@ -30,12 +30,12 @@ class ProblemInstance:
         return self._uid
 
     @property
-    def variant(self) -> "AbstractVariant":
+    def domain(self) -> "AbstractDomain":
         """
         Returns:
-            AbstractVariant: The domain's variant of the problem.
+            AbstractDomain: The domain of the problem.
         """
-        return self._variant
+        return self._domain
 
     @property
     def versions(self) -> Dict[str, Lazy[AbstractProblem]]:
@@ -51,7 +51,7 @@ class ProblemInstance:
         Returns:
             str: The name of the problem.
         """
-        return f"{self.variant.domain.name}:{self.variant.name}:{self.uid}"
+        return f"{self.domain.name}:{self.uid}"
 
     @property
     def is_empty(self) -> bool:

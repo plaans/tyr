@@ -15,20 +15,18 @@ class TestProblem(ModelTest):
     def get_default_attributes(self) -> Dict[str, Any]:
         return {
             "_uid": "05",
-            "_variant": self.variant(),
+            "_domain": self.domain(),
             "_versions": dict(),
         }
 
     def get_instance(self) -> ProblemInstance:
-        return ProblemInstance(self.variant(), "05")
+        return ProblemInstance(self.domain(), "05")
 
-    def variant(self):
-        if not hasattr(self, "_variant"):
-            self._variant = MagicMock()
-            self._variant.name = "mockvariant"
-            self._variant.domain = MagicMock()
-            self._variant.domain.name = "mockdomain"
-        return self._variant
+    def domain(self):
+        if not hasattr(self, "_domain"):
+            self._domain = MagicMock()
+            self._domain.name = "mockdomain"
+        return self._domain
 
     @pytest.fixture()
     def problem(self, request):
@@ -46,7 +44,7 @@ class TestProblem(ModelTest):
     # ============================================================================ #
 
     def test_get_name(self, problem: ProblemInstance):
-        expected = "mockdomain:mockvariant:05"
+        expected = "mockdomain:05"
         assert problem.name == expected
 
     def test_is_empty(self, problem: ProblemInstance):
