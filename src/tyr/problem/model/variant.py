@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Callable, Dict, List, Optional
 from unified_planning.shortcuts import AbstractProblem
 
 from tyr.patterns import Abstract, Lazy
-from tyr.problem.model.problem import Problem
+from tyr.problem.model.instance import ProblemInstance
 
 if TYPE_CHECKING:
     from tyr.problem.model.domain import AbstractDomain
@@ -30,7 +30,7 @@ class AbstractVariant(Abstract):
         self._name = self.__class__.__name__[:-7].lower()
         self._problem_factories = problem_factories
         self._domain = domain
-        self._problems: Dict[str, Problem] = {}
+        self._problems: Dict[str, ProblemInstance] = {}
 
     @property
     def problem_factories(self) -> List[Callable[[str], Optional[AbstractProblem]]]:
@@ -57,14 +57,14 @@ class AbstractVariant(Abstract):
         return self._name
 
     @property
-    def problems(self) -> Dict[str, Problem]:
+    def problems(self) -> Dict[str, ProblemInstance]:
         """
         Returns:
             Dict[str, Problem]: The problems of the domain, indexed by id.
         """
         return self._problems
 
-    def build_problem(self, problem_id: str) -> Problem:
+    def build_problem(self, problem_id: str) -> ProblemInstance:
         """
         Builds the problem with the given if.
         If no problem is associated with the given id, nothing is built.
@@ -72,7 +72,7 @@ class AbstractVariant(Abstract):
         Args:
             problem (Problem): The problem to hydrate.
         """
-        problem = Problem(self, problem_id)
+        problem = ProblemInstance(self, problem_id)
         for factory in self.problem_factories:
             version_name = factory.__name__[factory.__name__.find("problem_") + 8 :]
             problem.add_version(
@@ -81,18 +81,18 @@ class AbstractVariant(Abstract):
             )
         return problem
 
-    def get_problem_from_cache(self, problem_id: str) -> Optional[Problem]:
+    def get_problem_from_cache(self, problem_id: str) -> Optional[ProblemInstance]:
         """Tries to load the problem with the given id from the cache.
 
         Args:
             problem_id (str): The id of the problem to retreive.
 
         Returns:
-            Optional[Problem]: The cached problem or `None` if the problem is not present.
+            Optional[ProblemInstance]: The cached problem or `None` if the problem is not present.
         """
         return self._problems.get(problem_id, None)
 
-    def get_problem(self, problem_id: str) -> Optional[Problem]:
+    def get_problem(self, problem_id: str) -> Optional[ProblemInstance]:
         """
         Loads the problem with the given id from the cache.
         If there is no result, builds it from the problem factory.
@@ -102,7 +102,7 @@ class AbstractVariant(Abstract):
             problem_id (str): The of of the requested problem.
 
         Returns:
-            Optional[Problem]: The requested problem or `None` if it does not exist.
+            Optional[ProblemInstance]: The requested problem or `None` if it does not exist.
         """
         problem = self.get_problem_from_cache(problem_id)
         if problem is None:
@@ -112,13 +112,13 @@ class AbstractVariant(Abstract):
         self.save_problem_to_cache(problem)
         return problem
 
-    def save_problem_to_cache(self, problem: Optional[Problem]) -> None:
+    def save_problem_to_cache(self, problem: Optional[ProblemInstance]) -> None:
         """
         Saves the given problem to the cache.
         Does nothing if the problem is `None`.
 
         Args:
-            problem (Optional[Problem]): The problem to save.
+            problem (Optional[ProblemInstance]): The problem to save.
         """
         if problem is not None:
             self._problems[problem.uid] = problem

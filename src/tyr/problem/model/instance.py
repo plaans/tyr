@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from tyr.problem.model.variant import AbstractVariant
 
 
-class Problem:
+class ProblemInstance:
     """
     Represents an internal problem to solve.
 

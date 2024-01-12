@@ -8,14 +8,14 @@ from unified_planning.shortcuts import AbstractProblem
 
 import tests.tyr.problem.model.variant_test as variant_module
 from tests.utils import AbstractSingletonModelTest
-from tyr import AbstractDomain, AbstractVariant, Problem
+from tyr import AbstractDomain, AbstractVariant, ProblemInstance
 
 
 class MockdomainDomain(AbstractDomain):
-    def build_mockvariant_problem_base(self, problem: Problem):
+    def build_mockvariant_problem_base(self, problem: ProblemInstance):
         return MagicMock()
 
-    def build_mockvariant_problem_no_speed(self, problem: Problem):
+    def build_mockvariant_problem_no_speed(self, problem: ProblemInstance):
         return MagicMock()
 
 

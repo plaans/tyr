@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from tests.utils import ModelTest
-from tyr import Problem
+from tyr import ProblemInstance
 
 
 class TestProblem(ModelTest):
@@ -19,8 +19,8 @@ class TestProblem(ModelTest):
             "_versions": dict(),
         }
 
-    def get_instance(self) -> Problem:
-        return Problem(self.variant(), "05")
+    def get_instance(self) -> ProblemInstance:
+        return ProblemInstance(self.variant(), "05")
 
     def variant(self):
         if not hasattr(self, "_variant"):
@@ -45,18 +45,18 @@ class TestProblem(ModelTest):
     #                                     Tests                                    #
     # ============================================================================ #
 
-    def test_get_name(self, problem: Problem):
+    def test_get_name(self, problem: ProblemInstance):
         expected = "mockdomain:mockvariant:05"
         assert problem.name == expected
 
-    def test_is_empty(self, problem: Problem):
+    def test_is_empty(self, problem: ProblemInstance):
         problem._versions.clear()
         assert problem.is_empty
 
-    def test_is_not_empty(self, problem: Problem):
+    def test_is_not_empty(self, problem: ProblemInstance):
         assert not problem.is_empty
 
-    def test_add_version(self, problem: Problem):
+    def test_add_version(self, problem: ProblemInstance):
         problem._versions.clear()
         version = MagicMock()
         problem.add_version("version", version)

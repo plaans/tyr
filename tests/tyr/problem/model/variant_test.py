@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from tests.utils import AbstractModelTest
-from tyr import AbstractVariant, Lazy, Problem
+from tyr import AbstractVariant, Lazy, ProblemInstance
 
 
 class MockvariantVariant(AbstractVariant):
@@ -18,11 +18,11 @@ class TrackedvariantVariant(AbstractVariant):
         self.save_cache_count = 0
         self.build_count = 0
 
-    def get_problem_from_cache(self, problem_id: str) -> Optional[Problem]:
+    def get_problem_from_cache(self, problem_id: str) -> Optional[ProblemInstance]:
         self.from_cache_count += 1
         return super().get_problem_from_cache(problem_id)
 
-    def save_problem_to_cache(self, problem: Problem) -> None:
+    def save_problem_to_cache(self, problem: ProblemInstance) -> None:
         self.save_cache_count += 1
         return super().save_problem_to_cache(problem)
 
@@ -60,12 +60,12 @@ class TestAbstractVariant(AbstractModelTest):
             [self.build_problem_base, self.build_problem_no_speed],
         )
 
-    def build_problem_base(self, problem: Problem):
+    def build_problem_base(self, problem: ProblemInstance):
         if int(problem.uid) > 0:
             return MagicMock()
         return None
 
-    def build_problem_no_speed(self, problem: Problem):
+    def build_problem_no_speed(self, problem: ProblemInstance):
         if int(problem.uid) > 0:
             return MagicMock()
         return None
@@ -96,7 +96,7 @@ class TestAbstractVariant(AbstractModelTest):
     @pytest.fixture()
     def problem(request):
         problem_patch = patch(
-            "tyr.problem.model.problem.Problem",
+            "tyr.problem.model.instance.ProblemInstance",
             autospec=True,
         )
         problem = problem_patch.start()
@@ -140,7 +140,7 @@ class TestAbstractVariant(AbstractModelTest):
     def test_save_problem_to_empty_cache(
         self,
         variant: AbstractVariant,
-        problem: Problem,
+        problem: ProblemInstance,
         problem_id: str,
     ):
         problem.uid = problem_id
@@ -153,7 +153,7 @@ class TestAbstractVariant(AbstractModelTest):
     def test_save_problem_to_non_empty_cache(
         self,
         variant: AbstractVariant,
-        problem: Problem,
+        problem: ProblemInstance,
     ):
         base_problem = MagicMock()
         variant._problems = {"213": base_problem}
@@ -169,7 +169,7 @@ class TestAbstractVariant(AbstractModelTest):
     def test_get_present_problem_from_cache(
         self,
         variant: AbstractVariant,
-        problem: Problem,
+        problem: ProblemInstance,
     ):
         variant.save_problem_to_cache(problem)
         result = variant.get_problem_from_cache(problem.uid)
@@ -206,7 +206,7 @@ class TestAbstractVariant(AbstractModelTest):
     def test_get_present_problem(
         self,
         tracked_variant: TrackedvariantVariant,
-        problem: Problem,
+        problem: ProblemInstance,
     ):
         tracked_variant.save_problem_to_cache(problem)
         result = tracked_variant.get_problem(problem.uid)
@@ -216,7 +216,7 @@ class TestAbstractVariant(AbstractModelTest):
     def test_get_absent_problem(
         self,
         tracked_variant: TrackedvariantVariant,
-        problem: Problem,
+        problem: ProblemInstance,
     ):
         result = tracked_variant.get_problem(problem.uid)
         assert result is not None

@@ -1,3 +1,3 @@
 from .domain import AbstractDomain
-from .problem import Problem
+from .instance import ProblemInstance
 from .variant import AbstractVariant

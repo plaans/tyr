@@ -7,7 +7,7 @@ from unified_planning.shortcuts import AbstractProblem
 from tyr.patterns import Abstract, AbstractSingletonMeta, Singleton
 
 if TYPE_CHECKING:
-    from tyr.problem.model.problem import Problem
+    from tyr.problem.model.instance import ProblemInstance
     from tyr.problem.model.variant import AbstractVariant
 
 
@@ -46,7 +46,7 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         self,
         variant_name: str,
         problem_id: str,
-    ) -> Optional["Problem"]:
+    ) -> Optional["ProblemInstance"]:
         """Builds the problem with the given id in the requested variant.
 
         Args:
@@ -54,7 +54,7 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
             problem_id (str): The id of the problem to build.
 
         Returns:
-            Optional[Problem]: The generated problem or `None` if the problem doesn't exist.
+            Optional[ProblemInstance]: The generated problem or `None` if the problem doesn't exist.
         """
         if variant_name not in self.variants:
             import tyr.problem  # pylint: disable = import-outside-toplevel, cyclic-import

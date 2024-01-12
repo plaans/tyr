@@ -3,7 +3,7 @@ from typing import Optional
 
 from unified_planning.shortcuts import AbstractProblem
 
-from tyr import AbstractDomain, Problem
+from tyr import AbstractDomain, ProblemInstance
 
 
 class FakeDomain(AbstractDomain):
@@ -17,7 +17,7 @@ class FakeDomain(AbstractDomain):
     # =============================== Hierarchical =============================== #
 
     def build_hierarchical_problem_a_first(
-        self, problem: Problem
+        self, problem: ProblemInstance
     ) -> Optional[AbstractProblem]:
         """
         Builds the 'a_first' version of a hierarchical problem.
@@ -32,7 +32,7 @@ class FakeDomain(AbstractDomain):
         return base_problem
 
     def build_hierarchical_problem_base(
-        self, problem: Problem
+        self, problem: ProblemInstance
     ) -> Optional[AbstractProblem]:
         """
         Builds the 'base' version of a hierarchical problem.
@@ -43,7 +43,7 @@ class FakeDomain(AbstractDomain):
         return self.load_from_files(folder_path, problem.uid)
 
     def build_hierarchical_problem_modified(
-        self, problem: Problem
+        self, problem: ProblemInstance
     ) -> Optional[AbstractProblem]:
         """
         Builds the 'modified' version of a hierarchical problem.
@@ -60,7 +60,7 @@ class FakeDomain(AbstractDomain):
     # ================================ Sequential ================================ #
 
     def build_sequential_problem_a_first(
-        self, problem: Problem
+        self, problem: ProblemInstance
     ) -> Optional[AbstractProblem]:
         """Builds the 'a_first' version of a sequential problem."""
         base_problem = problem.versions["base"].value
@@ -70,14 +70,14 @@ class FakeDomain(AbstractDomain):
         return base_problem
 
     def build_sequential_problem_base(
-        self, problem: Problem
+        self, problem: ProblemInstance
     ) -> Optional[AbstractProblem]:
         """Builds the 'base' version of a sequential problem."""
         folder_path = Path(__file__).parent / "pddl"
         return self.load_from_files(folder_path, problem.uid)
 
     def build_sequential_problem_modified(
-        self, problem: Problem
+        self, problem: ProblemInstance
     ) -> Optional[AbstractProblem]:
         """Builds the 'modified' version of a sequential problem."""
         base_problem = problem.versions["base"].value
