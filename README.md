@@ -1,5 +1,9 @@
 # Tyr: Task Planner Comparison Tool
 
+![Pipeline](https://gitlab.laas.fr/rgodet1/tyr/badges/master/pipeline.svg?key_text=Pipeline)
+![Test coverage](https://gitlab.laas.fr/rgodet1/tyr/badges/master/coverage.svg?key_text=Coverage)
+![Latest release](https://gitlab.laas.fr/rgodet1/tyr/-/badges/release.svg)
+
 ## Overview
 
 **Tyr** is a Python-based tool designed for comparing a set of task planners over a variety of problems using the [unified-planning](https://unified-planning.readthedocs.io) library.
