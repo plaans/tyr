@@ -1,0 +1,11 @@
+{
+    "markdown.extension.toc.omittedFromToc": {
+        "README.md": [
+            "# Tyr: Task Planner Comparison Tool"
+        ]
+    },
+    "cSpell.words": [
+        "Justfile",
+        "venv"
+    ]
+}
