@@ -603,3 +603,5 @@ ignored-argument-names = "_.*|^ignored_|^unused_"
 redefining-builtins-modules = ["six.moves", "past.builtins", "future.builtins", "builtins", "io"]
 
 
+[tool.pytest.ini_options]
+markers = "slow: mark a test as slow"
