@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [1.3.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.2.1...v1.3.0) (2024-1-12)
+
+
+### Features
+
+* **domains/depots:** add hierarchical and temporal-numeric variants with base versions ([066aa77](https://gitlab.laas.fr/rgodet1/tyr/commit/066aa7753c260cd96d542cff24450c828fd1e793))
+
 ## [1.2.1](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.2.0...v1.2.1) (2024-1-12)
 
 
