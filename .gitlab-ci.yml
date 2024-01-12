@@ -99,7 +99,12 @@ tests:
       - VERSION: ["3.8", "3.9", "3.10", "3.11", "3.12"]
   image: python:$VERSION
   script:
-    - pytest tests
+    - pytest tests --junitxml report.xml
+  artifacts:
+    when: always
+    expire_in: 1 month
+    reports:
+      junit: report.xml
 
 coverage:
   extends: .test-job
