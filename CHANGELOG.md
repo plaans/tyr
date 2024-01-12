@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [1.2.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.1.2...v1.2.0) (2024-1-12)
+
+
+### Features
+
+* **problem:** util function to get all domains from module ([8a6b4ea](https://gitlab.laas.fr/rgodet1/tyr/commit/8a6b4eadeebdd2b52703392927c7f24f2cdab5fc))
+
 ## [1.1.2](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.1.1...v1.1.2) (2024-1-12)
 
 
