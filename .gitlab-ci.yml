@@ -96,7 +96,7 @@ tests:
   extends: .test-job
   parallel:
     matrix:
-      - VERSION: ["3.8", "3.11", "3.12"]
+      - VERSION: ["3.8", "3.9", "3.10", "3.11", "3.12"]
   image: python:$VERSION
   script:
     - pytest tests --junitxml report.xml
