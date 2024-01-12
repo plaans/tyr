@@ -48,8 +48,11 @@ _lint linter folder *args: _venv
 # =================================== Tests ================================== #
 
 # Run pytest.
-test +args="tests/":
+test-all +args="tests/":
     {{ python }} -m pytest {{ args }}
 
+# Run pytest without slow tests.
+test +args="tests/": (test-all "-m 'not slow'" args)
+
 # Run pytest for coverage.
-cov: (test "tests --cov src --cov-report term:skip-covered --cov-report html:coverage")
+cov: (test-all "tests --cov src --cov-report term:skip-covered --cov-report html:coverage")
