@@ -49,7 +49,10 @@ class TestAbstractDomain(AbstractSingletonModelTest):
     @staticmethod
     @pytest.fixture()
     def variant(request, problem):
-        variant_patch = patch("tyr.problem.model.variant.AbstractVariant")
+        variant_patch = patch(
+            "tyr.problem.model.variant.AbstractVariant",
+            autospec=True,
+        )
         variant = variant_patch.start()
         variant.get_problem.return_value = problem
         variant.name = "mockvariant"

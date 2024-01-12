@@ -95,7 +95,10 @@ class TestAbstractVariant(AbstractModelTest):
     @staticmethod
     @pytest.fixture()
     def problem(request):
-        problem_patch = patch("tyr.problem.model.problem.Problem")
+        problem_patch = patch(
+            "tyr.problem.model.problem.Problem",
+            autospec=True,
+        )
         problem = problem_patch.start()
         problem.uid = "05"
         problem.is_empty = False
