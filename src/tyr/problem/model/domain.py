@@ -1,30 +1,28 @@
+import functools
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Optional
+from typing import Dict, Optional
 
 from unified_planning.io import PDDLReader
 from unified_planning.shortcuts import AbstractProblem
 
-from tyr.patterns import Abstract, AbstractSingletonMeta, Singleton
-
-if TYPE_CHECKING:
-    from tyr.problem.model.instance import ProblemInstance
-    from tyr.problem.model.variant import AbstractVariant
+from tyr.patterns import Abstract, AbstractSingletonMeta, Lazy, Singleton
+from tyr.problem.model.instance import ProblemInstance
 
 
 class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
     """
     Represents the base class for all domains.
 
-    For each supported variant, the class must implements the method
+    For each problem version, the class must implements the method
     ``` python
-    def build_VARIANT_problem_VERSION(self, problem_id: str) -> Optional[up.AbstractProblem]
+    def build_problem_VERSION(self, problem_id: str) -> Optional[up.AbstractProblem]
     ```
     """
 
     def __init__(self) -> None:
         super().__init__()
         self._name = self.__class__.__name__[:-6].lower()
-        self._variants: Dict[str, "AbstractVariant"] = {}
+        self._problems: Dict[str, ProblemInstance] = {}
 
     @property
     def name(self) -> str:
@@ -35,49 +33,61 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         return self._name
 
     @property
-    def variants(self) -> Dict[str, "AbstractVariant"]:
+    def problems(self) -> Dict[str, ProblemInstance]:
         """
         Returns:
-            Dict[str, AbstractVariant]: The variants of the domain, indexed by name.
+            Dict[str, ProblemInstance]: The problems of the domain, indexed by id.
         """
-        return self._variants
+        return self._problems
 
-    def get_problem(
-        self,
-        variant_name: str,
-        problem_id: str,
-    ) -> Optional["ProblemInstance"]:
-        """Builds the problem with the given id in the requested variant.
+    def build_problem(self, problem_id: str) -> Optional[ProblemInstance]:
+        """Builds the problem with the given id.
 
         Args:
-            variant_name (str): The name of the variant responsible to build the problem.
+            problem_id (str): The id of the problem to create.
+
+        Returns:
+            Optional[ProblemInstance]: The generated problem, `None` if it doesn't exist.
+        """
+        problem_factories = [
+            getattr(self, v) for v in dir(self) if v.startswith("build_problem_")
+        ]
+        if len(problem_factories) == 0:
+            print(f"[WARN] Cannot find problem builders for domain {self.name}")
+            return None
+
+        problem = ProblemInstance(self, problem_id)
+        for factory in problem_factories:
+            version_name = factory.__name__[factory.__name__.find("problem_") + 8 :]
+            problem.add_version(version_name, Lazy(functools.partial(factory, problem)))
+
+        return problem
+
+    def get_problem(self, problem_id: str) -> Optional[ProblemInstance]:
+        """Builds the problem with the given id.
+
+        Args:
             problem_id (str): The id of the problem to build.
 
         Returns:
             Optional[ProblemInstance]: The generated problem or `None` if the problem doesn't exist.
         """
-        if variant_name not in self.variants:
-            import tyr.problem  # pylint: disable = import-outside-toplevel, cyclic-import
+        problem = self.load_problem_from_cache(problem_id)
+        if problem is None:
+            problem = self.build_problem(problem_id)
+        self.save_problem_to_cache(problem)
+        return problem
 
-            variant_class_name = f"{variant_name.title()}Variant"
-            variant_class = getattr(tyr.problem, variant_class_name, None)
-            if variant_class is None:
-                print(f"[WARN] Cannot find class for variant {variant_name}")
-                return None
+    def load_problem_from_cache(self, problem_id: str) -> Optional[AbstractProblem]:
+        """Loads the problem with the given id from the cache.
 
-            problem_factory_prefix = f"build_{variant_name}_problem"
-            problem_factories = [
-                getattr(self, v)
-                for v in dir(self)
-                if v.startswith(problem_factory_prefix)
-            ]
-            if len(problem_factories) == 0:
-                print(f"[WARN] Cannot find problem builders for variant {variant_name}")
-                return None
+        Args:
+            problem_id (str): The id of the problem to load
 
-            self.variants[variant_name] = variant_class(self, problem_factories)
-
-        return self.variants[variant_name].get_problem(problem_id)
+        Returns:
+            Optional[AbstractProblem]: The cached problem or `None`.
+        """
+        return self.problems.get(problem_id, None)
 
     def load_from_files(
         self,
@@ -113,3 +123,14 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
             domain_file.as_posix(),
             problem_file.as_posix(),
         )
+
+    def save_problem_to_cache(self, problem: Optional[ProblemInstance]) -> None:
+        """
+        Saves the given problem to the cache.
+        Does nothing if it is `None`.
+
+        Args:
+            problem (Optional[ProblemInstance]): The optional problem to save.
+        """
+        if problem is not None:
+            self.problems[problem.uid] = problem

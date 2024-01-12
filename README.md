@@ -1,12 +1,14 @@
 # Tyr: Task Planner Comparison Tool
 
-[![Pipeline](https://gitlab.laas.fr/rgodet1/tyr/badges/master/pipeline.svg?key_text=Pipeline)](https://gitlab.laas.fr/rgodet1/tyr/-/pipelines)
-[![Test coverage](https://gitlab.laas.fr/rgodet1/tyr/badges/master/coverage.svg?key_text=Coverage)](https://gitlab.laas.fr/rgodet1/tyr/-/graphs/master/charts)
-[![Latest release](https://gitlab.laas.fr/rgodet1/tyr/-/badges/release.svg)](https://gitlab.laas.fr/rgodet1/tyr/-/releases)
+[![pipeline](https://gitlab.laas.fr/rgodet1/tyr/badges/master/pipeline.svg)](https://gitlab.laas.fr/rgodet1/tyr/-/pipelines)
+[![coverage](https://gitlab.laas.fr/rgodet1/tyr/badges/master/coverage.svg)](https://gitlab.laas.fr/rgodet1/tyr/-/graphs/master/charts)
+[![Latest Release](https://gitlab.laas.fr/rgodet1/tyr/-/badges/release.svg)](https://gitlab.laas.fr/rgodet1/tyr/-/releases)
 
-[![Python 3.8](https://img.shields.io/badge/python-3.8-blue.svg)](https://www.python.org/downloads/release/python-380/)
-[![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/)
-[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/release/python-3120/)
+[![python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg?logo=python)](https://www.python.org/)
+[![code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![type checker: mypy](https://img.shields.io/badge/%20type_checker-mypy-%231674b1)](https://github.com/python/mypy)
+[![semantic-release: conventionalcommits](https://img.shields.io/badge/semantic--release-conventionalcommits-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
+
 
 ## Overview
 
@@ -20,7 +22,6 @@ This project aims to provide a understanding analysis of task planners' performa
     - [Installing the Dependencies](#installing-the-dependencies)
 - [Configuration](#configuration)
   - [Domains](#domains)
-  - [Variants](#variants)
 - [License](#license)
 - [Contact](#contact)
 
@@ -56,8 +57,7 @@ You can also run `just install dev`.
 
 ## Domains
 
-A **domain**, e.g., *Rovers*, is made of **variants**, e.g., *hierarchical* and *temporal*.
-Each variant contains a set of **problems** and each problem has a set of **versions**.
+A **domain** contains a set of **problems** and each problem has a set of **versions**.
 The different versions are used to make a same problem compatible for different planners.
 
 To add a new domain to the analysis process, create a class inheriting from `tyr.AbstractDomain` and with a name finishing by *Domain*.
@@ -72,11 +72,11 @@ class RoversDomain(AbstractDomain):
   pass
 ```
 
-For each variant supported by this domain, a method `build_<variant>_problem_<version>` must be added to that class.
-This method takes a problem instance and must returns the unified planning problem associated with this variant and this version.
+For each version of the domain, a method `build_problem_<version>` must be added to that class.
+This method takes a problem instance and must returns the unified planning problem associated with this version.
 It can also return `None` if no problem can be created.
 
-For example, to create the *base* version of the *hierarchical* variant, you can do:
+For example, to create the *base* version of the domain, you can do:
 
 ```python
 # file: src/tyr/problem/rovers.py
@@ -86,28 +86,11 @@ from tyr import AbstractDomain, Problem
 
 
 class RoversDomain(AbstractDomain):
-  def build_hierarchical_problem_base(self, pb: Problem) -> Optional[UProblem]:
+  def build_problem_base(self, pb: Problem) -> Optional[UProblem]:
     return UProblem("base problem to create")
 ```
 
 A full example can be found in [`tests/integration/problem/domain.py`](https://gitlab.laas.fr/rgodet1/tyr/-/blob/master/tests/integration/problem/domain.py).
-
-## Variants
-
-A new variant can be defined by adding a class inheriting from `tyr.AbstractVariant` and with a name finishing by *Variant*.
-The class must be defined inside the `tyr.problem` module.
-For example, you can create the variant *hierarchical* with:
-
-```python
-# file: src/tyr/problem/variants.py
-from tyr import AbstractVariant
-
-class HierarchicalVariant(AbstractVariant):
-  pass
-```
-
-There is nothing more to do.
-The variant is defined by a class in order to be able to add features in the future, as getters defining characteristics of the variant in order for the planners to know if they can support it.
 
 # License
 

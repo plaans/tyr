@@ -6,17 +6,25 @@ import pytest
 from pyparsing import ParseException
 from unified_planning.shortcuts import AbstractProblem
 
-import tests.tyr.problem.model.variant_test as variant_module
 from tests.utils import AbstractSingletonModelTest
-from tyr import AbstractDomain, AbstractVariant, ProblemInstance
+from tyr import AbstractDomain, ProblemInstance
+from tyr.patterns import Lazy
 
 
 class MockdomainDomain(AbstractDomain):
-    def build_mockvariant_problem_base(self, problem: ProblemInstance):
-        return MagicMock()
+    def build_problem_base(self, problem: ProblemInstance):
+        if int(problem.uid) > 0:
+            return MagicMock()
+        return None
 
-    def build_mockvariant_problem_no_speed(self, problem: ProblemInstance):
-        return MagicMock()
+    def build_problem_no_speed(self, problem: ProblemInstance):
+        if int(problem.uid) > 0:
+            return MagicMock()
+        return None
+
+
+class EmptyDomain(AbstractDomain):
+    pass
 
 
 class TestAbstractDomain(AbstractSingletonModelTest):
@@ -27,7 +35,7 @@ class TestAbstractDomain(AbstractSingletonModelTest):
     def get_default_attributes(self) -> Dict[str, Any]:
         return {
             "_name": "mockdomain",
-            "_variants": dict(),
+            "_problems": dict(),
         }
 
     def get_abstract_instance(self) -> AbstractDomain:
@@ -41,28 +49,30 @@ class TestAbstractDomain(AbstractSingletonModelTest):
         domain = self.get_instance()
 
         def teardown():
-            domain._variants.clear()
+            domain._problems.clear()
+
+        request.addfinalizer(teardown)
+        yield domain
+
+    @pytest.fixture()
+    def empty_domain(self):
+        yield EmptyDomain()
+
+    @pytest.fixture()
+    def tracked_domain(self, request):
+        domain = Mock(MockdomainDomain)
+        domain.get_problem = lambda x: MockdomainDomain.get_problem(domain, x)
+
+        def teardown():
+            domain.problems.clear()
 
         request.addfinalizer(teardown)
         yield domain
 
     @staticmethod
     @pytest.fixture()
-    def variant(request, problem):
-        variant_patch = patch(
-            "tyr.problem.model.variant.AbstractVariant",
-            autospec=True,
-        )
-        variant = variant_patch.start()
-        variant.get_problem.return_value = problem
-        variant.name = "mockvariant"
-        request.addfinalizer(variant_patch.stop)
-        yield variant
-
-    @staticmethod
-    @pytest.fixture()
-    def problem():
-        yield MagicMock()
+    def problem(request, domain):
+        return ProblemInstance(domain, request.param)
 
     @staticmethod
     @pytest.fixture()
@@ -73,65 +83,144 @@ class TestAbstractDomain(AbstractSingletonModelTest):
     #                                     Tests                                    #
     # ============================================================================ #
 
-    # ================================ Get problem =============================== #
+    # =============================== Build problem ============================== #
 
-    @pytest.mark.parametrize("problem_id", ["01", "05", "13"])
-    def test_get_problem_from_present_variant(
+    @pytest.mark.parametrize("problem_id", ["01", "05", "-02"])
+    def test_build_problem_version_names(self, domain: AbstractDomain, problem_id: str):
+        problem = domain.build_problem(problem_id)
+        assert list(problem.versions.keys()) == ["base", "no_speed"]
+
+    @pytest.mark.parametrize("problem_id", ["01", "05", "-02"])
+    @pytest.mark.parametrize("version", ["base", "no_speed"])
+    def test_build_problem_version_values(
         self,
         domain: AbstractDomain,
-        variant: AbstractVariant,
-        problem: Mock,
+        problem_id: str,
+        version: str,
+    ):
+        problem = domain.build_problem(problem_id)
+        if problem_id == "-02":
+            assert problem.versions[version].value is None
+        else:
+            assert isinstance(problem.versions[version].value, MagicMock)
+
+    @pytest.mark.parametrize("problem_id", ["01", "05", "-02"])
+    def test_build_problem_no_factories(
+        self,
+        empty_domain: AbstractDomain,
         problem_id: str,
     ):
-        domain._variants = {variant.name: variant}
-        result = domain.get_problem(variant.name, problem_id)
-        # Check the result is correct.
+        problem = empty_domain.build_problem(problem_id)
+        assert problem is None
+
+    # =============================== Save to cache ============================== #
+
+    @pytest.mark.parametrize("problem", ["01", "05", "-02"], indirect=True)
+    def test_save_problem_to_empty_cache(
+        self,
+        domain: AbstractDomain,
+        problem: ProblemInstance,
+    ):
+        assert domain._problems == dict()
+        domain.save_problem_to_cache(problem)
+        assert domain._problems == {problem.uid: problem}
+        domain.save_problem_to_cache(problem)
+        assert domain._problems == {problem.uid: problem}
+
+    @pytest.mark.parametrize("problem", ["01", "05", "-02"], indirect=True)
+    def test_save_problem_to_non_empty_cache(
+        self,
+        domain: AbstractDomain,
+        problem: ProblemInstance,
+    ):
+        base_problem = MagicMock()
+        domain._problems = {"213": base_problem}
+        domain.save_problem_to_cache(problem)
+        assert domain._problems == {"213": base_problem, problem.uid: problem}
+
+    def test_save_null_problem_to_cache(self, domain: AbstractDomain):
+        domain.save_problem_to_cache(None)
+        assert domain._problems == dict()
+
+    # ============================== Load from cache ============================= #
+
+    @pytest.mark.parametrize("problem", ["01", "05", "-02"], indirect=True)
+    def test_get_present_problem_from_cache(
+        self,
+        domain: AbstractDomain,
+        problem: ProblemInstance,
+    ):
+        domain.save_problem_to_cache(problem)
+        result = domain.load_problem_from_cache(problem.uid)
         assert result == problem
-        # Check the right parameters have been given.
-        variant.get_problem.assert_called_once_with(problem_id)
 
-    @patch("tyr.problem", variant_module)
-    @patch(f"{variant_module.__name__}.MockvariantVariant", autospec=True)
-    def test_get_problem_from_absent_variant(
+    @pytest.mark.parametrize("problem_id", ["01", "05", "-02"])
+    def test_get_absent_problem_from_cache(
         self,
-        mockvariant: AbstractVariant,
         domain: AbstractDomain,
+        problem_id: str,
     ):
-        mockvariant.name = "mockvariant"
-        result = domain.get_problem(mockvariant.name, "01")
-        # Check the variant has been created.
-        assert mockvariant.name in domain.variants
-        # Check the constructor has been called with the right parameters.
-        mockvariant.assert_called_once_with(
-            domain,
-            [
-                domain.build_mockvariant_problem_base,
-                domain.build_mockvariant_problem_no_speed,
-            ],
+        result = domain.load_problem_from_cache(problem_id)
+        assert result is None
+
+    # ================================ Get problem =============================== #
+
+    @pytest.mark.parametrize("problem", ["01", "05", "-02"], indirect=True)
+    def test_get_problem_load_from_cache(
+        self,
+        tracked_domain: AbstractDomain,
+        problem: ProblemInstance,
+    ):
+        tracked_domain._problems = {"13": MagicMock()}
+        tracked_domain.get_problem(problem.uid)
+        tracked_domain.load_problem_from_cache.assert_called_once_with(problem.uid)
+
+    @pytest.mark.parametrize("problem", ["01", "05", "-02"], indirect=True)
+    def test_get_problem_save_to_cache(
+        self,
+        tracked_domain: AbstractDomain,
+        problem: ProblemInstance,
+    ):
+        tracked_domain._problems = {"13": MagicMock()}
+        tracked_domain.get_problem(problem.uid)
+        tracked_domain.save_problem_to_cache.assert_called_once()
+
+    @pytest.mark.parametrize("problem", ["01", "05", "-02"], indirect=True)
+    def test_get_present_problem(
+        self,
+        tracked_domain: AbstractDomain,
+        problem: ProblemInstance,
+    ):
+        tracked_domain.load_problem_from_cache = (
+            lambda x: MockdomainDomain.load_problem_from_cache(tracked_domain, x)
         )
-        # Check a problem has been returned.
+        tracked_domain.problems = {problem.uid: problem}
+        result = tracked_domain.get_problem(problem.uid)
+        assert result == problem
+        tracked_domain.build_problem.assert_not_called()
+
+    @pytest.mark.parametrize("problem", ["01", "05", "-02"], indirect=True)
+    def test_get_absent_problem(
+        self,
+        tracked_domain: AbstractDomain,
+        problem: ProblemInstance,
+    ):
+        tracked_domain.load_problem_from_cache = (
+            lambda x: MockdomainDomain.load_problem_from_cache(tracked_domain, x)
+        )
+        tracked_domain.problems = dict()
+        result = tracked_domain.get_problem(problem.uid)
         assert result is not None
+        tracked_domain.build_problem.assert_called_once_with(problem.uid)
 
-    def test_get_problem_from_unexistant_variant(
+    @pytest.mark.parametrize("problem_id", ["01", "05", "-02"])
+    def test_get_problem_versions_are_lazy(
         self,
         domain: AbstractDomain,
-        variant: AbstractVariant,
+        problem_id: str,
     ):
-        result = domain.get_problem(variant.name, "01")
-        # Check nothing has been returned.
-        assert result is None
-
-    @patch("tyr.problem", variant_module)
-    @patch(f"{variant_module.__name__}.UnsupportedvariantVariant", autospec=True)
-    def test_get_problem_from_unsupported_variant(
-        self,
-        mockvariant: AbstractVariant,
-        domain: AbstractDomain,
-    ):
-        mockvariant.name = "unsupportedvariant"
-        result = domain.get_problem(mockvariant.name, "01")
-        # Check nothing has been returned.
-        assert result is None
+        result = domain.get_problem(problem_id)
+        assert all(isinstance(v, Lazy) for v in result.versions.values())
 
     # ============================== Load from files ============================= #
 
