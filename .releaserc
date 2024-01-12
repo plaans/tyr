@@ -2,7 +2,10 @@
   "extends": "@semantic-release/gitlab-config",
   "branches": [
     "master",
-    {"name": "develop", "prerelease": "dev"}
+    {
+      "name": "develop",
+      "prerelease": "dev"
+    }
   ],
   "plugins": [
     [
@@ -10,8 +13,15 @@
       {
         "preset": "conventionalcommits",
         "releaseRules": [
-          { "type": "docs", "scope": "README", "release": "patch" },
-          { "type": "refactor", "release": "patch" }
+          {
+            "type": "docs",
+            "scope": "readme",
+            "release": "patch"
+          },
+          {
+            "type": "refactor",
+            "release": "patch"
+          }
         ]
       }
     ],
@@ -23,7 +33,7 @@
       }
     ],
     [
-      "@semantic-release/exec", 
+      "@semantic-release/exec",
       {
         "prepareCmd": "./ci/release.sh ${nextRelease.version} ${Date.now()}"
       }
@@ -32,16 +42,29 @@
       "@semantic-release/gitlab",
       {
         "assets": [
-          { "path": "CHANGELOG.md", "label": "CHANGELOG" },
-          { "path": "LICENSE.md", "label": "LICENSE" },
-          { "path": "README.md", "label": "README" }
+          {
+            "path": "CHANGELOG.md",
+            "label": "CHANGELOG"
+          },
+          {
+            "path": "LICENSE.md",
+            "label": "LICENSE"
+          },
+          {
+            "path": "README.md",
+            "label": "README"
+          }
         ]
       }
     ],
     [
       "@semantic-release/git",
       {
-        "assets": ["CHANGELOG.md", "LICENSE.md", "pyproject.toml"],
+        "assets": [
+          "CHANGELOG.md",
+          "LICENSE.md",
+          "pyproject.toml"
+        ],
         "message": "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}"
       }
     ]
