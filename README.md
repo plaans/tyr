@@ -1,8 +1,12 @@
 # Tyr: Task Planner Comparison Tool
 
-![Pipeline](https://gitlab.laas.fr/rgodet1/tyr/badges/master/pipeline.svg?key_text=Pipeline)
-![Test coverage](https://gitlab.laas.fr/rgodet1/tyr/badges/master/coverage.svg?key_text=Coverage)
-![Latest release](https://gitlab.laas.fr/rgodet1/tyr/-/badges/release.svg)
+[![Pipeline](https://gitlab.laas.fr/rgodet1/tyr/badges/master/pipeline.svg?key_text=Pipeline)](https://gitlab.laas.fr/rgodet1/tyr/-/pipelines)
+[![Test coverage](https://gitlab.laas.fr/rgodet1/tyr/badges/master/coverage.svg?key_text=Coverage)](https://gitlab.laas.fr/rgodet1/tyr/-/graphs/master/charts)
+[![Latest release](https://gitlab.laas.fr/rgodet1/tyr/-/badges/release.svg)](https://gitlab.laas.fr/rgodet1/tyr/-/releases)
+
+[![Python 3.8](https://img.shields.io/badge/python-3.8-blue.svg)](https://www.python.org/downloads/release/python-380/)
+[![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/release/python-3120/)
 
 ## Overview
 
