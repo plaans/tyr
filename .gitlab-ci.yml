@@ -36,10 +36,10 @@ default:
   allow_failure: true
   parallel:
     matrix:
-      - DIR: [__main__, src, tests]
+      - DIR: [src, tests]
   rules:
     - exists:
-        - "$DIR"
+        - "$DIR/**/*.py"
 
 bandit:
   extends: .static-analysis-job
@@ -89,7 +89,7 @@ commitlint:
   needs: []
   rules:
     - exists:
-        - "tests"
+        - tests/**/*.py
 
 tests:
   extends: .test-job
