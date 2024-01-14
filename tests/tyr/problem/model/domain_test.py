@@ -77,7 +77,7 @@ class TestAbstractDomain(AbstractSingletonModelTest):
     @staticmethod
     @pytest.fixture()
     def files_path(request):
-        yield Path(__file__).parent / "fixtures" / request.param
+        yield Path(__file__).parent.parent / "fixtures" / request.param
 
     # ============================================================================ #
     #                                     Tests                                    #
