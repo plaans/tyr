@@ -1,4 +1,4 @@
-(define (problem Fake01)
+(define (problem Fake)
 	(:domain Fake)
 
 	(:objects
@@ -11,4 +11,5 @@
 	(:goal (and
 		(at robot0 place1)
 	))
+	(:metric minimize (total-time))
 )

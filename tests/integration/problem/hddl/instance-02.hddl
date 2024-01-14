@@ -1,4 +1,4 @@
-(define (problem Fake01)
+(define (problem Fake)
 	(:domain Fake)
 
 	(:objects
@@ -7,10 +7,12 @@
 	)
 	(:htn
 		:subtasks (and
-            (t1 (go robot0 place2))
+            (_t2 (go robot0 place2))
+            (_t3 (go robot0 place1))
 		)
 	)
 	(:init
 		(at robot0 place0)
 	)
+	(:metric minimize (total-time))
 )
