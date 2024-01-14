@@ -1,6 +1,6 @@
 import pytest
-from unified_planning.shortcuts import AbstractProblem
 from unified_planning.model.htn import HierarchicalProblem
+from unified_planning.shortcuts import AbstractProblem
 
 from tests.integration.problem.domains import FakeDomain
 from tyr import AbstractDomain, get_all_domains
@@ -38,7 +38,8 @@ class TestDomainCreation:
             problem is not None
         ), f"The domain {domain.name} is empty, please consider to remove it"
         # Check all versions can successfully be built.
-        for version in problem.versions.values():
+        for version_name, version in problem.versions.items():
+            print(f"Checking version {version_name}")
             value = version.value  # Check the value can be accessed without error.
             if value is not None:
                 # Check the problems have goals to achieve.
