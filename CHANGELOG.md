@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [1.4.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.3.0...v1.4.0) (2024-1-14)
+
+
+### Bug Fixes
+
+* **converter:** make a copy of goals ([dc48794](https://gitlab.laas.fr/rgodet1/tyr/commit/dc4879458db781cfea0a71a7b0d130dee7a10fca))
+
+
+### Features
+
+* **domains/depots:** add hierarchical numeric base version ([931cf17](https://gitlab.laas.fr/rgodet1/tyr/commit/931cf17a6d1448e056cdc7094fbee206f7f1d6d4))
+* **domains/depots:** add hierarchical temporal numeric base and no div versions ([8a90772](https://gitlab.laas.fr/rgodet1/tyr/commit/8a90772218b4ab7519a62115129958d3dfa69599))
+* **domains/depots:** add no-div version to temporal-numeric ([f394094](https://gitlab.laas.fr/rgodet1/tyr/commit/f39409422be93827447c9a5b22c9ca05854bd8b0))
+* **domains/depots:** add numeric base version ([63172cd](https://gitlab.laas.fr/rgodet1/tyr/commit/63172cdb8ebcf0b67db21cb520eaebc5a0e5b199))
+* **problem:** add converter from goals to tasks ([1efa194](https://gitlab.laas.fr/rgodet1/tyr/commit/1efa194d2ffe95ad189ee1acfcfc1647d7f9fdb9))
+
 # [1.3.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.2.1...v1.3.0) (2024-1-12)
 
 
