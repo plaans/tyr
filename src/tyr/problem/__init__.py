@@ -1,2 +1,2 @@
 from .model import *
-from .utils import *
+from .scanner import *
