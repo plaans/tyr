@@ -41,7 +41,7 @@ def goals_to_tasks(
         hier_pb.set_initial_value(hier_pb.fluent(sv.fluent().name)(*sv.args), val)
 
     # Get a flat representation of all goals.
-    base_goals = base_pb.goals
+    base_goals = base_pb.goals[:]
     goals = []
     while len(base_goals) > 0:
         goal = base_goals.pop()
