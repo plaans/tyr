@@ -12,13 +12,9 @@ from tyr.problem.model import AbstractDomain, ProblemInstance
 
 class DepotsHierarchicalNumericDomain(AbstractDomain):
     def build_problem_base(self, problem: ProblemInstance) -> Optional[AbstractProblem]:
-        num_problem = DepotsNumericDomain().get_problem(problem.uid)
-        if num_problem is None:  # pragma: no cover
+        base_num = DepotsNumericDomain().get_problem_version(problem.uid, "base")
+        if base_num is None:
             return None
-        base_tn = num_problem.versions["base"].value
-        if base_tn is None:
-            return None
-
         mapping = {"on": "do_put_on"}
         hier_dom_file = (Path(__file__).parent / "base/domain.hddl").resolve()
-        return goals_to_tasks(base_tn, hier_dom_file, mapping)
+        return goals_to_tasks(base_num, hier_dom_file, mapping)

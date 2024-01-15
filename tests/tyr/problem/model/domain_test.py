@@ -7,8 +7,7 @@ from pyparsing import ParseException
 from unified_planning.shortcuts import AbstractProblem
 
 from tests.utils import AbstractSingletonModelTest
-from tyr import AbstractDomain, ProblemInstance
-from tyr.patterns import Lazy
+from tyr import AbstractDomain, Lazy, ProblemInstance
 
 
 class MockdomainDomain(AbstractDomain):
@@ -62,6 +61,19 @@ class TestAbstractDomain(AbstractSingletonModelTest):
     def tracked_domain(self, request):
         domain = Mock(MockdomainDomain)
         domain.get_problem = lambda x: MockdomainDomain.get_problem(domain, x)
+
+        def teardown():
+            domain.problems.clear()
+
+        request.addfinalizer(teardown)
+        yield domain
+
+    @pytest.fixture()
+    def tracked_domain_version(self, request):
+        domain = Mock(MockdomainDomain)
+        domain.get_problem_version = lambda x, y: MockdomainDomain.get_problem_version(
+            domain, x, y
+        )
 
         def teardown():
             domain.problems.clear()
@@ -221,6 +233,59 @@ class TestAbstractDomain(AbstractSingletonModelTest):
     ):
         result = domain.get_problem(problem_id)
         assert all(isinstance(v, Lazy) for v in result.versions.values())
+
+    # ============================ Get problem version =========================== #
+
+    @pytest.mark.parametrize("problem_id", ["01", "05", "-02"])
+    @pytest.mark.parametrize("version", ["base", "no_speed"])
+    def test_get_problem_version_call_get_problem(
+        self,
+        tracked_domain_version: AbstractDomain,
+        problem_id: str,
+        version: str,
+    ):
+        # Raises a ParseException because of the mock of get_problem
+        with pytest.raises(TypeError):
+            tracked_domain_version.get_problem_version(problem_id, version)
+            tracked_domain_version.get_problem.assert_called_once_with(problem_id)
+
+    @pytest.mark.parametrize("problem", ["01", "05", "-02"], indirect=True)
+    @pytest.mark.parametrize("version", ["base", "no_speed"])
+    def test_get_problem_version_value(
+        self,
+        tracked_domain_version: AbstractDomain,
+        problem: ProblemInstance,
+        version: str,
+    ):
+        factory = getattr(tracked_domain_version, f"build_problem_{version}")
+        problem.add_version(version, Lazy(factory))
+        tracked_domain_version.get_problem.return_value = problem
+        result = tracked_domain_version.get_problem_version(problem.uid, version)
+        assert result == problem.versions[version].value
+
+    @pytest.mark.parametrize("problem_id", ["01", "05", "-02"])
+    @pytest.mark.parametrize("version", ["base", "no_speed"])
+    def test_get_problem_version_of_null_problem(
+        self,
+        tracked_domain_version: AbstractDomain,
+        problem_id: str,
+        version: str,
+    ):
+        tracked_domain_version.get_problem.return_value = None
+        result = tracked_domain_version.get_problem_version(problem_id, version)
+        assert result is None
+
+    @pytest.mark.parametrize("problem", ["01", "05", "-02"], indirect=True)
+    @pytest.mark.parametrize("version", ["not_present", "inexistant"])
+    def test_get_problem_version_inexistant(
+        self,
+        tracked_domain_version: AbstractDomain,
+        problem: ProblemInstance,
+        version: str,
+    ):
+        tracked_domain_version.get_problem.return_value = problem
+        result = tracked_domain_version.get_problem_version(problem.uid, version)
+        assert result is None
 
     # ============================== Load from files ============================= #
 

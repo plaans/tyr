@@ -78,6 +78,29 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         self.save_problem_to_cache(problem)
         return problem
 
+    def get_problem_version(
+        self,
+        problem_id: str,
+        version: str,
+    ) -> Optional[AbstractProblem]:
+        """Retrieves the requested version with the given id.
+
+        Args:
+            problem_id (str): The id of the problem to search.
+            version (str): The requested version of the problem.
+
+        Returns:
+            Optional[AbstractProblem]: The value of the requested version.
+                `None` if the problem or the version doee not exist.
+        """
+        problem = self.get_problem(problem_id)
+        if problem is None:
+            return None
+        try:
+            return problem.versions[version].value
+        except KeyError:
+            return None
+
     def load_problem_from_cache(self, problem_id: str) -> Optional[AbstractProblem]:
         """Loads the problem with the given id from the cache.
 
