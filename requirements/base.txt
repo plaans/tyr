@@ -1,2 +1,5 @@
 # Unified Planning
 git+https://github.com/aiplan4eu/unified-planning.git
+
+# Local code
+-e .

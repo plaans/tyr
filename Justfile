@@ -24,7 +24,6 @@ clear:
 
 # Install dependencies in a virtual environment. Target should be in [prod, dev].
 install target="prod": _venv
-    {{ python }} -m pip install -e .
     {{ python }} -m pip install -r requirements/{{ target }}.txt
 
 # Clear then install the target.
