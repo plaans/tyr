@@ -22,6 +22,8 @@ This project aims to provide a understanding analysis of task planners' performa
     - [Installing the Dependencies](#installing-the-dependencies)
 - [Configuration](#configuration)
   - [Domains](#domains)
+- [Available Tools](#available-tools)
+  - [Domains](#domains-1)
 - [License](#license)
 - [Contact](#contact)
 
@@ -91,6 +93,16 @@ class RoversDomain(AbstractDomain):
 ```
 
 A full example can be found in [`tests/integration/problem/domain.py`](https://gitlab.laas.fr/rgodet1/tyr/-/blob/master/tests/integration/problem/domain.py).
+
+# Available Tools
+
+## Domains
+
+The following table lists the versions of the domains already present in the repo.
+
+|            | Hierarchical | Hierarchical Numeric | Hierarchical Temporal Numeric | Numeric | Temporal Numeric  |
+| ---------- | ------------ | -------------------- | ----------------------------- | ------- | ----------------- |
+| **Depots** | `base`       | `base`               | `base`, `no_div`              | `base`  | `base`, `no_div ` |
 
 # License
 
