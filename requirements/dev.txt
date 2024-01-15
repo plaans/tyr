@@ -1,5 +1,7 @@
 -r base.txt
 
+types-PyYAML
+
 bandit
 black
 flake8
