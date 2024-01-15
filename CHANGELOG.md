@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.4.0...v1.4.1) (2024-1-15)
+
 # [1.4.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.3.0...v1.4.0) (2024-1-14)
 
 
