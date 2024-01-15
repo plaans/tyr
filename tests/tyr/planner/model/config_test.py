@@ -12,33 +12,32 @@ class TestPlannerConfig(ModelTest):
         }
 
     def get_instance(self) -> PlannerConfig:
-        config = {
-            "name": "upf-mock",
-            "problems": {"mockdomain": "base", "mockdomainbis": "base"},
-        }
-        return PlannerConfig(config)
+        return PlannerConfig(
+            name="upf-mock",
+            problems={"mockdomain": "base", "mockdomainbis": "base"},
+        )
 
     def test_equality(self):
         config1 = PlannerConfig(
-            {
+            **{
                 "name": "upf-mock",
                 "problems": {"mockdomain": "base", "mockdomainbis": "base"},
             }
         )
         config2 = PlannerConfig(
-            {
+            **{
                 "name": "upf-mock",
                 "problems": {"mockdomain": "base", "mockdomainbis": "base"},
             }
         )
         config3 = PlannerConfig(
-            {
+            **{
                 "name": "upf-mock-2",
                 "problems": {"mockdomain": "base", "mockdomainbis": "base"},
             }
         )
         config4 = PlannerConfig(
-            {
+            **{
                 "name": "upf-mock",
                 "problems": {"mockdomain-2": "base", "mockdomainbis": "base"},
             }

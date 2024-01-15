@@ -10,16 +10,12 @@ class TestScanner:
         mocked_module.__path__ = config_module.__path__
         expected = [
             PlannerConfig(
-                {
-                    "name": "upf-mock",
-                    "problems": {"mockdomain": "base", "mockdomainbis": "base_2"},
-                }
+                name="upf-mock",
+                problems={"mockdomain": "base", "mockdomainbis": "base_2"},
             ),
             PlannerConfig(
-                {
-                    "name": "upf-mock-2",
-                    "problems": {"mockdomainter": "base", "mockdomainquad": "base_2"},
-                }
+                name="upf-mock-2",
+                problems={"mockdomainter": "base", "mockdomainquad": "base_2"},
             ),
         ]
         result = get_all_planner_configs()

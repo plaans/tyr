@@ -1,12 +1,12 @@
-from typing import Any, Dict
+from typing import Dict
 
 
 class PlannerConfig:
     """Represents the configuration of a planner."""
 
-    def __init__(self, config: Dict[str, Any]) -> None:
-        self._name = config["name"]
-        self._problems = config["problems"]
+    def __init__(self, name: str, problems: Dict[str, str]) -> None:
+        self._name = name
+        self._problems = problems
 
     @property
     def name(self) -> str:

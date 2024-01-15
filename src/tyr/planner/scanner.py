@@ -15,4 +15,8 @@ def get_all_planner_configs() -> List[PlannerConfig]:
 
     config_file = (Path(config_module.__path__[0]) / "planners.yaml").resolve()
     with open(config_file, "r", encoding="utf-8") as file:
-        return [PlannerConfig(p) for p in yaml.safe_load(file)]
+        content = yaml.safe_load(file)
+
+    if content is None:
+        return []
+    return [PlannerConfig(**p) for p in content]
