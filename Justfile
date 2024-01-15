@@ -5,6 +5,7 @@
 
 # ================================= Variables ================================ #
 
+aries_dir := "libs/aries"
 coverage_dir := "coverage"
 linters := "black flake8 isort mypy pylint"
 python_dir := ".venv"
@@ -24,6 +25,8 @@ clear:
 
 # Install dependencies in a virtual environment. Target should be in [prod, dev].
 install target="prod": _venv
+    cargo build --release --bin up-server --manifest-path {{ aries_dir }}/Cargo.toml
+    cp {{ aries_dir }}/target/release/up-server {{ aries_dir }}/planning/unified/plugin/up_aries/bin/up-aries_linux_amd64
     {{ python }} -m pip install -r requirements/{{ target }}.txt
 
 # Clear then install the target.
