@@ -1,0 +1,4 @@
+- name: upf-mock
+  problems:
+    mockdomain: base
+    mockdomainbis: base
