@@ -287,6 +287,13 @@ class TestAbstractDomain(AbstractSingletonModelTest):
         result = tracked_domain_version.get_problem_version(problem.uid, version)
         assert result is None
 
+    # ============================= Get plan quality ============================= #
+
+    def test_get_plan_quality_returns_None_by_default(self, domain: AbstractDomain):
+        plan = MagicMock()
+        result = domain.get_quality_of_plan(plan)
+        assert result is None
+
     # ============================== Load from files ============================= #
 
     @patch("builtins.open")

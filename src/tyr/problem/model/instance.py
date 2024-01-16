@@ -1,5 +1,7 @@
-from typing import TYPE_CHECKING, Dict
+from typing import TYPE_CHECKING, Dict, Optional
 
+from unified_planning.io import PDDLReader
+from unified_planning.plans import Plan, PlanKind
 from unified_planning.shortcuts import AbstractProblem
 
 from tyr.patterns import Lazy
@@ -71,3 +73,35 @@ class ProblemInstance:
             version (Lazy[AbstractProblem]): The lazy value of the problem version.
         """
         self._versions[version_name] = version
+
+    def get_quality_of_plan(self, plan: str) -> Optional[float]:
+        """Extracts the quality of the given plan.
+
+        Args:
+            plan (str): The plan to study.
+
+        Raises:
+            ValueError: When multiple quality metrics have to be measured.
+
+        Returns:
+            Optional[float]: The quality of the plan if any.
+        """
+        version = self.versions["base"].value
+        upf_plan = PDDLReader().parse_plan_string(version, plan)
+
+        if (num_metrics := len(version.quality_metrics)) == 0:
+            return None
+        if num_metrics > 1:
+            raise ValueError("Multiple quality metrics is not supported")
+
+        metric = version.quality_metrics[0]
+        if metric.is_minimize_makespan():
+            return self._get_makespan_of_plan(upf_plan)
+        return self.domain.get_quality_of_plan(upf_plan)
+
+    def _get_makespan_of_plan(self, plan: Plan) -> Optional[float]:
+        if plan.kind == PlanKind.TIME_TRIGGERED_PLAN:
+            return float(max(s + (d or 0) for (s, _, d) in plan.timed_actions))
+        if plan.kind == PlanKind.SEQUENTIAL_PLAN:
+            return len(plan.actions)
+        return None

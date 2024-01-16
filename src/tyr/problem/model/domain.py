@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Dict, Optional
 
 from unified_planning.io import PDDLReader
+from unified_planning.plans import Plan
 from unified_planning.shortcuts import AbstractProblem
 
 from tyr.patterns import Abstract, AbstractSingletonMeta, Lazy, Singleton
@@ -100,6 +101,18 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
             return problem.versions[version].value
         except KeyError:
             return None
+
+    # pylint: disable = unused-argument
+    def get_quality_of_plan(self, plan: Plan) -> Optional[float]:
+        """Extracts the quality of the given plan.
+
+        Args:
+            plan (Plan): The plan to study.
+
+        Returns:
+            Optional[float]: The quality of the plan if any.
+        """
+        return None
 
     def load_problem_from_cache(self, problem_id: str) -> Optional[AbstractProblem]:
         """Loads the problem with the given id from the cache.
