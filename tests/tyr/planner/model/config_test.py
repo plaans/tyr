@@ -7,8 +7,8 @@ from tyr import PlannerConfig
 class TestPlannerConfig(ModelTest):
     def get_default_attributes(self) -> Dict[str, Any]:
         return {
-            "_name": "upf-mock",
-            "_problems": {"mockdomain": "base", "mockdomainbis": "base"},
+            "name": "upf-mock",
+            "problems": {"mockdomain": "base", "mockdomainbis": "base"},
         }
 
     def get_instance(self) -> PlannerConfig:
