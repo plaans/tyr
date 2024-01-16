@@ -135,3 +135,22 @@ class TestPlannerResult:
         )
         result = PlannerResult.unsupported(problem, planner)
         assert result == expected
+
+    # =================================== Error ================================== #
+
+    @pytest.mark.parametrize("name", ["mockplanner", "mockplannerbis"])
+    @pytest.mark.parametrize("problem", [MagicMock(), MagicMock()])
+    @pytest.mark.parametrize("computation_time", [1.5, 0, 16])
+    def test_error(self, name: str, problem: Mock, computation_time: float):
+        planner = MagicMock()
+        planner.name = name
+        expected = PlannerResult(
+            name,
+            problem,
+            PlannerResultStatus.ERROR,
+            computation_time,
+            plan=None,
+            plan_quality=None,
+        )
+        result = PlannerResult.error(problem, planner, computation_time)
+        assert result == expected

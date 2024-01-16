@@ -109,3 +109,26 @@ class PlannerResult:
             plan=None,
             plan_quality=None,
         )
+
+    @staticmethod
+    def error(
+        problem: ProblemInstance, planner: "Planner", computation_time: float
+    ) -> "PlannerResult":
+        """Creates an error result.
+
+        Args:
+            problem (ProblemInstance): The erroneous problem.
+            planner (Planner): The planner trying the solve the problem.
+            computation_time (float): Time to reach the error.
+
+        Returns:
+            PlannerResult: The error result.
+        """
+        return PlannerResult(
+            planner.name,
+            problem,
+            PlannerResultStatus.ERROR,
+            computation_time,
+            plan=None,
+            plan_quality=None,
+        )
