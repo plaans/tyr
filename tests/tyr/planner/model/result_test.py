@@ -141,3 +141,21 @@ class TestPlannerResult(ModelTest):
             problem.get_quality_of_plan.assert_not_called()
         else:
             problem.get_quality_of_plan.assert_called_once_with(str(plan))
+
+    # ================================ Unsupported =============================== #
+
+    @pytest.mark.parametrize("name", ["mockplanner", "mockplannerbis"])
+    @pytest.mark.parametrize("problem", [MagicMock(), MagicMock()])
+    def test_unsupported(self, name: str, problem: Mock):
+        planner = MagicMock()
+        planner.name = name
+        expected = PlannerResult(
+            name,
+            problem,
+            PlannerResultStatus.UNSUPPORTED,
+            computation_time=None,
+            plan=None,
+            plan_quality=None,
+        )
+        result = PlannerResult.unsupported(problem, planner)
+        assert result == expected

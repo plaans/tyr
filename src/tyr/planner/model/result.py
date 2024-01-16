@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from unified_planning.engines.results import (
     PlanGenerationResult,
@@ -8,6 +8,9 @@ from unified_planning.engines.results import (
 )
 
 from tyr.problem import ProblemInstance
+
+if TYPE_CHECKING:
+    from tyr.planner.model.planner import Planner
 
 
 class PlannerResultStatus(Enum):
@@ -85,4 +88,24 @@ class PlannerResult:
             computation_time,
             plan,
             plan_quality,
+        )
+
+    @staticmethod
+    def unsupported(problem: ProblemInstance, planner: "Planner") -> "PlannerResult":
+        """Creates an unsupported result.
+
+        Args:
+            problem (ProblemInstance): The unsupported problem.
+            planner (Planner): The planner trying the solve the problem.
+
+        Returns:
+            PlannerResult: The unsupported result.
+        """
+        return PlannerResult(
+            planner.name,
+            problem,
+            PlannerResultStatus.UNSUPPORTED,
+            computation_time=None,
+            plan=None,
+            plan_quality=None,
         )
