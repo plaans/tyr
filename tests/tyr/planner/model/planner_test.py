@@ -229,6 +229,7 @@ class TestPlanner(ModelTest):
             result = planner.solve(problem, solve_config)
         assert result == expected
 
+    @pytest.mark.slow
     @pytest.mark.timeout(3)
     @pytest.mark.parametrize("timeout", [1, 2])
     @patch("unified_planning.shortcuts.OneshotPlanner", autospec=True)
