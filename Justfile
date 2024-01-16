@@ -7,6 +7,7 @@
 
 aries_dir := "libs/aries"
 coverage_dir := "coverage"
+logs_dir := "logs"
 linters := "black flake8 isort mypy pylint"
 python_dir := ".venv"
 python_bin := "python3"
@@ -21,6 +22,7 @@ python := python_dir + "/bin/" + python_bin
 clear:
     rm -rf {{ python_dir }}
     rm -rf {{ coverage_dir }}
+    rm -rf {{ logs_dir }}
     rm -rf **/*.egg-info
 
 # Install dependencies in a virtual environment. Target should be in [prod, dev].
