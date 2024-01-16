@@ -53,9 +53,9 @@ class PlannerResult:
     planner_name: str
     problem: ProblemInstance
     status: PlannerResultStatus
-    computation_time: Optional[float]
-    plan: Optional[str]
-    plan_quality: Optional[float]
+    computation_time: Optional[float] = None
+    plan: Optional[str] = None
+    plan_quality: Optional[float] = None
 
     @staticmethod
     def from_upf(
