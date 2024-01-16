@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Optional
 from unittest.mock import MagicMock, Mock
 
 import pytest
@@ -7,42 +7,18 @@ from unified_planning.engines.results import (
     PlanGenerationResultStatus,
 )
 
-from tests.utils import ModelTest
 from tyr import PlannerResult, PlannerResultStatus
 
 
-class TestPlannerResult(ModelTest):
+class TestPlannerResult:
     # ============================================================================ #
     #                                    Getters                                   #
     # ============================================================================ #
-    def get_default_attributes(self) -> Dict[str, Any]:
-        return {
-            "planner_name": "mockplanner",
-            "problem": self._problem(),
-            "status": PlannerResultStatus.SOLVED,
-            "computation_time": None,
-            "plan": None,
-            "plan_quality": None,
-        }
 
-    def get_instance(self) -> PlannerResult:
-        return PlannerResult(
-            planner_name="mockplanner",
-            problem=self._problem(),
-            status=PlannerResultStatus.SOLVED,
-            computation_time=None,
-            plan=None,
-            plan_quality=None,
-        )
-
-    def _problem(self):
-        if not hasattr(self, "_problem_"):
-            self._problem_ = MagicMock()
-        return self._problem_
-
+    @staticmethod
     @pytest.fixture()
-    def problem(self):
-        yield self._problem()
+    def problem():
+        yield MagicMock()
 
     @staticmethod
     @pytest.fixture()
