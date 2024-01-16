@@ -7,7 +7,7 @@ from tests.utils import ModelTest
 from tyr import ProblemInstance
 
 
-class TestProblem(ModelTest):
+class TestProblemInstance(ModelTest):
     # ============================================================================ #
     #                                    Getters                                   #
     # ============================================================================ #
