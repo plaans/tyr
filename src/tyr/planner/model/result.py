@@ -91,26 +91,6 @@ class PlannerResult:
         )
 
     @staticmethod
-    def unsupported(problem: ProblemInstance, planner: "Planner") -> "PlannerResult":
-        """Creates an unsupported result.
-
-        Args:
-            problem (ProblemInstance): The unsupported problem.
-            planner (Planner): The planner trying the solve the problem.
-
-        Returns:
-            PlannerResult: The unsupported result.
-        """
-        return PlannerResult(
-            planner.name,
-            problem,
-            PlannerResultStatus.UNSUPPORTED,
-            computation_time=None,
-            plan=None,
-            plan_quality=None,
-        )
-
-    @staticmethod
     def error(
         problem: ProblemInstance, planner: "Planner", computation_time: float
     ) -> "PlannerResult":
@@ -129,6 +109,49 @@ class PlannerResult:
             problem,
             PlannerResultStatus.ERROR,
             computation_time,
+            plan=None,
+            plan_quality=None,
+        )
+
+    @staticmethod
+    def timeout(
+        problem: ProblemInstance, planner: "Planner", timeout: int
+    ) -> "PlannerResult":
+        """Creates a timeout result.
+
+        Args:
+            problem (ProblemInstance): The timed out problem.
+            planner (Planner): The planner trying the solve the problem.
+            timeout (int): The limit time to solve the problem.
+
+        Returns:
+            PlannerResult: The timeout result.
+        """
+        return PlannerResult(
+            planner.name,
+            problem,
+            PlannerResultStatus.TIMEOUT,
+            timeout,
+            plan=None,
+            plan_quality=None,
+        )
+
+    @staticmethod
+    def unsupported(problem: ProblemInstance, planner: "Planner") -> "PlannerResult":
+        """Creates an unsupported result.
+
+        Args:
+            problem (ProblemInstance): The unsupported problem.
+            planner (Planner): The planner trying the solve the problem.
+
+        Returns:
+            PlannerResult: The unsupported result.
+        """
+        return PlannerResult(
+            planner.name,
+            problem,
+            PlannerResultStatus.UNSUPPORTED,
+            computation_time=None,
             plan=None,
             plan_quality=None,
         )

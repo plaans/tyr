@@ -118,24 +118,6 @@ class TestPlannerResult:
         else:
             problem.get_quality_of_plan.assert_called_once_with(str(plan))
 
-    # ================================ Unsupported =============================== #
-
-    @pytest.mark.parametrize("name", ["mockplanner", "mockplannerbis"])
-    @pytest.mark.parametrize("problem", [MagicMock(), MagicMock()])
-    def test_unsupported(self, name: str, problem: Mock):
-        planner = MagicMock()
-        planner.name = name
-        expected = PlannerResult(
-            name,
-            problem,
-            PlannerResultStatus.UNSUPPORTED,
-            computation_time=None,
-            plan=None,
-            plan_quality=None,
-        )
-        result = PlannerResult.unsupported(problem, planner)
-        assert result == expected
-
     # =================================== Error ================================== #
 
     @pytest.mark.parametrize("name", ["mockplanner", "mockplannerbis"])
@@ -153,4 +135,41 @@ class TestPlannerResult:
             plan_quality=None,
         )
         result = PlannerResult.error(problem, planner, computation_time)
+        assert result == expected
+
+    # ================================== Timeout ================================= #
+
+    @pytest.mark.parametrize("name", ["mockplanner", "mockplannerbis"])
+    @pytest.mark.parametrize("problem", [MagicMock(), MagicMock()])
+    @pytest.mark.parametrize("timeout", [1, 0, 16])
+    def test_timeout(self, name: str, problem: Mock, timeout: float):
+        planner = MagicMock()
+        planner.name = name
+        expected = PlannerResult(
+            name,
+            problem,
+            PlannerResultStatus.TIMEOUT,
+            timeout,
+            plan=None,
+            plan_quality=None,
+        )
+        result = PlannerResult.timeout(problem, planner, timeout)
+        assert result == expected
+
+    # ================================ Unsupported =============================== #
+
+    @pytest.mark.parametrize("name", ["mockplanner", "mockplannerbis"])
+    @pytest.mark.parametrize("problem", [MagicMock(), MagicMock()])
+    def test_unsupported(self, name: str, problem: Mock):
+        planner = MagicMock()
+        planner.name = name
+        expected = PlannerResult(
+            name,
+            problem,
+            PlannerResultStatus.UNSUPPORTED,
+            computation_time=None,
+            plan=None,
+            plan_quality=None,
+        )
+        result = PlannerResult.unsupported(problem, planner)
         assert result == expected
