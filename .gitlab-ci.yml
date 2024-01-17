@@ -6,24 +6,27 @@ stages:
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
+  PATH: "${PATH}:/root/.cargo/bin/"
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
 cache:
   paths:
     - .cache/pip
     - .venv
+    - libs/aries
 
 default:
-  image: node:latest
+  image: $CI_REGISTRY_IMAGE
   interruptible: true
 
 .python-job:
-  image: python:latest
   before_script:
-    - python --version ; pip --version
-    - pip install virtualenv
-    - virtualenv .venv
+    - python3.12 --version ; python3.12 -m pip --version
+    - python3.12 -m pip install virtualenv
+    - python3.12 -m virtualenv .venv
     - source .venv/bin/activate
+    - cargo build --release --bin up-server --manifest-path libs/aries/Cargo.toml
+    - cp libs/aries/target/release/up-server libs/aries/planning/unified/plugin/up_aries/bin/up-aries_linux_amd64
     - pip install -r requirements/dev.txt
 
 # ============================================================================ #
@@ -73,7 +76,6 @@ pylint:
 
 commitlint:
   stage: Static Analysis
-  image: node:latest
   before_script:
     - npm install --save-dev @commitlint/cli @commitlint/config-conventional
   script:
@@ -91,12 +93,22 @@ commitlint:
     - exists:
         - tests/**/*.py
 
+# tests:
+#   extends: .test-job
+#   parallel:
+#     matrix:
+#       - VERSION: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+#   image: python:$VERSION
+#   script:
+#     - pytest tests --junitxml report.xml
+#   artifacts:
+#     when: always
+#     expire_in: 1 month
+#     reports:
+#       junit: report.xml
+
 tests:
   extends: .test-job
-  parallel:
-    matrix:
-      - VERSION: ["3.8", "3.9", "3.10", "3.11", "3.12"]
-  image: python:$VERSION
   script:
     - pytest tests --junitxml report.xml
   artifacts:
@@ -125,7 +137,6 @@ coverage:
 
 semantic-release:
   stage: Release
-  image: node:latest
   before_script:
     - npm install --save-dev conventional-changelog-conventionalcommits semantic-release @semantic-release/changelog @semantic-release/exec @semantic-release/git @semantic-release/gitlab-config
   script:
