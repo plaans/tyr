@@ -120,6 +120,8 @@ tests:
     expire_in: 1 month
     reports:
       junit: report.xml
+    paths:
+      - logs/
 
 coverage:
   extends: .test-job
