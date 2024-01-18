@@ -1,0 +1,7 @@
+# Pytest
+py # pytest-parallel's dependency
+pytest
+pytest-cov
+pytest-mock
+pytest-parallel
+pytest-timeout
