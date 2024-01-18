@@ -43,6 +43,13 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         """
         return self._problems
 
+    def get_num_problems(self) -> int:
+        """
+        Returns:
+            int: The number of problems present in the domain.
+        """
+        raise NotImplementedError()
+
     def build_problem(self, problem_id: str) -> Optional[ProblemInstance]:
         """Builds the problem with the given id.
 

@@ -11,6 +11,9 @@ from tyr import AbstractDomain, Lazy, ProblemInstance
 
 
 class MockDomainDomain(AbstractDomain):
+    def get_num_problems(self) -> int:
+        return 10
+
     def build_problem_base(self, problem: ProblemInstance):
         if int(problem.uid) > 0:
             return MagicMock()
@@ -174,6 +177,11 @@ class TestAbstractDomain(AbstractSingletonModelTest):
     ):
         result = domain.load_problem_from_cache(problem_id)
         assert result is None
+
+    # =========================== Get number of problem ========================== #
+
+    def test_get_number_of_problems(self, domain: AbstractDomain):
+        assert domain.get_num_problems() == 10
 
     # ================================ Get problem =============================== #
 

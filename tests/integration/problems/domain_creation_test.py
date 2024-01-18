@@ -26,11 +26,15 @@ class TestDomainCreation:
             assert isinstance(version.value, AbstractProblem)
 
     @pytest.mark.slow
-    @pytest.mark.parametrize("problem_id", [f"{i:0>2}" for i in range(1, 100)])
     @pytest.mark.parametrize(
-        "domain",
-        get_all_domains(),
-        ids=[d.name for d in get_all_domains()],
+        ["domain", "problem_id"],
+        [
+            (d, f"{p:0>2}")
+            for d in get_all_domains()
+            for p in range(1, d.get_num_problems() + 2)
+            # Test one more problem (+2) in order to check behaviour on non existant problem
+        ],
+        ids=lambda x: x if isinstance(x, str) else x.name,
     )
     def test_real_domain_creation(self, domain: AbstractDomain, problem_id: str):
         problem = domain.get_problem(problem_id)

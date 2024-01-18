@@ -11,6 +11,9 @@ from tyr.problems.model import AbstractDomain, ProblemInstance
 
 
 class DepotsHierarchicalTemporalNumericDomain(AbstractDomain):
+    def get_num_problems(self) -> int:
+        return DepotsTemporalNumericDomain().get_num_problems()
+
     def build_problem_base(self, problem: ProblemInstance) -> Optional[AbstractProblem]:
         base_tn = DepotsTemporalNumericDomain().get_problem_version(problem.uid, "base")
         if base_tn is None:

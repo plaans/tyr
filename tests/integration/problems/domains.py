@@ -9,6 +9,9 @@ from tyr import AbstractDomain, ProblemInstance
 class FakeDomain(AbstractDomain):
     """A fake domain used for demonstration."""
 
+    def get_num_problems(self) -> int:
+        return 3
+
     def build_problem_a_first(
         self, problem: ProblemInstance
     ) -> Optional[AbstractProblem]:
