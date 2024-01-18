@@ -9,6 +9,9 @@ class PlannerConfig:
     name: str
     problems: Dict[str, str]
 
+    def __hash__(self) -> int:
+        return hash(self.name) + hash(str(self.problems))
+
 
 @dataclass(frozen=True)
 class SolveConfig:
