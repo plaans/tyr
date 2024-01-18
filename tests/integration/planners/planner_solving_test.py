@@ -5,6 +5,8 @@ from tyr.planners.model.config import SolveConfig
 from tyr.planners.model.result import PlannerResultStatus
 from tyr.problems.scanner import get_all_domains
 
+SUCCESS_PLANNER = {p.name: False for p in get_all_planners()}
+
 
 class TestPlannerSolving:
     @pytest.mark.slow
@@ -25,3 +27,12 @@ class TestPlannerSolving:
         rejected_status = [PlannerResultStatus.ERROR, PlannerResultStatus.UNSUPPORTED]
         result = planner.solve(problem_instance, solve_config)
         assert result.status not in rejected_status
+        if result.status == PlannerResultStatus.SOLVED:
+            SUCCESS_PLANNER[planner.name] = True
+
+    @pytest.mark.slow
+    @pytest.mark.run(after="test_real_planner_solving")
+    @pytest.mark.parametrize("planner", get_all_planners(), ids=lambda x: x.name)
+    def test_at_least_one_problem_solved(self, planner: Planner):
+        # Ensure one planner has been solved so a full success process has been done.
+        assert SUCCESS_PLANNER[planner.name] is True
