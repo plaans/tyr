@@ -1,3 +1,4 @@
+import os
 import resource
 import time
 from dataclasses import replace
@@ -38,7 +39,11 @@ class TestPlanner(ModelTest):
         return Planner(self.config())
 
     def config(self) -> PlannerConfig:
-        return PlannerConfig(name="mock-config", problems={"mockdomain": "base"})
+        return PlannerConfig(
+            name="mock-config",
+            problems={"mockdomain": "base"},
+            env={"MY_VARIABLE": "new_value", "MY_BOOL": "True"},
+        )
 
     @pytest.fixture()
     def planner(self):
@@ -324,6 +329,19 @@ class TestPlanner(ModelTest):
         mocked_planner = mocked_oneshot_planner.return_value.__enter__.return_value
         planner.solve(problem, solve_config)
         assert mocked_planner.skip_checks is True
+
+    @patch.dict(os.environ, {"MY_VARIABLE": "initial_value", "MY_BOOL": "False"})
+    def test_solve_set_env_params(
+        self,
+        planner: Planner,
+        problem: ProblemInstance,
+        solve_config: SolveConfig,
+    ):
+        assert os.environ["MY_VARIABLE"] == "initial_value"
+        assert os.environ["MY_BOOL"] == "False"
+        planner.solve(problem, solve_config)
+        assert os.environ["MY_VARIABLE"] == "new_value"
+        assert os.environ["MY_BOOL"] == "True"
 
     # ================================= Equality ================================= #
 

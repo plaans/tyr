@@ -1,8 +1,9 @@
+import os
 import resource
 import signal
 import time
-from pathlib import Path
 import traceback
+from pathlib import Path
 from typing import Optional
 
 import unified_planning.shortcuts as upf
@@ -87,6 +88,10 @@ class Planner:
 
         # Limits the virtual memory of the current process.
         resource.setrlimit(resource.RLIMIT_AS, (config.memout, resource.RLIM_INFINITY))
+
+        # Set the environment variables specified in the planner config.
+        for env_name, env_value in self.config.env.items():
+            os.environ[env_name] = env_value
 
         # Start recording time in case the second `start` is not reached because of an error.
         start = time.time()
