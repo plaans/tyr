@@ -1,5 +1,6 @@
 import os
 import resource
+import shutil
 import signal
 import time
 import traceback
@@ -92,6 +93,9 @@ class Planner:
         # Set the environment variables specified in the planner config.
         for env_name, env_value in self.config.env.items():
             os.environ[env_name] = env_value
+
+        # Clear the logs.
+        shutil.rmtree(self.get_log_file(problem, "").parent, True)
 
         # Start recording time in case the second `start` is not reached because of an error.
         start = time.time()

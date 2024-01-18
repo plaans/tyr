@@ -343,6 +343,18 @@ class TestPlanner(ModelTest):
         assert os.environ["MY_VARIABLE"] == "new_value"
         assert os.environ["MY_BOOL"] == "True"
 
+    @patch("shutil.rmtree")
+    def test_solve_clear_logs(
+        self,
+        mocked_rmtree: Mock,
+        planner: Planner,
+        problem: ProblemInstance,
+        solve_config: SolveConfig,
+    ):
+        log_folder = planner.get_log_file(problem, "").parent
+        planner.solve(problem, solve_config)
+        mocked_rmtree.assert_called_once_with(log_folder, True)
+
     # ================================= Equality ================================= #
 
     def test_eq(self):
