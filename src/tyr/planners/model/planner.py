@@ -90,28 +90,27 @@ class Planner:
         start = time.time()
         try:
             # Get the planner and the log file.
-            with (
-                upf.OneshotPlanner(name=self.name) as planner,
-                open(self.get_log_file(problem), "w", encoding="utf-8") as log_file,
-            ):
-                # Prepare own timeout procedure in case the planner doesn't timeout by itself.
-                signal.signal(signal.SIGALRM, _timeout_handler)
-                signal.alarm(config.timeout)
-                try:
-                    # Record time and try the solve the problem.
-                    start = time.time()
-                    upf_result = planner.solve(
-                        version,
-                        timeout=config.timeout,
-                        output_stream=log_file,
-                    )
-                    end = time.time()
-                except TimeoutError:
-                    # The planner timed out.
-                    return PlannerResult.timeout(problem, self, config.timeout)
-                finally:
-                    # Disable the timeout alarm.
-                    signal.alarm(0)
+            with upf.OneshotPlanner(name=self.name) as planner:
+                log_path = self.get_log_file(problem)
+                with open(log_path, "w", encoding="utf-8") as log_file:
+                    # Prepare own timeout procedure in case the planner doesn't timeout by itself.
+                    signal.signal(signal.SIGALRM, _timeout_handler)
+                    signal.alarm(config.timeout)
+                    try:
+                        # Record time and try the solve the problem.
+                        start = time.time()
+                        upf_result = planner.solve(
+                            version,
+                            timeout=config.timeout,
+                            output_stream=log_file,
+                        )
+                        end = time.time()
+                    except TimeoutError:
+                        # The planner timed out.
+                        return PlannerResult.timeout(problem, self, config.timeout)
+                    finally:
+                        # Disable the timeout alarm.
+                        signal.alarm(0)
 
             # Convert the result into inner format and set computation time if not present.
             result = PlannerResult.from_upf(problem, upf_result)
