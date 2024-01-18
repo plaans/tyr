@@ -313,6 +313,18 @@ class TestPlanner(ModelTest):
             resource.RLIMIT_AS, (memout, resource.RLIM_INFINITY)
         )
 
+    @patch("unified_planning.shortcuts.OneshotPlanner", autospec=True)
+    def test_solve_skip_checks(
+        self,
+        mocked_oneshot_planner: Mock,
+        planner: Planner,
+        problem: ProblemInstance,
+        solve_config: SolveConfig,
+    ):
+        mocked_planner = mocked_oneshot_planner.return_value.__enter__.return_value
+        planner.solve(problem, solve_config)
+        assert mocked_planner.skip_checks is True
+
     # ================================= Equality ================================= #
 
     def test_eq(self):

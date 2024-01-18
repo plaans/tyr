@@ -93,6 +93,8 @@ class Planner:
         try:
             # Get the planner and the log file.
             with upf.OneshotPlanner(name=self.name) as planner:
+                # Disable compatibility checking
+                planner.skip_checks = True
                 log_path = self.get_log_file(problem, "solve")
                 with open(log_path, "w", encoding="utf-8") as log_file:
                     # Prepare own timeout procedure in case the planner doesn't timeout by itself.
