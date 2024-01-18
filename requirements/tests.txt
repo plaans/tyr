@@ -3,5 +3,6 @@ py # pytest-parallel's dependency
 pytest
 pytest-cov
 pytest-mock
+pytest-ordering
 pytest-parallel
 pytest-timeout
