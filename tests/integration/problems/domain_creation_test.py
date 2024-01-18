@@ -1,5 +1,6 @@
 import pytest
 from unified_planning.model.htn import HierarchicalProblem
+from unified_planning.model.scheduling import SchedulingProblem
 from unified_planning.shortcuts import AbstractProblem
 
 from tests.integration.problems.domains import FakeDomain
@@ -49,5 +50,7 @@ class TestDomainCreation:
                 # Check the problems have goals to achieve.
                 if isinstance(value, HierarchicalProblem):
                     assert len(value.task_network.subtasks) != 0
+                elif isinstance(value, SchedulingProblem):
+                    assert len(value.activities) != 0
                 else:
                     assert len(value.goals) != 0
