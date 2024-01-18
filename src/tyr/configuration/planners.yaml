@@ -1,1 +1,10 @@
 ---
+- name: aries
+  problems:
+    depots-hierarchical: base
+    depots-hierarchical-numeric: base
+    depots-hierarchical-temporal-numeric: no_div
+    depots-numeric: base
+    depots-temporal-numeric: no_div
+  env:
+    ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
