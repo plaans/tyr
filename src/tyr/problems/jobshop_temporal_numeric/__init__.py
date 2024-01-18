@@ -3,12 +3,10 @@
 from typing import Optional
 
 from unified_planning.engines.mixins.compiler import CompilationKind
-from unified_planning.shortcuts import AbstractProblem
-from unified_planning.shortcuts import Compiler
+from unified_planning.shortcuts import AbstractProblem, Compiler
 
 from tyr.problems.converter import scheduling_to_actions
 from tyr.problems.jobshop_scheduling import JobshopSchedulingDomain
-
 from tyr.problems.model import AbstractDomain, ProblemInstance
 
 
@@ -32,4 +30,4 @@ class JobshopTemporalNumericDomain(AbstractDomain):
             problem_kind=base.kind,
             compilation_kind=CompilationKind.NEGATIVE_CONDITIONS_REMOVING,
         ) as compiler:
-            return compiler.compile(base).problem
+            return compiler.compile(base).problem  # pylint: disable=no-member
