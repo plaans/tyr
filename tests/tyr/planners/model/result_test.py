@@ -86,15 +86,51 @@ class TestPlannerResult:
         result = PlannerResult.from_upf(problem, upf_result)
         assert result.computation_time == expected
 
-    @pytest.mark.parametrize("plan", [None, MagicMock(), MagicMock()])
+    mock_plan = """Hierarchical SequentialPlan:
+    nop
+    nop
+    lift(hoist0, crate1, pallet0, depot0)
+    load(hoist0, crate1, truck1, depot0)
+    drive(truck1, depot0, distributor0)
+    nop
+    lift(hoist1, crate0, pallet1, distributor0)
+    drive(truck0, distributor1, distributor0)
+    load(hoist1, crate0, truck0, distributor0)
+    unload(hoist1, crate1, truck1, distributor0)
+    drop(hoist1, crate1, pallet1, distributor0)
+    drive(truck0, distributor0, distributor1)
+    nop
+    unload(hoist2, crate0, truck0, distributor1)
+    drop(hoist2, crate0, pallet2, distributor1)
+"""
+
+    mock_expected_plan = """(nop)
+(nop)
+(lift hoist0 crate1 pallet0 depot0)
+(load hoist0 crate1 truck1 depot0)
+(drive truck1 depot0 distributor0)
+(nop)
+(lift hoist1 crate0 pallet1 distributor0)
+(drive truck0 distributor1 distributor0)
+(load hoist1 crate0 truck0 distributor0)
+(unload hoist1 crate1 truck1 distributor0)
+(drop hoist1 crate1 pallet1 distributor0)
+(drive truck0 distributor0 distributor1)
+(nop)
+(unload hoist2 crate0 truck0 distributor1)
+(drop hoist2 crate0 pallet2 distributor1)"""
+
+    @pytest.mark.parametrize(
+        ["plan", "expected"], [(None, None), (mock_plan, mock_expected_plan)]
+    )
     def test_from_upf_plan(
         self,
         plan: Optional[Mock],
+        expected: Optional[str],
         problem: Mock,
         upf_result: PlanGenerationResult,
     ):
         upf_result.plan = plan
-        expected = None if plan is None else str(plan)
         result = PlannerResult.from_upf(problem, upf_result)
         assert result.plan == expected
 
@@ -116,7 +152,8 @@ class TestPlannerResult:
         if plan is None:
             problem.get_quality_of_plan.assert_not_called()
         else:
-            problem.get_quality_of_plan.assert_called_once_with(str(plan))
+            plan_str = PlannerResult._convert_upf_plan(str(plan))
+            problem.get_quality_of_plan.assert_called_once_with(plan_str)
 
     # =================================== Error ================================== #
 

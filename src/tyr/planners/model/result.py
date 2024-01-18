@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass
 from enum import Enum, auto
 from typing import TYPE_CHECKING, Optional
@@ -6,6 +7,7 @@ from unified_planning.engines.results import (
     PlanGenerationResult,
     PlanGenerationResultStatus,
 )
+from unified_planning.plans import Plan
 
 from tyr.problems import ProblemInstance
 
@@ -58,6 +60,25 @@ class PlannerResult:
     plan_quality: Optional[float] = None
 
     @staticmethod
+    def _convert_upf_plan(upf_plan: Plan) -> str:
+        plan = []
+
+        for line in str(upf_plan).split("\n"):
+            if line.strip() != "":
+                action_match = re.match(r"^\s*(\w+)(?:\(([^)]+)\))?\s*$", line)
+                if action_match:
+                    action_name = action_match.group(1)
+                    parameters = action_match.group(2)
+                    if parameters is not None:
+                        parameters = " " + parameters.replace(",", "")
+                    else:
+                        parameters = ""
+                    action = f"({action_name}{parameters})"
+                    plan.append(action)
+
+        return "\n".join(plan)
+
+    @staticmethod
     def from_upf(
         problem: ProblemInstance,
         result: PlanGenerationResult,
@@ -78,7 +99,7 @@ class PlannerResult:
 
         plan, plan_quality = None, None
         if result.plan is not None:
-            plan = str(result.plan)
+            plan = PlannerResult._convert_upf_plan(result.plan)
             plan_quality = problem.get_quality_of_plan(plan)
 
         return PlannerResult(
