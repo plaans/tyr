@@ -76,6 +76,7 @@ class TestPlanner(ModelTest):
     @pytest.mark.parametrize("problem_id", ["01", "06"])
     @pytest.mark.parametrize("domain_name", ["domain1", "domain2"])
     @pytest.mark.parametrize("planner_name", ["planner1", "planner2"])
+    @pytest.mark.parametrize("file_name", ["solve", "error", "warning"])
     def test_get_log_file(
         self,
         planner: Planner,
@@ -83,6 +84,7 @@ class TestPlanner(ModelTest):
         planner_name: str,
         domain_name: str,
         problem_id: str,
+        file_name: str,
     ):
         old_config = planner.config
         old_uid = problem.uid
@@ -92,8 +94,10 @@ class TestPlanner(ModelTest):
         problem._uid = problem_id
         problem.domain._name = domain_name
 
-        expected = LOGS_DIR / planner_name / domain_name / problem_id / "solve.log"
-        result = planner.get_log_file(problem)
+        expected = (
+            LOGS_DIR / planner_name / domain_name / problem_id / f"{file_name}.log"
+        )
+        result = planner.get_log_file(problem, file_name)
         assert result == expected
 
         planner._config = old_config
@@ -133,7 +137,7 @@ class TestPlanner(ModelTest):
             pass
         mocked_planner.get_version.assert_called_once_with(problem)
 
-    def test_solve_no_available_versiom(
+    def test_solve_no_available_version(
         self,
         planner: Planner,
         problem: ProblemInstance,
@@ -171,7 +175,7 @@ class TestPlanner(ModelTest):
         assert solve_kwargs["timeout"] == timeout
         assert (
             solve_kwargs["output_stream"].name
-            == planner.get_log_file(problem).as_posix()
+            == planner.get_log_file(problem, "solve").as_posix()
         )
 
     @patch("unified_planning.shortcuts.OneshotPlanner", autospec=True)

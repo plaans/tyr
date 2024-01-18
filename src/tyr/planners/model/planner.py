@@ -39,18 +39,19 @@ class Planner:
         """
         return self.config.name
 
-    def get_log_file(self, problem: ProblemInstance) -> Path:
+    def get_log_file(self, problem: ProblemInstance, file_name: str) -> Path:
         """The file where the planner can write its logs for the given problem.
 
         Args:
             problem (ProblemInstance): The problem concerned by the logs.
+            file_name (str): The name of the file to write in.
 
         Returns:
             Path: The path of the log file.
         """
         folder = LOGS_DIR / self.name / problem.domain.name / problem.uid
         folder.mkdir(parents=True, exist_ok=True)
-        return folder / "solve.log"
+        return folder / f"{file_name}.log"
 
     def get_version(self, problem: ProblemInstance) -> Optional[AbstractProblem]:
         """Search the version that the planner has to solve for the given problem.
@@ -91,7 +92,7 @@ class Planner:
         try:
             # Get the planner and the log file.
             with upf.OneshotPlanner(name=self.name) as planner:
-                log_path = self.get_log_file(problem)
+                log_path = self.get_log_file(problem, "solve")
                 with open(log_path, "w", encoding="utf-8") as log_file:
                     # Prepare own timeout procedure in case the planner doesn't timeout by itself.
                     signal.signal(signal.SIGALRM, _timeout_handler)
