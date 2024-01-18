@@ -5,9 +5,9 @@ from typing import Optional
 
 from unified_planning.shortcuts import AbstractProblem
 
-from tyr.problem.converter import goals_to_tasks
-from tyr.problem.depots_numeric import DepotsNumericDomain
-from tyr.problem.model import AbstractDomain, ProblemInstance
+from tyr.problems.converter import goals_to_tasks
+from tyr.problems.depots_numeric import DepotsNumericDomain
+from tyr.problems.model import AbstractDomain, ProblemInstance
 
 
 class DepotsHierarchicalNumericDomain(AbstractDomain):

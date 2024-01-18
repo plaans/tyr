@@ -7,7 +7,7 @@ from unified_planning.shortcuts import AbstractProblem
 from tyr.patterns import Lazy
 
 if TYPE_CHECKING:
-    from tyr.problem.model.domain import AbstractDomain
+    from tyr.problems.model.domain import AbstractDomain
 
 
 class ProblemInstance:

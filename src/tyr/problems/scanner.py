@@ -2,15 +2,15 @@ from importlib import import_module
 from pkgutil import walk_packages
 from typing import List
 
-from tyr.problem.model.domain import AbstractDomain
+from tyr.problems.model.domain import AbstractDomain
 
 
 def get_all_domains() -> List[AbstractDomain]:
     """
     Returns:
-        List[AbstractDomain]: All domains defined in `tyr.problem` module.
+        List[AbstractDomain]: All domains defined in `tyr.problems` module.
     """
-    import tyr.problem as problem_module  # pylint: disable=import-outside-toplevel, cyclic-import
+    import tyr.problems as problem_module  # pylint: disable=import-outside-toplevel, cyclic-import
 
     domains = []
 

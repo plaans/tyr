@@ -2,7 +2,7 @@ import pytest
 from unified_planning.model.htn import HierarchicalProblem
 from unified_planning.shortcuts import AbstractProblem
 
-from tests.integration.problem.domains import FakeDomain
+from tests.integration.problems.domains import FakeDomain
 from tyr import AbstractDomain, get_all_domains
 
 

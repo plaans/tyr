@@ -10,7 +10,7 @@ from unified_planning.shortcuts import AbstractProblem
 from tyr.core.constants import LOGS_DIR
 from tyr.planners.model.config import PlannerConfig, SolveConfig
 from tyr.planners.model.result import PlannerResult
-from tyr.problem import ProblemInstance
+from tyr.problems import ProblemInstance
 
 
 def _timeout_handler(signum, frame):

@@ -1,12 +1,12 @@
 from unittest.mock import patch
 
-import tests.integration.problem as problem_module
-from tests.integration.problem.domains import FakeDomain
-from tyr.problem import get_all_domains
+import tests.integration.problems as problem_module
+from tests.integration.problems.domains import FakeDomain
+from tyr.problems import get_all_domains
 
 
 class TestUtils:
-    @patch("tyr.problem")
+    @patch("tyr.problems")
     def test_get_all_domains_mocked(self, mocked_module):
         mocked_module.__path__ = problem_module.__path__
         mocked_module.__name__ = problem_module.__name__

@@ -7,7 +7,7 @@ from unified_planning.engines.results import (
     PlanGenerationResultStatus,
 )
 
-from tyr.problem import ProblemInstance
+from tyr.problems import ProblemInstance
 
 if TYPE_CHECKING:
     from tyr.planners.model.planner import Planner

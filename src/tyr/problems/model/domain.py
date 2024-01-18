@@ -7,7 +7,7 @@ from unified_planning.plans import Plan
 from unified_planning.shortcuts import AbstractProblem
 
 from tyr.patterns import Abstract, AbstractSingletonMeta, Lazy, Singleton
-from tyr.problem.model.instance import ProblemInstance
+from tyr.problems.model.instance import ProblemInstance
 
 
 class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):

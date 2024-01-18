@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional
 from unified_planning.io import PDDLReader
 from unified_planning.shortcuts import AbstractProblem
 
-from tyr.problem.model import AbstractDomain, ProblemInstance
+from tyr.problems.model import AbstractDomain, ProblemInstance
 
 
 class DepotsTemporalNumericDomain(AbstractDomain):
