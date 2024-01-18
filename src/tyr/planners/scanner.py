@@ -3,7 +3,7 @@ from typing import List
 
 import yaml
 
-from tyr.planner.model.config import PlannerConfig
+from tyr.planners.model.config import PlannerConfig
 
 
 def get_all_planner_configs() -> List[PlannerConfig]:

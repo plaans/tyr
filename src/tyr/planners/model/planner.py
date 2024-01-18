@@ -8,8 +8,8 @@ import unified_planning.shortcuts as upf
 from unified_planning.shortcuts import AbstractProblem
 
 from tyr.core.constants import LOGS_DIR
-from tyr.planner.model.config import PlannerConfig, SolveConfig
-from tyr.planner.model.result import PlannerResult
+from tyr.planners.model.config import PlannerConfig, SolveConfig
+from tyr.planners.model.result import PlannerResult
 from tyr.problem import ProblemInstance
 
 
