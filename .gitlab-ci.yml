@@ -112,6 +112,7 @@ tests:
       - VERSION: ["3.8", "3.9", "3.10", "3.11", "3.12"]
   before_script:
     - just reset $PYTHON_REQUIREMENTS_TARGET $VERSION
+    - .venv/bin/python --version
   script:
     - just test-all tests --junitxml report.xml
   artifacts:
@@ -124,6 +125,7 @@ coverage:
   extends: .test-job
   before_script:
     - just reset $PYTHON_REQUIREMENTS_TARGET $DEFAULT_PYTHON_VERSION
+    - .venv/bin/python --version
   script:
     - just _cov-ci
   coverage: '/TOTAL.*\s+(\d+%)$/'
