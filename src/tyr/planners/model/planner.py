@@ -125,3 +125,11 @@ class Planner:
             # An error occured...
             computation_time = time.time() - start
             return PlannerResult.error(problem, self, computation_time)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Planner):
+            return False
+        return self.config == other.config
+
+    def __hash__(self) -> int:
+        return hash(self.config)

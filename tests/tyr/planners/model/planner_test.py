@@ -292,3 +292,33 @@ class TestPlanner(ModelTest):
         mock_resource.assert_called_once_with(
             resource.RLIMIT_AS, (memout, resource.RLIM_INFINITY)
         )
+
+    # ================================= Equality ================================= #
+
+    def test_eq(self):
+        config1 = PlannerConfig(name="planner1", problems={"domain1": "version1"})
+        config2 = PlannerConfig(name="planner1", problems={"domain1": "version1"})
+        planner1 = Planner(config1)
+        planner2 = Planner(config2)
+        assert planner1 == planner2
+
+    def test_neq(self):
+        config1 = PlannerConfig(name="planner1", problems={"domain1": "version1"})
+        config2 = PlannerConfig(name="planner2", problems={"domain2": "version2"})
+        planner1 = Planner(config1)
+        planner2 = Planner(config2)
+        assert planner1 != planner2
+
+    def test_eq_non_planner(self):
+        config1 = PlannerConfig(name="planner1", problems={"domain1": "version1"})
+        config2 = PlannerConfig(name="planner1", problems={"domain1": "version1"})
+        planner1 = Planner(config1)
+        planner2 = {"config": config2}
+        assert planner1 != planner2
+
+    def test_hash(self):
+        config = PlannerConfig(name="planner1", problems={"domain1": "version1"})
+        planner = Planner(config)
+        expected = hash(config)
+        result = hash(planner)
+        assert result == expected
