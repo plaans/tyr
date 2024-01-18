@@ -4,6 +4,7 @@ from typing import List
 import yaml
 
 from tyr.planners.model.config import PlannerConfig
+from tyr.planners.model.planner import Planner
 
 
 def get_all_planner_configs() -> List[PlannerConfig]:
@@ -20,3 +21,11 @@ def get_all_planner_configs() -> List[PlannerConfig]:
     if content is None:
         return []
     return [PlannerConfig(**p) for p in content]
+
+
+def get_all_planners() -> List[Planner]:
+    """
+    Returns:
+        List[Planner]: All planners defined in `tyr.configuration` module.
+    """
+    return [Planner(c) for c in get_all_planner_configs()]
