@@ -4,12 +4,10 @@ ENV DEBIAN_FRONTEND="noninteractive" TZ="Europe/Paris"
 # Install util packages
 RUN apt update && apt upgrade -y
 RUN apt install -y \
+    build-essential \
     curl \
     git \
     wget
-
-# Install Nodejs
-RUN apt install -y nodejs npm
 
 # Install Python from 3.8 to 3.12
 RUN apt install -y software-properties-common

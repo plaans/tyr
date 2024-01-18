@@ -142,6 +142,7 @@ coverage:
 
 semantic-release:
   stage: Release
+  image: node:latest
   before_script:
     - npm install --save-dev conventional-changelog-conventionalcommits semantic-release @semantic-release/changelog @semantic-release/exec @semantic-release/git @semantic-release/gitlab-config
   script:
