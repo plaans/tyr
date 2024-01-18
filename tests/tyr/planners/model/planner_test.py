@@ -214,6 +214,22 @@ class TestPlanner(ModelTest):
             result = planner.solve(problem, solve_config)
         assert result == expected
 
+    @patch("builtins.open")
+    @patch("unified_planning.shortcuts.OneshotPlanner", autospec=True)
+    def test_solve_error_write_in_logs(
+        self,
+        mocked_oneshot_planner: Mock,
+        mocked_open: Mock,
+        planner: Planner,
+        problem: ProblemInstance,
+        solve_config: SolveConfig,
+    ):
+        mocked_planner = mocked_oneshot_planner.return_value.__enter__.return_value
+        mocked_planner.solve.side_effect = RuntimeError
+        log_path = planner.get_log_file(problem, "error")
+        planner.solve(problem, solve_config)
+        mocked_open.assert_called_with(log_path, "w", encoding="utf-8")
+
     @pytest.mark.parametrize("computation_time", [1, 10, 15.7])
     @patch("unified_planning.shortcuts.OneshotPlanner", autospec=True)
     @patch("tyr.planners.model.planner.PlannerResult.from_upf", autospec=True)

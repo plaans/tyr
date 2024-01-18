@@ -2,6 +2,7 @@ import resource
 import signal
 import time
 from pathlib import Path
+import traceback
 from typing import Optional
 
 import unified_planning.shortcuts as upf
@@ -124,6 +125,9 @@ class Planner:
 
         except Exception:  # pylint: disable=broad-exception-caught
             # An error occured...
+            log_path = self.get_log_file(problem, "error")
+            with open(log_path, "w", encoding="utf-8") as log_file:
+                log_file.write(traceback.format_exc())
             computation_time = time.time() - start
             return PlannerResult.error(problem, self, computation_time)
 
