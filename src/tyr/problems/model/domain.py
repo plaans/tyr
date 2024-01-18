@@ -1,5 +1,6 @@
 import functools
 from pathlib import Path
+import re
 from typing import Dict, Optional
 
 from unified_planning.io import PDDLReader
@@ -22,7 +23,8 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
 
     def __init__(self) -> None:
         super().__init__()
-        self._name = self.__class__.__name__[:-6].lower()
+        base_name = self.__class__.__name__[:-6]
+        self._name = re.sub(r"([A-Z])", r"-\1", base_name).lower().lstrip("-")
         self._problems: Dict[str, ProblemInstance] = {}
 
     @property

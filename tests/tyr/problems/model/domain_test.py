@@ -10,7 +10,7 @@ from tests.utils import AbstractSingletonModelTest
 from tyr import AbstractDomain, Lazy, ProblemInstance
 
 
-class MockdomainDomain(AbstractDomain):
+class MockDomainDomain(AbstractDomain):
     def build_problem_base(self, problem: ProblemInstance):
         if int(problem.uid) > 0:
             return MagicMock()
@@ -33,7 +33,7 @@ class TestAbstractDomain(AbstractSingletonModelTest):
 
     def get_default_attributes(self) -> Dict[str, Any]:
         return {
-            "_name": "mockdomain",
+            "_name": "mock-domain",
             "_problems": dict(),
         }
 
@@ -41,7 +41,7 @@ class TestAbstractDomain(AbstractSingletonModelTest):
         return AbstractDomain()
 
     def get_instance(self) -> AbstractDomain:
-        return MockdomainDomain()
+        return MockDomainDomain()
 
     @pytest.fixture()
     def domain(self, request):
@@ -59,8 +59,8 @@ class TestAbstractDomain(AbstractSingletonModelTest):
 
     @pytest.fixture()
     def tracked_domain(self, request):
-        domain = Mock(MockdomainDomain)
-        domain.get_problem = lambda x: MockdomainDomain.get_problem(domain, x)
+        domain = Mock(MockDomainDomain)
+        domain.get_problem = lambda x: MockDomainDomain.get_problem(domain, x)
 
         def teardown():
             domain.problems.clear()
@@ -70,8 +70,8 @@ class TestAbstractDomain(AbstractSingletonModelTest):
 
     @pytest.fixture()
     def tracked_domain_version(self, request):
-        domain = Mock(MockdomainDomain)
-        domain.get_problem_version = lambda x, y: MockdomainDomain.get_problem_version(
+        domain = Mock(MockDomainDomain)
+        domain.get_problem_version = lambda x, y: MockDomainDomain.get_problem_version(
             domain, x, y
         )
 
@@ -204,7 +204,7 @@ class TestAbstractDomain(AbstractSingletonModelTest):
         problem: ProblemInstance,
     ):
         tracked_domain.load_problem_from_cache = (
-            lambda x: MockdomainDomain.load_problem_from_cache(tracked_domain, x)
+            lambda x: MockDomainDomain.load_problem_from_cache(tracked_domain, x)
         )
         tracked_domain.problems = {problem.uid: problem}
         result = tracked_domain.get_problem(problem.uid)
@@ -218,7 +218,7 @@ class TestAbstractDomain(AbstractSingletonModelTest):
         problem: ProblemInstance,
     ):
         tracked_domain.load_problem_from_cache = (
-            lambda x: MockdomainDomain.load_problem_from_cache(tracked_domain, x)
+            lambda x: MockDomainDomain.load_problem_from_cache(tracked_domain, x)
         )
         tracked_domain.problems = dict()
         result = tracked_domain.get_problem(problem.uid)
