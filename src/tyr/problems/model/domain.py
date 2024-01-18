@@ -1,6 +1,6 @@
 import functools
-from pathlib import Path
 import re
+from pathlib import Path
 from typing import Dict, Optional
 
 from unified_planning.io import PDDLReader

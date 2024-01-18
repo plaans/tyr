@@ -1,5 +1,7 @@
 from typing import Tuple
+
 import pytest
+
 from tyr import Planner, get_all_planners
 from tyr.problems.scanner import get_all_domains
 
@@ -10,7 +12,7 @@ class TestPlannerConfiguration:
         [(p, pb) for p in get_all_planners() for pb in p.config.problems.items()],
         ids=lambda x: x.name if isinstance(x, Planner) else x[0],
     )
-    def test_real_planner_configuration(
+    def test_real_planner_problems_configuration(
         self,
         planner: Planner,
         problem: Tuple[str, str],
