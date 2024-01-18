@@ -23,6 +23,12 @@ class TestScanner:
         result = get_all_planner_configs()
         assert result == expected
 
+    @patch("yaml.safe_load")
+    def test_get_all_planner_configs_empty_file(self, mocked_yaml):
+        mocked_yaml.return_value = None
+        result = get_all_planner_configs()
+        assert result == []
+
     def test_get_all_planner_configs_real(self):
         # Check no crash
         get_all_planner_configs()
