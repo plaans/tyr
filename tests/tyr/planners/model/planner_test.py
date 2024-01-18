@@ -16,7 +16,7 @@ from tyr import (
     SolveConfig,
 )
 from tyr.core.constants import LOGS_DIR
-from tyr.planner.model.result import PlannerResultStatus
+from tyr.planners.model.result import PlannerResultStatus
 
 
 class MockdomainDomain(AbstractDomain):
@@ -175,7 +175,7 @@ class TestPlanner(ModelTest):
         )
 
     @patch("unified_planning.shortcuts.OneshotPlanner", autospec=True)
-    @patch("tyr.planner.model.planner.PlannerResult.from_upf", autospec=True)
+    @patch("tyr.planners.model.planner.PlannerResult.from_upf", autospec=True)
     def test_solve_result_from_upf(
         self,
         mocked_result_from_upf: Mock,
@@ -212,7 +212,7 @@ class TestPlanner(ModelTest):
 
     @pytest.mark.parametrize("computation_time", [1, 10, 15.7])
     @patch("unified_planning.shortcuts.OneshotPlanner", autospec=True)
-    @patch("tyr.planner.model.planner.PlannerResult.from_upf", autospec=True)
+    @patch("tyr.planners.model.planner.PlannerResult.from_upf", autospec=True)
     def test_solve_computation_time(
         self,
         mocked_result_from_upf: Mock,
@@ -254,7 +254,7 @@ class TestPlanner(ModelTest):
 
     @pytest.mark.parametrize("timeout", [10, 200])
     @patch("unified_planning.shortcuts.OneshotPlanner", autospec=True)
-    @patch("tyr.planner.model.planner.PlannerResult.from_upf", autospec=True)
+    @patch("tyr.planners.model.planner.PlannerResult.from_upf", autospec=True)
     def test_solve_crop_to_timeout(
         self,
         mocked_result_from_upf: Mock,

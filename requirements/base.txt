@@ -1,8 +1,5 @@
 # Local code
 -e .
 
-# Aries
-libs/aries/planning/unified/plugin
-
 # Unified Planning
 git+https://github.com/aiplan4eu/unified-planning.git@master#egg=unified_planning

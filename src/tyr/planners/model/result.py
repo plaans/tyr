@@ -10,7 +10,7 @@ from unified_planning.engines.results import (
 from tyr.problem import ProblemInstance
 
 if TYPE_CHECKING:
-    from tyr.planner.model.planner import Planner
+    from tyr.planners.model.planner import Planner
 
 
 class PlannerResultStatus(Enum):

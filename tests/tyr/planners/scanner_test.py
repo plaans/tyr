@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-import tests.tyr.planner.fixtures.configuration as config_module
+import tests.tyr.planners.fixtures.configuration as config_module
 from tyr import PlannerConfig, get_all_planner_configs
 
 
