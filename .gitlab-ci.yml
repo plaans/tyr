@@ -1,42 +1,54 @@
 ---
 stages:
+  - Build
   - Static Analysis
   - Tests
   - Release
 
 variables:
+  DEFAULT_PYTHON_VERSION: "3.12"
   GIT_SUBMODULE_STRATEGY: recursive
-  PATH: "${PATH}:/root/.cargo/bin/"
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  PYTHON_REQUIREMENTS_TARGET: "ci"
 
 cache:
   paths:
     - .cache/pip
     - .venv
-    - libs/aries
 
 default:
   image: $CI_REGISTRY_IMAGE
   interruptible: true
 
-.python-job:
-  before_script:
-    - python3.12 --version ; python3.12 -m pip --version
-    - python3.12 -m pip install virtualenv
-    - python3.12 -m virtualenv .venv
-    - source .venv/bin/activate
-    - cargo build --release --bin up-server --manifest-path libs/aries/Cargo.toml
-    - cp libs/aries/target/release/up-server libs/aries/planning/unified/plugin/up_aries/bin/up-aries_linux_amd64
-    - pip install -r requirements/dev.txt
+# ============================================================================ #
+#                                     Build                                    #
+# ============================================================================ #
+
+docker:
+  stage: Build
+  image: gitlab/dind
+  services:
+    - docker:dind
+  rules:
+    - changes:
+        - Dockerfile
+        - Justfile
+        - .gitlab-ci.yml
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $CI_REGISTRY_IMAGE --no-cache .
+    - docker push $CI_REGISTRY_IMAGE
 
 # ============================================================================ #
 #                                Static Analysis                               #
 # ============================================================================ #
 
 .static-analysis-job:
-  extends: .python-job
   stage: Static Analysis
   allow_failure: true
+  before_script:
+    - just reset $PYTHON_REQUIREMENTS_TARGET $DEFAULT_PYTHON_VERSION
+    - .venv/bin/python --version
   parallel:
     matrix:
       - DIR: [src, tests]
@@ -47,32 +59,32 @@ default:
 bandit:
   extends: .static-analysis-job
   script:
-    - bandit -r -c pyproject.toml "$DIR"
+    - just _lint bandit "$DIR" -r -c pyproject.toml
 
 black:
   extends: .static-analysis-job
   script:
-    - black --check "$DIR"
+    - just _lint black "$DIR" --check
 
 flake8:
   extends: .static-analysis-job
   script:
-    - flake8 "$DIR"
+    - just _lint flake8 "$DIR"
 
 isort:
   extends: .static-analysis-job
   script:
-    - isort "$DIR" --check-only
+    - just _lint isort "$DIR" --check-only
 
 mypy:
   extends: .static-analysis-job
   script:
-    - mypy "$DIR"
+    - just _lint mypy "$DIR"
 
 pylint:
   extends: .static-analysis-job
   script:
-    - pylint "$DIR"
+    - just _lint pylint "$DIR"
 
 commitlint:
   stage: Static Analysis
@@ -86,31 +98,21 @@ commitlint:
 # ============================================================================ #
 
 .test-job:
-  extends: .python-job
   stage: Tests
-  needs: []
+  needs: ["docker"]
   rules:
     - exists:
         - tests/**/*.py
 
-# tests:
-#   extends: .test-job
-#   parallel:
-#     matrix:
-#       - VERSION: ["3.8", "3.9", "3.10", "3.11", "3.12"]
-#   image: python:$VERSION
-#   script:
-#     - pytest tests --junitxml report.xml
-#   artifacts:
-#     when: always
-#     expire_in: 1 month
-#     reports:
-#       junit: report.xml
-
 tests:
   extends: .test-job
+  parallel:
+    matrix:
+      - VERSION: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+  before_script:
+    - just reset $PYTHON_REQUIREMENTS_TARGET $VERSION
   script:
-    - pytest tests --junitxml report.xml
+    - just test-all tests --junitxml report.xml
   artifacts:
     when: always
     expire_in: 1 month
@@ -119,8 +121,10 @@ tests:
 
 coverage:
   extends: .test-job
+  before_script:
+    - just reset $PYTHON_REQUIREMENTS_TARGET $DEFAULT_PYTHON_VERSION
   script:
-    - pytest tests --cov src --cov-report term --cov-report xml --junitxml report.xml
+    - just _cov-ci
   coverage: '/TOTAL.*\s+(\d+%)$/'
   artifacts:
     when: always
