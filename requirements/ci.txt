@@ -1,3 +1,6 @@
 -r base.txt
 -r linters.txt
 -r tests.txt
+
+# The local installation with pip is disabled in CI (issues with git during version computation)
+up-aries

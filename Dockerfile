@@ -38,4 +38,7 @@ RUN rustup update
 # Install Just
 RUN cargo install just
 
+# Specify up-aries path because its installation with pip is disabled in CI (issues with git during version computation)
+ENV PYTHONPATH="/root/workspace/libs/aries/planning/unified/plugin"
+
 WORKDIR /root/workspace
