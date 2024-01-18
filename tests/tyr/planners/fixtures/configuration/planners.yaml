@@ -8,3 +8,6 @@
   problems:
     mockdomainter: base
     mockdomainquad: base_2
+  env:
+    MY_ENV_PARAM: bar
+    MY_BOOL_PARAM: True

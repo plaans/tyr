@@ -12,10 +12,12 @@ class TestScanner:
             PlannerConfig(
                 name="upf-mock",
                 problems={"mockdomain": "base", "mockdomainbis": "base_2"},
+                env={},
             ),
             PlannerConfig(
                 name="upf-mock-2",
                 problems={"mockdomainter": "base", "mockdomainquad": "base_2"},
+                env={"MY_ENV_PARAM": "bar", "MY_BOOL_PARAM": True},
             ),
         ]
         result = get_all_planner_configs()

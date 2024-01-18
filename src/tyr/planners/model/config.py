@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict
 
 
@@ -8,6 +8,7 @@ class PlannerConfig:
 
     name: str
     problems: Dict[str, str]
+    env: Dict[str, str] = field(default_factory=dict)
 
     def __hash__(self) -> int:
         return hash(self.name) + hash(str(self.problems))
