@@ -100,7 +100,9 @@ commitlint:
 
 .test-job:
   stage: Tests
-  needs: ["docker"]
+  needs:
+    - job: docker
+      optional: true
   rules:
     - exists:
         - tests/**/*.py
