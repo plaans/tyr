@@ -28,9 +28,4 @@ def get_all_planners() -> List[Planner]:
     Returns:
         List[Planner]: All planners defined in `tyr.configuration` module.
     """
-    # FIXME # pylint: disable=fixme
-    from .optic import OpticPlanner  # pylint: disable=import-outside-toplevel
-
-    OpticPlanner.register()
-
     return [Planner(c) for c in get_all_planner_configs()]

@@ -2,7 +2,7 @@ from typing import Any, List
 
 import pytest
 from unified_planning.engines.results import LogMessage, PlanGenerationResultStatus
-from unified_planning.shortcuts import OneshotPlanner, Problem
+from unified_planning.shortcuts import Problem
 
 from tyr import TyrPDDLPlanner
 
@@ -31,8 +31,3 @@ class TestTyrPDDLPlanner:
 
     def test_automatic_name(self, planner: TyrPDDLPlanner):
         assert planner.name == "mock-planner"
-
-    def test_registration(self, planner: TyrPDDLPlanner):
-        planner.register()
-        # No error should raise if the planner is registered.
-        OneshotPlanner(name=planner.name)

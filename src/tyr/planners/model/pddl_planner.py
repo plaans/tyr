@@ -13,7 +13,6 @@ from unified_planning.engines.results import (
     PlanGenerationResultStatus,
     correct_plan_generation_result,
 )
-from unified_planning.environment import get_environment
 from unified_planning.io import PDDLWriter
 from unified_planning.plans import TimeTriggeredPlan
 from unified_planning.shortcuts import AbstractProblem, ProblemKind, State
@@ -25,12 +24,6 @@ class TyrPDDLPlanner(PDDLPlanner):
     @classmethod
     def _get_name(cls) -> str:
         return re.sub(r"([A-Z])", r"-\1", cls.__name__[:-7]).lower().lstrip("-")
-
-    @classmethod
-    def register(cls):
-        """Registers the planner into unified planning."""
-        env = get_environment()
-        env.factory.add_engine(cls._get_name(), cls.__module__, cls.__name__)
 
     @property
     def name(self):
