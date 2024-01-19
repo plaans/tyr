@@ -1,10 +1,10 @@
 ---
-- name: upf-mock
+- name: fake-planner
   problems:
     mockdomain: base
     mockdomainbis: base_2
 
-- name: upf-mock-2
+- name: mock-planner
   problems:
     mockdomainter: base
     mockdomainquad: base_2

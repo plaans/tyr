@@ -10,12 +10,12 @@ class TestScanner:
         mocked_module.__path__ = config_module.__path__
         expected = [
             PlannerConfig(
-                name="upf-mock",
+                name="fake-planner",
                 problems={"mockdomain": "base", "mockdomainbis": "base_2"},
                 env={},
             ),
             PlannerConfig(
-                name="upf-mock-2",
+                name="mock-planner",
                 problems={"mockdomainter": "base", "mockdomainquad": "base_2"},
                 env={"MY_ENV_PARAM": "bar", "MY_BOOL_PARAM": True},
             ),

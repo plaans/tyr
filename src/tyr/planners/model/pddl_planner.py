@@ -21,13 +21,10 @@ from unified_planning.shortcuts import AbstractProblem, ProblemKind, State
 class TyrPDDLPlanner(PDDLPlanner):
     """A local wrapper from unified planning PDDL Planner."""
 
-    @classmethod
-    def _get_name(cls) -> str:
-        return re.sub(r"([A-Z])", r"-\1", cls.__name__[:-7]).lower().lstrip("-")
-
     @property
     def name(self):
-        return self._get_name()
+        base_name = self.__class__.__name__[:-7]
+        return re.sub(r"([A-Z])", r"-\1", base_name).lower().lstrip("-")
 
     @staticmethod
     def supported_kind() -> ProblemKind:
