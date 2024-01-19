@@ -48,7 +48,6 @@ just install
 To install dependencies without Justfile, use the following commands:
 
 ```bash
-pip install -e .
 pip install -r requirements/prod.txt
 ```
 

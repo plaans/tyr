@@ -1,2 +1,8 @@
+# Local code
+-e .
+
+# Aries requirements symbolic link
+-r aries.txt
+
 # Unified Planning
-git+https://github.com/aiplan4eu/unified-planning.git
+git+https://github.com/aiplan4eu/unified-planning.git@master#egg=unified_planning

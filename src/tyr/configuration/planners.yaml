@@ -1,0 +1,18 @@
+---
+- name: aries
+  problems:
+    depots-hierarchical: base
+    depots-hierarchical-numeric: base
+    depots-hierarchical-temporal-numeric: no_div
+    depots-numeric: base
+    depots-temporal-numeric: no_div
+    jobshop-scheduling: base
+    jobshop-temporal-numeric: base
+  env:
+    ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
+
+- name: optic
+  problems:
+    depots-numeric: base
+    depots-temporal-numeric: no_div
+    jobshop-temporal-numeric: no_neg_cond

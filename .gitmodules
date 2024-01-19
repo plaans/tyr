@@ -1,0 +1,3 @@
+[submodule "libs/aries"]
+	path = libs/aries
+	url = https://github.com/plaans/aries.git
