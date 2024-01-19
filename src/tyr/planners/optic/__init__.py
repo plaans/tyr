@@ -51,7 +51,6 @@ class OpticPlanner(TyrPDDLPlanner):
         retval: int,
         log_messages: Optional[List[LogMessage]] = None,
     ) -> PlanGenerationResultStatus:
-        print(log_messages)
         if plan is not None:
             return PlanGenerationResultStatus.SOLVED_SATISFICING
         if retval == 0:
