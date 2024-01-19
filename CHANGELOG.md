@@ -4,6 +4,53 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [1.5.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.4.1...v1.5.0) (2024-1-19)
+
+
+### Bug Fixes
+
+* **ci:** make docker needs optional ([4214f6f](https://gitlab.laas.fr/rgodet1/tyr/commit/4214f6fc78ef4e1cb4395e35b235499d42d91434))
+* **ci:** use node:latest for commitlint ([181ad4e](https://gitlab.laas.fr/rgodet1/tyr/commit/181ad4e8b737b16a0f41146d663c2e652e6de42d))
+* **ci:** use node:latest for release ([52a7a85](https://gitlab.laas.fr/rgodet1/tyr/commit/52a7a85746fd707ac760bd7c69661ee4972896f2))
+* **planner result:** convertion of upf plan into string ([335e4df](https://gitlab.laas.fr/rgodet1/tyr/commit/335e4dfd858810b8a524fac3ca03214e516de812))
+* **tests:** register planners before solving problems ([4c04e42](https://gitlab.laas.fr/rgodet1/tyr/commit/4c04e422aec44efeb36feabdb665ffc72c2a4746))
+* **typing:** list and optional for python3.8 ([c7c3f58](https://gitlab.laas.fr/rgodet1/tyr/commit/c7c3f58fb0c46299d37734a842f3f34c42ac7dbd))
+* **up:** register planners manually ([3383e9c](https://gitlab.laas.fr/rgodet1/tyr/commit/3383e9ca964f41707cc1acc37ae0010a68c63a9a))
+
+
+### Features
+
+* **core:** add log and root directories constants ([3c793cb](https://gitlab.laas.fr/rgodet1/tyr/commit/3c793cbf822bfbd7b470c2343a45f993872eb5d8))
+* **domain:** getter of number of instances ([cf947d8](https://gitlab.laas.fr/rgodet1/tyr/commit/cf947d85b5a8f164dec1c5b8334d38302fe91599))
+* **pddl planner:** override _solve to get plan from process output if needed ([ee4f5ca](https://gitlab.laas.fr/rgodet1/tyr/commit/ee4f5ca23eea417aabed55628a320a663bb92c82))
+* **planner config:** add config dataclass for resolution ([14d1035](https://gitlab.laas.fr/rgodet1/tyr/commit/14d1035ec326ed94e29614c6f157e12a5a226fc1))
+* **planner config:** add hash ([7d15edf](https://gitlab.laas.fr/rgodet1/tyr/commit/7d15edfa6a9d09fe6a2bb402a91aad06f5fc5ceb))
+* **planner config:** can specify env variables to set ([da4023c](https://gitlab.laas.fr/rgodet1/tyr/commit/da4023c2c34b6a6d7c6c0925a34b45f280852b7c))
+* **planner result:** factory for error ([3ab74c9](https://gitlab.laas.fr/rgodet1/tyr/commit/3ab74c9fac8661ee5e2f7c4efc3fd44be445ff03))
+* **planner result:** factory for timeout ([6b5bc44](https://gitlab.laas.fr/rgodet1/tyr/commit/6b5bc44c137b482c49270f622f61cdb2f4d41e42))
+* **planner result:** factory for unsupported ([906c1e3](https://gitlab.laas.fr/rgodet1/tyr/commit/906c1e39001f3f0d6ae20bf3987aa6081c4b64f8))
+* **planner scanner:** get all planners ([9ee6510](https://gitlab.laas.fr/rgodet1/tyr/commit/9ee6510af5f9a6ec1d907b4bb9a0b57b9aa4cfbc))
+* **planner:** abstract version for PDDL planners ([1600b82](https://gitlab.laas.fr/rgodet1/tyr/commit/1600b82444e0842eab6002d6516d83bb4023f888))
+* **planner:** add hash and eq ([9b4a37b](https://gitlab.laas.fr/rgodet1/tyr/commit/9b4a37b64f9f8955a4ecc8974b3533386994847c))
+* **planner:** add Planner ([03a6374](https://gitlab.laas.fr/rgodet1/tyr/commit/03a63745c646202892940dcf22eed99ff6f822bc))
+* **planner:** add planner config scanner ([afeae4e](https://gitlab.laas.fr/rgodet1/tyr/commit/afeae4e6e097b996ceb7c43e7584f57489a3b61c))
+* **planner:** add PlannerConfig ([58bebcb](https://gitlab.laas.fr/rgodet1/tyr/commit/58bebcb05e1c8307ad689fa62010ac24900e656a))
+* **planner:** add PlannerResult ([9859efb](https://gitlab.laas.fr/rgodet1/tyr/commit/9859efb2e42ed37951bc3e8897d3adf63015e7d9))
+* **planner:** can specify the name of the log file ([f65f256](https://gitlab.laas.fr/rgodet1/tyr/commit/f65f2565a5d4eb9aaf334dabc55fa89770940258))
+* **planner:** clear the logs before solving ([f28d3fd](https://gitlab.laas.fr/rgodet1/tyr/commit/f28d3fd1c15dc8fe53590f51537ee05bec404048))
+* **planners:** add Aries config ([39662b5](https://gitlab.laas.fr/rgodet1/tyr/commit/39662b5221dac16cf6b98fbb318990212e823bce))
+* **planners:** add Optic ([1e28108](https://gitlab.laas.fr/rgodet1/tyr/commit/1e281081cd42b715dcaf4dca4b51fbc6b0e7d296))
+* **planner:** save errors in logs ([34891e6](https://gitlab.laas.fr/rgodet1/tyr/commit/34891e64c7e27e2578567db87a162181e72c463c))
+* **planner:** set env variables before solving ([8f2e906](https://gitlab.laas.fr/rgodet1/tyr/commit/8f2e906a20fdbfcb0a1fd38c5eb6103c9e13a0c4))
+* **planner:** skip compatibility checks ([27a480d](https://gitlab.laas.fr/rgodet1/tyr/commit/27a480d4b29bd9d2b48169b4b47009032eb7b272))
+* **problems:** add jobshop scheduling and temporal numeric ([9a9dadb](https://gitlab.laas.fr/rgodet1/tyr/commit/9a9dadbde645cb0d8072c0256b545dc5252333cf))
+* **problems:** can extracte the quality of a plan ([754b1de](https://gitlab.laas.fr/rgodet1/tyr/commit/754b1de121049c567c61e02e86684cf8bf19fb3d))
+
+
+### Reverts
+
+* **docker:** remove PYTHONPATH ([f64bd1d](https://gitlab.laas.fr/rgodet1/tyr/commit/f64bd1dd552e51fde3a2e8ed37d4ba2518fd5125))
+
 ## [1.4.1](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.4.0...v1.4.1) (2024-1-15)
 
 # [1.4.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.3.0...v1.4.0) (2024-1-14)
