@@ -1,6 +1,8 @@
 # Local code
 -e .
 
+click
+
 # Aries requirements symbolic link
 -r aries.txt
 
