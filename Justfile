@@ -23,7 +23,7 @@ clear:
     rm -rf {{ logs_dir }}
     rm -rf **/*.egg-info
 
-# Install dependencies in a virtual environment. Target should be in [prod, dev, ci].
+# Install dependencies in a virtual environment. Target should be in [prod, dev].
 install target="prod" python_version="3.11": (_venv python_version) build_aries
     {{ python }} -m pip install -r requirements/{{ target }}.txt
 
@@ -76,15 +76,15 @@ cov: (test-all "tests --cov src --cov-report term:skip-covered --cov-report html
 _cov-ci: (test-all "tests --cov src --cov-report term --cov-report xml --junitxml report.xml")
 
 _ci-local:
-    just reset "ci" "3.12" 
+    just reset "dev" "3.12" 
     just lint
     just test
-    just reset "ci" "3.8"
+    just reset "dev" "3.8"
     just test
-    just reset "ci" "3.9"
+    just reset "dev" "3.9"
     just test
-    just reset "ci" "3.10"
+    just reset "dev" "3.10"
     just test
-    just reset "ci" "3.11"
+    just reset "dev" "3.11"
     just test
     just reset "dev"

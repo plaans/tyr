@@ -9,7 +9,7 @@ variables:
   DEFAULT_PYTHON_VERSION: "3.12"
   GIT_SUBMODULE_STRATEGY: recursive
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-  PYTHON_REQUIREMENTS_TARGET: "ci"
+  PYTHON_REQUIREMENTS_TARGET: "dev"
 
 cache:
   paths:

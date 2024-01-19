@@ -1,4 +1,22 @@
 -r base.txt
--r libs.txt
--r linters.txt
--r tests.txt
+
+# Mypy types
+types-PyYAML
+
+# Linters
+bandit
+black
+flake8
+flake8-pyproject
+isort
+mypy
+pylint
+
+# Pytest
+py # pytest-parallel's dependency
+pytest
+pytest-cov
+pytest-mock
+pytest-ordering
+pytest-parallel
+pytest-timeout
