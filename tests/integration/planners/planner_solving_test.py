@@ -1,9 +1,13 @@
 import pytest
 
-from tyr import Planner, get_all_planners
-from tyr.planners.model.config import SolveConfig
-from tyr.planners.model.result import PlannerResultStatus
-from tyr.problems.scanner import get_all_domains
+from tyr import (
+    Planner,
+    PlannerResultStatus,
+    SolveConfig,
+    get_all_domains,
+    get_all_planners,
+    register_all_planners,
+)
 
 SUCCESS_PLANNER = {p.name: False for p in get_all_planners()}
 
@@ -20,6 +24,7 @@ class TestPlannerSolving:
         planner: Planner,
         domain_name: str,
     ):
+        register_all_planners()
         # Check solving the first instance does not return an error.
         domain = {d.name: d for d in get_all_domains()}[domain_name]
         problem_instance = domain.get_problem("01")
