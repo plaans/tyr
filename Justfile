@@ -87,4 +87,3 @@ _ci-local:
     just test
     just reset "dev" "3.11"
     just test
-    just reset "dev"
