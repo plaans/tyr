@@ -1,7 +1,7 @@
 # pylint: disable = missing-class-docstring, missing-function-docstring
 
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 from unified_planning.model.metrics import MinimizeMakespan
 from unified_planning.model.scheduling.activity import Activity
@@ -11,7 +11,7 @@ from unified_planning.shortcuts import LE, AbstractProblem
 from tyr.problems.model import AbstractDomain, ProblemInstance
 
 
-def _ints(line: str) -> list[int]:
+def _ints(line: str) -> List[int]:
     """Returns the list of integers stored in the given line."""
     return list(map(int, line.rstrip().split()))
 

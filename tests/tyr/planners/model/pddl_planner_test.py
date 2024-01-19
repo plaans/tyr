@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, List, Optional
 
 import pytest
 from unified_planning.engines.results import LogMessage, PlanGenerationResultStatus
@@ -16,9 +16,9 @@ class MockPlannerPlanner(TyrPDDLPlanner):
     def _result_status(
         self,
         problem: Problem,
-        plan: Any | None,
+        plan: Optional[Any],
         retval: int,
-        log_messages: List[LogMessage] | None = None,
+        log_messages: Optional[List[LogMessage]] = None,
     ) -> PlanGenerationResultStatus:
         return super()._result_status(problem, plan, retval, log_messages)
 
