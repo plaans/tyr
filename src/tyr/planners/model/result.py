@@ -58,6 +58,7 @@ class PlannerResult:
     computation_time: Optional[float] = None
     plan: Optional[str] = None
     plan_quality: Optional[float] = None
+    error_message: str = ""
 
     @staticmethod
     def _convert_upf_plan(upf_plan: Plan) -> str:
@@ -113,7 +114,10 @@ class PlannerResult:
 
     @staticmethod
     def error(
-        problem: ProblemInstance, planner: "Planner", computation_time: float
+        problem: ProblemInstance,
+        planner: "Planner",
+        computation_time: float,
+        message: str,
     ) -> "PlannerResult":
         """Creates an error result.
 
@@ -132,6 +136,7 @@ class PlannerResult:
             computation_time,
             plan=None,
             plan_quality=None,
+            error_message=message,
         )
 
     @staticmethod

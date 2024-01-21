@@ -213,8 +213,8 @@ class TestPlanner(ModelTest):
         solve_config: SolveConfig,
     ):
         mocked_planner = mocked_oneshot_planner.return_value.__enter__.return_value
-        mocked_planner.solve.side_effect = RuntimeError
-        expected = PlannerResult.error(problem, planner, computation_time)
+        mocked_planner.solve.side_effect = RuntimeError("foo toto")
+        expected = PlannerResult.error(problem, planner, computation_time, "foo toto")
         with patch("time.time", side_effect=[0, 0, computation_time]):
             result = planner.solve(problem, solve_config)
         assert result == expected

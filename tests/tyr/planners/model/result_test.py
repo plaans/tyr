@@ -160,7 +160,14 @@ class TestPlannerResult:
     @pytest.mark.parametrize("name", ["mockplanner", "mockplannerbis"])
     @pytest.mark.parametrize("problem", [MagicMock(), MagicMock()])
     @pytest.mark.parametrize("computation_time", [1.5, 0, 16])
-    def test_error(self, name: str, problem: Mock, computation_time: float):
+    @pytest.mark.parametrize("message", ["foo", "bar"])
+    def test_error(
+        self,
+        name: str,
+        problem: Mock,
+        computation_time: float,
+        message: str,
+    ):
         planner = MagicMock()
         planner.name = name
         expected = PlannerResult(
@@ -170,8 +177,9 @@ class TestPlannerResult:
             computation_time,
             plan=None,
             plan_quality=None,
+            error_message=message,
         )
-        result = PlannerResult.error(problem, planner, computation_time)
+        result = PlannerResult.error(problem, planner, computation_time, message)
         assert result == expected
 
     # ================================== Timeout ================================= #

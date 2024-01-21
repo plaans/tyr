@@ -134,13 +134,13 @@ class Planner:
                 return PlannerResult.timeout(problem, self, config.timeout)
             return result
 
-        except Exception:  # pylint: disable=broad-exception-caught
+        except Exception as e:  # pylint: disable=broad-exception-caught
             # An error occured...
             log_path = self.get_log_file(problem, "error")
             with open(log_path, "w", encoding="utf-8") as log_file:
                 log_file.write(traceback.format_exc())
             computation_time = time.time() - start
-            return PlannerResult.error(problem, self, computation_time)
+            return PlannerResult.error(problem, self, computation_time, str(e))
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Planner):
