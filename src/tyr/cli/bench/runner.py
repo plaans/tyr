@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, TypeVar
 
 from tyr.cli.bench import collector
 from tyr.cli.bench.terminal_writter import BenchTerminalWritter
@@ -6,6 +6,17 @@ from tyr.cli.config import CliContext
 from tyr.planners.model.config import SolveConfig
 from tyr.problems.model.domain import AbstractDomain
 from tyr.problems.model.instance import ProblemInstance
+
+T = TypeVar("T")
+
+
+def sort_items(items: List[T]) -> List[T]:
+    return sorted(
+        items,
+        key=lambda x: (x.name.split(":")[0], int(x.name.split(":")[1]))  # type: ignore
+        if ":" in x.name  # type: ignore
+        else x.name,  # type: ignore
+    )
 
 
 def run_bench(
@@ -37,14 +48,17 @@ def run_bench(
     for problem in problems.selected:
         pb_by_dom.setdefault(problem.domain, []).append(problem)
 
-    # Get domain names in alphabetical order.
-    domains = sorted(pb_by_dom.keys(), key=lambda d: d.name)
+    # Sort all loop lists on alphabetical order.
+    srtd_domains = sort_items(list(pb_by_dom.keys()))
+    srtd_planners = sort_items(planners.selected)
+    for domain in pb_by_dom:
+        pb_by_dom[domain] = sort_items(pb_by_dom[domain])
 
     # Perform resolution.
-    for domain in domains:
+    for domain in srtd_domains:
         tw.report_domain(domain)
 
-        for planner in planners.selected:
+        for planner in srtd_planners:
             tw.report_planner(planner)
 
             for problem in pb_by_dom[domain]:

@@ -98,7 +98,7 @@ class TestBench:
         problems = [MagicMock(ProblemInstance) for _ in range(sum(num_problems))]
         for i, problem in enumerate(problems):
             problem.domain = domains[i % num_domains]
-            problem.name = f"{problem.domain.name}:problem-{i}"
+            problem.name = f"{problem.domain.name}:{i}"
             problem.uid = str(i)
         collected_problems = CollectionResult(
             selected=problems[: num_problems[0]],
@@ -129,7 +129,7 @@ class TestBench:
         with open(expected_result_path, "r") as expected_result_file:
             expected_result = expected_result_file.read()
 
-        run_bench(ctx, solve_config)
+        run_bench(ctx, solve_config, [], [])
         result = out.getvalue().replace("\r", "\n")
         assert result == expected_result
 
