@@ -6,16 +6,16 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 
 from tyr import (
+    AbstractDomain,
     CliContext,
-    SolveConfig,
-    run_bench,
     CollectionResult,
-    PlannerConfig,
     Planner,
+    PlannerConfig,
     PlannerResult,
     PlannerResultStatus,
-    AbstractDomain,
     ProblemInstance,
+    SolveConfig,
+    run_bench,
 )
 
 

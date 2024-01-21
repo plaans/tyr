@@ -11,8 +11,7 @@ pass_context = click.make_pass_decorator(CliContext, ensure=True)
 @click.option(
     "-v",
     "--verbose",
-    default=False,
-    is_flag=True,
+    count=True,
     help="Increase verbosity.",
 )
 @click.option(
@@ -25,7 +24,7 @@ pass_context = click.make_pass_decorator(CliContext, ensure=True)
 @pass_context
 def cli(ctx: CliContext, verbose, out):
     ctx.out = out
-    ctx.verbosity += 1 if verbose else 0
+    ctx.verbosity = verbose
 
 
 @cli.command("bench")
@@ -41,10 +40,24 @@ def cli(ctx: CliContext, verbose, out):
     default=4 * 1024**3,
     help="Memout for planners in bytes. Default to 4GB.",
 )
+@click.option(
+    "-p",
+    "--planners",
+    type=str,
+    multiple=True,
+    help="A list of regex filters on planner names.",
+)
+@click.option(
+    "-d",
+    "--domains",
+    type=str,
+    multiple=True,
+    help="A list of regex filters on problem names. A problem name is of the form DOMAIN:UID.",
+)
 @pass_context
-def cli_bench(ctx: CliContext, timeout, memout):
+def cli_bench(ctx: CliContext, timeout, memout, planners, domains):
     solve_config = SolveConfig(memout, timeout)
-    run_bench(ctx, solve_config)
+    run_bench(ctx, solve_config, planners, domains)
 
 
 if __name__ == "__main__":

@@ -1,11 +1,12 @@
+import re
 from dataclasses import dataclass, field
 from typing import Generic, List, TypeVar
 
+from tyr.planners import scanner as planner_scanner
 from tyr.planners.loader import register_all_planners
 from tyr.planners.model.planner import Planner
-from tyr.planners.scanner import get_all_planners
+from tyr.problems import scanner as domain_scanner
 from tyr.problems.model.instance import ProblemInstance
-from tyr.problems.scanner import get_all_domains
 
 T = TypeVar("T")
 
@@ -27,28 +28,62 @@ class CollectionResult(Generic[T]):
         return len(self.selected) + len(self.deselected) + len(self.skipped)
 
 
-def collect_planners() -> CollectionResult[Planner]:
+def collect_planners(*filters: str) -> CollectionResult[Planner]:
     """
+    Args:
+        filters (List[str]): A list of regex filters on planner names.
+
     Returns:
         CollectionResult[Planner]: The collected planners for the benchmark.
     """
-    # TODO - Filter planners
     register_all_planners()
-    return CollectionResult(selected=get_all_planners())
+    all_planners = planner_scanner.get_all_planners()
+    selected: List[Planner] = []
+
+    if len(filters) == 0:
+        return CollectionResult(all_planners)
+
+    for flt in filters:
+        re_filter = re.compile(flt)
+
+        for planner in all_planners:
+            if re_filter.match(planner.name) is not None:
+                selected.append(planner)
+
+    selected = list(set(selected))  # Remove duplicates
+    deselected = [p for p in all_planners if p not in selected]
+
+    return CollectionResult(selected, deselected)
 
 
-def collect_problems() -> CollectionResult[ProblemInstance]:
+def collect_problems(*filters: str) -> CollectionResult[ProblemInstance]:
     """
+
+    Args:
+        filters (List[str]): A list of regex filters on problem names.
+
     Returns:
         CollectionResult[Planner]: The collected problems for the benchmark.
     """
-    # TODO - Filter problems
-    problems = [
+    all_problems = [
         d.get_problem(f"{p+1:0>2}")
-        for d in get_all_domains()
+        for d in domain_scanner.get_all_domains()
         for p in range(d.get_num_problems())
     ]
-    return CollectionResult(
-        selected=[p for p in problems if p is not None],
-        skipped=[p for p in problems if p is None],
-    )
+    skipped = [p for p in all_problems if p is None]
+    available = [p for p in all_problems if p is not None]
+    selected: List[ProblemInstance] = []
+
+    if len(filters) == 0:
+        return CollectionResult(available, [], skipped)
+
+    for flt in filters:
+        re_filter = re.compile(flt)
+
+        for problem in available:
+            if re_filter.match(problem.name) is not None:
+                selected.append(problem)
+
+    selected = list(set(selected))  # Remove duplicates
+    desectected = [p for p in available if p not in selected]
+    return CollectionResult(selected, desectected, skipped)

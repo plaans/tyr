@@ -8,12 +8,19 @@ from tyr.problems.model.domain import AbstractDomain
 from tyr.problems.model.instance import ProblemInstance
 
 
-def run_bench(ctx: CliContext, solve_config: SolveConfig):
+def run_bench(
+    ctx: CliContext,
+    solve_config: SolveConfig,
+    planner_filters: List[str],
+    domain_filters: List[str],
+):
     """Compares a set of planners over a bench of problems.
 
     Args:
         ctx (CliContext): The CLI execution context.
         solve_config (SolveConfig): The configuration to use for the resolutions.
+        planner_filters (List[str]): A list of regex filters on planner names.
+        domains_filters (List[str]): A list of regex filters on problems names.
     """
 
     # Create the writter and start the session.
@@ -21,7 +28,8 @@ def run_bench(ctx: CliContext, solve_config: SolveConfig):
     tw.session_starts()
 
     # Collect the planners and the problems to use for the benchmark.
-    planners, problems = collector.collect_planners(), collector.collect_problems()
+    planners = collector.collect_planners(*planner_filters)
+    problems = collector.collect_problems(*domain_filters)
     tw.report_collect(planners, problems)
 
     # Group problems by domains.
