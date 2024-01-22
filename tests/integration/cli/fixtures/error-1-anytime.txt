@@ -3,9 +3,10 @@ platform linux -- Python 3.11.4 -- /home/roland/thesis/projects/tyr/.venv/bin/py
 rootdir: /home/roland/thesis/projects/tyr
 timeout: 315s (05:15) -- memout: 4831838208 Bytes (4.50 GB)
 parallel: 1 job
-collecting...
-collected 3 planners / 1 deselected / 2 selected
+collecting...collected 3 planners / 1 deselected / 2 selected
 collected 250 problems / 180 deselected / 20 skipped / 50 selected
+
+******************************************************* Anytime ********************************************************
 
 planner-0 - domain-0:0:version-0 ERROR 15s                                                                          [1%]
 planner-0 - domain-0:0:version-0 ERROR 15s                                                                          [2%]
@@ -113,103 +114,105 @@ planner-1 - domain-4:44:none UNSUPPORTED                                        
 planner-1 - domain-4:49:none UNSUPPORTED                                                                          [100%]
 
 ======================================================== ERRORS ========================================================
-_________________________________________________ planner - domain-0:0 _________________________________________________
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
 
 My error message
-_________________________________________________ planner - domain-0:0 _________________________________________________
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
 
 My error message
-_________________________________________________ planner - domain-0:0 _________________________________________________
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
 
 My error message
-_________________________________________________ planner - domain-0:0 _________________________________________________
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
 
 My error message
-_________________________________________________ planner - domain-0:0 _________________________________________________
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
 
 My error message
-_________________________________________________ planner - domain-0:0 _________________________________________________
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
 
 My error message
-_________________________________________________ planner - domain-0:0 _________________________________________________
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
 
 My error message
-_________________________________________________ planner - domain-0:0 _________________________________________________
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
 
 My error message
-_________________________________________________ planner - domain-0:0 _________________________________________________
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
 
 My error message
-_________________________________________________ planner - domain-0:0 _________________________________________________
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
 
 My error message
-_________________________________________________ planner - domain-0:0 _________________________________________________
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
 
 My error message
-_________________________________________________ planner - domain-0:0 _________________________________________________
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
 
 My error message
-_________________________________________________ planner - domain-0:0 _________________________________________________
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
 
 My error message
-_________________________________________________ planner - domain-0:0 _________________________________________________
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
 
 My error message
-_________________________________________________ planner - domain-0:0 _________________________________________________
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
 
 My error message
-_________________________________________________ planner - domain-0:0 _________________________________________________
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
 
 My error message
-_________________________________________________ planner - domain-0:0 _________________________________________________
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
 
 My error message
-_________________________________________________ planner - domain-0:0 _________________________________________________
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
 
 My error message
-_________________________________________________ planner - domain-0:0 _________________________________________________
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
 
 My error message
-_________________________________________________ planner - domain-0:0 _________________________________________________
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
 
 My error message
-_________________________________________________ planner - domain-0:0 _________________________________________________
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
 
 My error message
-_________________________________________________ planner - domain-0:0 _________________________________________________
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
 
 My error message
-_________________________________________________ planner - domain-0:0 _________________________________________________
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
 
 My error message
-_________________________________________________ planner - domain-0:0 _________________________________________________
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
 
 My error message
-_________________________________________________ planner - domain-0:0 _________________________________________________
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
 
 My error message
-_________________________________________________ planner - domain-0:0 _________________________________________________
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
 
 My error message
-_________________________________________________ planner - domain-0:0 _________________________________________________
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
 
 My error message
-_________________________________________________ planner - domain-0:0 _________________________________________________
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
 
 My error message
-_________________________________________________ planner - domain-0:0 _________________________________________________
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
 
 My error message
-_________________________________________________ planner - domain-0:0 _________________________________________________
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
 
 My error message
 ==================================================== short summary =====================================================
-ERROR planner - domain-0:0    ERROR planner - domain-0:0    ERROR planner - domain-0:0    ERROR planner - domain-0:0  
-ERROR planner - domain-0:0    ERROR planner - domain-0:0    ERROR planner - domain-0:0    ERROR planner - domain-0:0  
-ERROR planner - domain-0:0    ERROR planner - domain-0:0    ERROR planner - domain-0:0    ERROR planner - domain-0:0  
-ERROR planner - domain-0:0    ERROR planner - domain-0:0    ERROR planner - domain-0:0    ERROR planner - domain-0:0  
-ERROR planner - domain-0:0    ERROR planner - domain-0:0    ERROR planner - domain-0:0    ERROR planner - domain-0:0  
-ERROR planner - domain-0:0    ERROR planner - domain-0:0    ERROR planner - domain-0:0    ERROR planner - domain-0:0  
-ERROR planner - domain-0:0    ERROR planner - domain-0:0    ERROR planner - domain-0:0    ERROR planner - domain-0:0  
-ERROR planner - domain-0:0    ERROR planner - domain-0:0  
+ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0  
+ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0  
+ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0  
+ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0  
+ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0  
+ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0  
+ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0  
+ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0  
+ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0  
+ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0  
 ============================================ 30 error, 70 unsupported in 0s ============================================

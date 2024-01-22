@@ -6,12 +6,12 @@ from tyr.cli.bench import collector
 from tyr.cli.bench.terminal_writter import BenchTerminalWritter
 from tyr.cli.config import CliContext
 from tyr.planners.loader import register_all_planners
-from tyr.planners.model.config import SolveConfig
+from tyr.planners.model.config import RunningMode, SolveConfig
 from tyr.planners.model.planner import Planner
 from tyr.problems.model.domain import AbstractDomain
 from tyr.problems.model.instance import ProblemInstance
 
-T = TypeVar("T")
+I = TypeVar("I")  # noqa: E741
 
 # Forced to be global for parallelization.
 tw: Optional[BenchTerminalWritter] = None
@@ -21,14 +21,15 @@ def _solve(
     planner: Planner,
     problem: ProblemInstance,
     solve_config: SolveConfig,
+    running_mode: RunningMode,
 ):
     register_all_planners()
-    result = planner.solve(problem, solve_config)
+    result = planner.solve(problem, solve_config, running_mode)
     if tw is not None:
         tw.report_planner_result(problem.domain, planner, result)
 
 
-def _sort_items(items: List[T]) -> List[T]:
+def _sort_items(items: List[I]) -> List[I]:
     return sorted(
         items,
         key=lambda x: (x.name.split(":")[0], int(x.name.split(":")[1]))  # type: ignore
@@ -42,6 +43,7 @@ def run_bench(
     solve_config: SolveConfig,
     planner_filters: List[str],
     domain_filters: List[str],
+    running_modes: List[RunningMode],
 ):
     """Compares a set of planners over a bench of problems.
 
@@ -51,6 +53,7 @@ def run_bench(
         jobs (int): Number of CPUs to use for parallel computation.
         planner_filters (List[str]): A list of regex filters on planner names.
         domains_filters (List[str]): A list of regex filters on problems names.
+        running_modes (List[RunningMode]): A list of mode to run planner resolutions.
     """
     global tw  # pylint: disable = global-statement
 
@@ -61,7 +64,7 @@ def run_bench(
     # Collect the planners and the problems to use for the benchmark.
     planners = collector.collect_planners(*planner_filters)
     problems = collector.collect_problems(*domain_filters)
-    tw.report_collect(planners, problems)
+    tw.report_collect(planners, problems, running_modes)
 
     # Group problems by domains.
     pb_by_dom: Dict[AbstractDomain, List[ProblemInstance]] = {}
@@ -76,23 +79,28 @@ def run_bench(
 
     # Perform resolution.
     if solve_config.jobs == 1:
-        for domain in srtd_domains:
-            tw.report_domain(domain)
+        for running_mode in running_modes:
+            tw.report_running_mode(running_mode)
 
-            for planner in srtd_planners:
-                tw.report_planner(domain, planner)
+            for domain in srtd_domains:
+                tw.report_domain(domain)
 
-                for problem in pb_by_dom[domain]:
-                    _solve(planner, problem, solve_config)
-                tw.report_planner_finished()
+                for planner in srtd_planners:
+                    tw.report_planner(domain, planner)
+
+                    for problem in pb_by_dom[domain]:
+                        _solve(planner, problem, solve_config, running_mode)
+                    tw.report_planner_finished()
 
     else:
         tw.line()
         Parallel(n_jobs=solve_config.jobs, require="sharedmem")(
-            delayed(_solve)(planner, problem, solve_config)
+            delayed(_solve)(planner, problem, solve_config, running_mode)
+            for running_mode in running_modes
             for domain in srtd_domains
             for planner in srtd_planners
             for problem in pb_by_dom[domain]
         )
 
+    # End the session.
     tw.session_finished()

@@ -1,0 +1,133 @@
+=============================================== Tyr bench session starts ===============================================
+platform linux -- Python 3.11.4 -- /home/roland/thesis/projects/tyr/.venv/bin/python
+rootdir: /home/roland/thesis/projects/tyr
+timeout: 315s (05:15) -- memout: 4831838208 Bytes (4.50 GB)
+parallel: 1 job
+collecting...collected 3 planners / 1 deselected / 2 selected
+collected 250 problems / 180 deselected / 20 skipped / 50 selected
+
+******************************************************* Anytime ********************************************************
+
+domain-0
+    planner-0:version-0 EEEEEEEEEE                                                                                 [10%]
+    planner-1:version-1 EEEEEEEEEE                                                                                 [20%]
+
+domain-1
+    planner-0:none ..........                                                                                      [30%]
+    planner-1:version-2 EEEEEEEEEE                                                                                 [40%]
+
+domain-2
+    planner-0:none ..........                                                                                      [50%]
+    planner-1:none ..........                                                                                      [60%]
+
+domain-3
+    planner-0:none ..........                                                                                      [70%]
+    planner-1:none ..........                                                                                      [80%]
+
+domain-4
+    planner-0:none ..........                                                                                      [90%]
+    planner-1:none ..........                                                                                     [100%]
+
+======================================================== ERRORS ========================================================
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
+
+My error message
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
+
+My error message
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
+
+My error message
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
+
+My error message
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
+
+My error message
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
+
+My error message
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
+
+My error message
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
+
+My error message
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
+
+My error message
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
+
+My error message
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
+
+My error message
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
+
+My error message
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
+
+My error message
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
+
+My error message
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
+
+My error message
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
+
+My error message
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
+
+My error message
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
+
+My error message
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
+
+My error message
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
+
+My error message
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
+
+My error message
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
+
+My error message
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
+
+My error message
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
+
+My error message
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
+
+My error message
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
+
+My error message
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
+
+My error message
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
+
+My error message
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
+
+My error message
+____________________________________________ planner - anytime - domain-0:0 ____________________________________________
+
+My error message
+==================================================== short summary =====================================================
+ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0  
+ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0  
+ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0  
+ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0  
+ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0  
+ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0  
+ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0  
+ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0  
+ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0  
+ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0    ERROR planner - anytime - domain-0:0  
+============================================ 30 error, 70 unsupported in 0s ============================================

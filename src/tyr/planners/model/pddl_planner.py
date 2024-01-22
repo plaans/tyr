@@ -5,7 +5,8 @@ import tempfile
 import time
 from typing import IO, Callable, List, Optional, Tuple, Union
 
-from unified_planning.engines.pddl_planner import PDDLPlanner, run_command_posix_select
+from unified_planning.engines.pddl_anytime_planner import PDDLAnytimePlanner
+from unified_planning.engines.pddl_planner import run_command_posix_select
 from unified_planning.engines.results import (
     LogLevel,
     LogMessage,
@@ -18,7 +19,7 @@ from unified_planning.plans import TimeTriggeredPlan
 from unified_planning.shortcuts import AbstractProblem, ProblemKind, State
 
 
-class TyrPDDLPlanner(PDDLPlanner):
+class TyrPDDLPlanner(PDDLAnytimePlanner):
     """A local wrapper from unified planning PDDL Planner."""
 
     @property
@@ -37,13 +38,14 @@ class TyrPDDLPlanner(PDDLPlanner):
     def _get_plan(self, proc_out: List[str]) -> str:
         raise NotImplementedError()
 
-    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-arguments, too-many-locals
     def _solve(
         self,
         problem: AbstractProblem,
         heuristic: Optional[Callable[[State], Optional[float]]] = None,
         timeout: Optional[float] = None,
         output_stream: Optional[Union[Tuple[IO[str], IO[str]], IO[str]]] = None,
+        anytime: bool = False,
     ) -> PlanGenerationResult:
         self._writer = PDDLWriter(
             problem,
@@ -59,7 +61,18 @@ class TyrPDDLPlanner(PDDLPlanner):
             plan_filename = os.path.join(tempdir, "plan.txt")
             self._writer.write_domain(domain_filename)
             self._writer.write_problem(problem_filename)
-            cmd = self._get_cmd(domain_filename, problem_filename, plan_filename)
+            if anytime:
+                cmd = self._get_anytime_cmd(
+                    domain_filename,
+                    problem_filename,
+                    plan_filename,
+                )
+            else:
+                cmd = self._get_cmd(
+                    domain_filename,
+                    problem_filename,
+                    plan_filename,
+                )
             process_start = time.time()
 
             if output_stream is None:

@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from enum import Enum, auto
 from typing import Dict
 
 
@@ -21,3 +22,10 @@ class SolveConfig:
     jobs: int
     memout: int
     timeout: int
+
+
+class RunningMode(Enum):
+    """Different mode to run planner resolutions."""
+
+    ANYTIME = auto()
+    ONESHOT = auto()

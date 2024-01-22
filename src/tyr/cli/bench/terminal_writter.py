@@ -6,7 +6,7 @@ from typing import List, Optional, TextIO
 
 from tyr.cli.bench.collector import CollectionResult
 from tyr.cli.writter import Writter
-from tyr.planners.model.config import SolveConfig
+from tyr.planners.model.config import RunningMode, SolveConfig
 from tyr.planners.model.planner import Planner
 from tyr.planners.model.result import PlannerResult, PlannerResultStatus
 from tyr.problems.model.domain import AbstractDomain
@@ -73,7 +73,13 @@ class BenchTerminalWritter(Writter):
         Returns:
             str: The formatted header.
         """
-        return result.planner_name + " - " + result.problem.name
+        return (
+            result.planner_name
+            + " - "
+            + result.running_mode.name.lower()
+            + " - "
+            + result.problem.name
+        )
 
     def summary_errors(self):
         """Prints a summary about the errors that occurred."""
@@ -177,14 +183,18 @@ class BenchTerminalWritter(Writter):
         self,
         planners: CollectionResult[Planner],
         problems: CollectionResult[ProblemInstance],
+        running_modes: List[RunningMode],
     ):
         """Prints a report about the collection of planners and problems.
 
         Args:
             planners (CollectionResult[Planner]): The collection result on planners.
             problems (CollectionResult[ProblemInstance]): The collection result on problems.
+            running_modes (List[RunningMode]): The mode used to run planners resolutions.
         """
-        self._num_to_run = len(planners.selected) * len(problems.selected)
+        self._num_to_run = (
+            len(planners.selected) * len(problems.selected) * len(running_modes)
+        )
 
         def report(result: CollectionResult, name: str):
             total = result.total
@@ -205,6 +215,15 @@ class BenchTerminalWritter(Writter):
         self.rewrite("")
         report(planners, "planner")
         report(problems, "problem")
+
+    def report_running_mode(self, running_mode: RunningMode):
+        """Prints a report about a new running mode.
+
+        Args:
+            running_mode (RunningMode): The new running mode.
+        """
+        self.line()
+        self.separator("*", running_mode.name.title())
 
     def report_domain(self, domain: AbstractDomain):
         """Prints a report about a new running domain.
@@ -261,7 +280,13 @@ class BenchTerminalWritter(Writter):
                 self.report_progress()
         else:
             current_version = planner.config.problems.get(domain.name, "none")
-            self.write(f"{planner.name} - {result.problem.name}:{current_version}")
+            if self._solve_config.jobs == 1:
+                self.write(f"{planner.name} - {result.problem.name}:{current_version}")
+            else:
+                self.write(
+                    f"{planner.name} - {result.running_mode.name.lower()} - \
+{result.problem.name}:{current_version}"
+                )
             self.write(" " + result.status.name, **{markup_key: True})
 
             if (comp_time := result.computation_time) is not None and (

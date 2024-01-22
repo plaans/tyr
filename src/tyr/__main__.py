@@ -1,8 +1,10 @@
 # pylint: disable = missing-function-docstring, too-many-arguments
 
+from typing import List
+
 import click
 
-from tyr import CliContext, SolveConfig, run_bench
+from tyr import CliContext, RunningMode, SolveConfig, run_bench
 
 pass_context = click.make_pass_decorator(CliContext, ensure=True)
 
@@ -61,10 +63,30 @@ if negative (n_cpus + 1 + jobs) are used. Default to 1.",
     multiple=True,
     help="A list of regex filters on problem names. A problem name is of the form DOMAIN:UID.",
 )
+@click.option("--anytime", is_flag=True, help="Perform anytime solving method only.")
+@click.option("--oneshot", is_flag=True, help="Perform oneshot solving method only.")
 @pass_context
-def cli_bench(ctx: CliContext, timeout, memout, jobs, planners, domains):
+def cli_bench(
+    ctx: CliContext,
+    timeout: int,
+    memout: int,
+    jobs: int,
+    planners: List[str],
+    domains: List[str],
+    anytime: bool,
+    oneshot: bool,
+):
+    if anytime and oneshot:
+        running_modes = [RunningMode.ANYTIME, RunningMode.ONESHOT]
+    elif anytime:
+        running_modes = [RunningMode.ANYTIME]
+    elif oneshot:
+        running_modes = [RunningMode.ONESHOT]
+    else:
+        running_modes = [RunningMode.ANYTIME, RunningMode.ONESHOT]
+
     solve_config = SolveConfig(jobs, memout, timeout)
-    run_bench(ctx, solve_config, planners, domains)
+    run_bench(ctx, solve_config, planners, domains, running_modes)
 
 
 if __name__ == "__main__":

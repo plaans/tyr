@@ -7,7 +7,7 @@ from unified_planning.engines.results import (
     PlanGenerationResultStatus,
 )
 
-from tyr import PlannerResult, PlannerResultStatus
+from tyr import PlannerResult, PlannerResultStatus, RunningMode
 
 
 class TestPlannerResult:
@@ -37,7 +37,7 @@ class TestPlannerResult:
 
     @pytest.mark.parametrize("problem", [MagicMock(), MagicMock()])
     def test_from_upf_problem(self, problem: Mock, upf_result: PlanGenerationResult):
-        result = PlannerResult.from_upf(problem, upf_result)
+        result = PlannerResult.from_upf(problem, upf_result, RunningMode.ONESHOT)
         assert result.problem == problem
 
     @pytest.mark.parametrize("status", PlanGenerationResultStatus)
@@ -59,7 +59,7 @@ class TestPlannerResult:
             PlanGenerationResultStatus.INTERMEDIATE: PlannerResultStatus.SOLVED,
         }
         upf_result.status = status
-        result = PlannerResult.from_upf(problem, upf_result)
+        result = PlannerResult.from_upf(problem, upf_result, RunningMode.ONESHOT)
         assert result.status == status_map[status]
 
     @pytest.mark.parametrize("name", ["mockplanner", "mockplannerbis"])
@@ -67,7 +67,7 @@ class TestPlannerResult:
         self, name: str, problem: Mock, upf_result: PlanGenerationResult
     ):
         upf_result.engine_name = name
-        result = PlannerResult.from_upf(problem, upf_result)
+        result = PlannerResult.from_upf(problem, upf_result, RunningMode.ONESHOT)
         assert result.planner_name == name
 
     @pytest.mark.parametrize("computation_time", [None, "1.5", "0.0", "15"])
@@ -83,7 +83,7 @@ class TestPlannerResult:
         else:
             upf_result.metrics = {"engine_internal_time": computation_time}
             expected = float(computation_time)
-        result = PlannerResult.from_upf(problem, upf_result)
+        result = PlannerResult.from_upf(problem, upf_result, RunningMode.ONESHOT)
         assert result.computation_time == expected
 
     mock_plan = """Hierarchical SequentialPlan:
@@ -131,7 +131,7 @@ class TestPlannerResult:
         upf_result: PlanGenerationResult,
     ):
         upf_result.plan = plan
-        result = PlannerResult.from_upf(problem, upf_result)
+        result = PlannerResult.from_upf(problem, upf_result, RunningMode.ONESHOT)
         assert result.plan == expected
 
     @pytest.mark.parametrize(
@@ -146,7 +146,7 @@ class TestPlannerResult:
     ):
         upf_result.plan = plan
         problem.get_quality_of_plan.return_value = quality
-        result = PlannerResult.from_upf(problem, upf_result)
+        result = PlannerResult.from_upf(problem, upf_result, RunningMode.ONESHOT)
 
         assert result.plan_quality == quality
         if plan is None:
@@ -173,13 +173,16 @@ class TestPlannerResult:
         expected = PlannerResult(
             name,
             problem,
+            RunningMode.ONESHOT,
             PlannerResultStatus.ERROR,
             computation_time,
             plan=None,
             plan_quality=None,
             error_message=message,
         )
-        result = PlannerResult.error(problem, planner, computation_time, message)
+        result = PlannerResult.error(
+            problem, planner, RunningMode.ONESHOT, computation_time, message
+        )
         assert result == expected
 
     # ================================== Timeout ================================= #
@@ -193,12 +196,13 @@ class TestPlannerResult:
         expected = PlannerResult(
             name,
             problem,
+            RunningMode.ONESHOT,
             PlannerResultStatus.TIMEOUT,
             timeout,
             plan=None,
             plan_quality=None,
         )
-        result = PlannerResult.timeout(problem, planner, timeout)
+        result = PlannerResult.timeout(problem, planner, RunningMode.ONESHOT, timeout)
         assert result == expected
 
     # ================================ Unsupported =============================== #
@@ -211,10 +215,11 @@ class TestPlannerResult:
         expected = PlannerResult(
             name,
             problem,
+            RunningMode.ONESHOT,
             PlannerResultStatus.UNSUPPORTED,
             computation_time=None,
             plan=None,
             plan_quality=None,
         )
-        result = PlannerResult.unsupported(problem, planner)
+        result = PlannerResult.unsupported(problem, planner, RunningMode.ONESHOT)
         assert result == expected

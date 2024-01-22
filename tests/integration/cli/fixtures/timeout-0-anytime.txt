@@ -3,17 +3,18 @@ platform linux -- Python 3.11.4 -- /home/roland/thesis/projects/tyr/.venv/bin/py
 rootdir: /home/roland/thesis/projects/tyr
 timeout: 315s (05:15) -- memout: 4831838208 Bytes (4.50 GB)
 parallel: 1 job
-collecting...
-collected 3 planners / 1 deselected / 2 selected
+collecting...collected 3 planners / 1 deselected / 2 selected
 collected 250 problems / 180 deselected / 20 skipped / 50 selected
 
+******************************************************* Anytime ********************************************************
+
 domain-0
-    planner-0:version-0 MMMMMMMMMM                                                                                 [10%]
-    planner-1:version-1 MMMMMMMMMM                                                                                 [20%]
+    planner-0:version-0 TTTTTTTTTT                                                                                 [10%]
+    planner-1:version-1 TTTTTTTTTT                                                                                 [20%]
 
 domain-1
     planner-0:none ..........                                                                                      [30%]
-    planner-1:version-2 MMMMMMMMMM                                                                                 [40%]
+    planner-1:version-2 TTTTTTTTTT                                                                                 [40%]
 
 domain-2
     planner-0:none ..........                                                                                      [50%]
@@ -27,4 +28,4 @@ domain-4
     planner-0:none ..........                                                                                      [90%]
     planner-1:none ..........                                                                                     [100%]
 
-=========================================== 70 unsupported, 30 memout in 0s ============================================
+=========================================== 70 unsupported, 30 timeout in 0s ===========================================

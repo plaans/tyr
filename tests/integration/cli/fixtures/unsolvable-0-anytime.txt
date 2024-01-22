@@ -3,9 +3,10 @@ platform linux -- Python 3.11.4 -- /home/roland/thesis/projects/tyr/.venv/bin/py
 rootdir: /home/roland/thesis/projects/tyr
 timeout: 315s (05:15) -- memout: 4831838208 Bytes (4.50 GB)
 parallel: 1 job
-collecting...
-collected 3 planners / 1 deselected / 2 selected
+collecting...collected 3 planners / 1 deselected / 2 selected
 collected 250 problems / 180 deselected / 20 skipped / 50 selected
+
+******************************************************* Anytime ********************************************************
 
 domain-0
     planner-0:version-0 UUUUUUUUUU                                                                                 [10%]
@@ -28,14 +29,19 @@ domain-4
     planner-1:none ..........                                                                                     [100%]
 
 ==================================================== short summary =====================================================
-UNSOLVABLE planner - domain-0:0    UNSOLVABLE planner - domain-0:0    UNSOLVABLE planner - domain-0:0  
-UNSOLVABLE planner - domain-0:0    UNSOLVABLE planner - domain-0:0    UNSOLVABLE planner - domain-0:0  
-UNSOLVABLE planner - domain-0:0    UNSOLVABLE planner - domain-0:0    UNSOLVABLE planner - domain-0:0  
-UNSOLVABLE planner - domain-0:0    UNSOLVABLE planner - domain-0:0    UNSOLVABLE planner - domain-0:0  
-UNSOLVABLE planner - domain-0:0    UNSOLVABLE planner - domain-0:0    UNSOLVABLE planner - domain-0:0  
-UNSOLVABLE planner - domain-0:0    UNSOLVABLE planner - domain-0:0    UNSOLVABLE planner - domain-0:0  
-UNSOLVABLE planner - domain-0:0    UNSOLVABLE planner - domain-0:0    UNSOLVABLE planner - domain-0:0  
-UNSOLVABLE planner - domain-0:0    UNSOLVABLE planner - domain-0:0    UNSOLVABLE planner - domain-0:0  
-UNSOLVABLE planner - domain-0:0    UNSOLVABLE planner - domain-0:0    UNSOLVABLE planner - domain-0:0  
-UNSOLVABLE planner - domain-0:0    UNSOLVABLE planner - domain-0:0    UNSOLVABLE planner - domain-0:0  
+UNSOLVABLE planner - anytime - domain-0:0    UNSOLVABLE planner - anytime - domain-0:0  
+UNSOLVABLE planner - anytime - domain-0:0    UNSOLVABLE planner - anytime - domain-0:0  
+UNSOLVABLE planner - anytime - domain-0:0    UNSOLVABLE planner - anytime - domain-0:0  
+UNSOLVABLE planner - anytime - domain-0:0    UNSOLVABLE planner - anytime - domain-0:0  
+UNSOLVABLE planner - anytime - domain-0:0    UNSOLVABLE planner - anytime - domain-0:0  
+UNSOLVABLE planner - anytime - domain-0:0    UNSOLVABLE planner - anytime - domain-0:0  
+UNSOLVABLE planner - anytime - domain-0:0    UNSOLVABLE planner - anytime - domain-0:0  
+UNSOLVABLE planner - anytime - domain-0:0    UNSOLVABLE planner - anytime - domain-0:0  
+UNSOLVABLE planner - anytime - domain-0:0    UNSOLVABLE planner - anytime - domain-0:0  
+UNSOLVABLE planner - anytime - domain-0:0    UNSOLVABLE planner - anytime - domain-0:0  
+UNSOLVABLE planner - anytime - domain-0:0    UNSOLVABLE planner - anytime - domain-0:0  
+UNSOLVABLE planner - anytime - domain-0:0    UNSOLVABLE planner - anytime - domain-0:0  
+UNSOLVABLE planner - anytime - domain-0:0    UNSOLVABLE planner - anytime - domain-0:0  
+UNSOLVABLE planner - anytime - domain-0:0    UNSOLVABLE planner - anytime - domain-0:0  
+UNSOLVABLE planner - anytime - domain-0:0    UNSOLVABLE planner - anytime - domain-0:0  
 ========================================= 30 unsolvable, 70 unsupported in 0s ==========================================

@@ -8,6 +8,7 @@ from tyr import (
     get_all_planners,
     register_all_planners,
 )
+from tyr.planners.model.config import RunningMode
 
 SUCCESS_PLANNER = {p.name: False for p in get_all_planners()}
 
@@ -19,10 +20,12 @@ class TestPlannerSolving:
         [(p, d) for p in get_all_planners() for d in list(p.config.problems.keys())],
         ids=lambda x: x.name if isinstance(x, Planner) else x,
     )
+    @pytest.mark.parametrize("running_mode", RunningMode)
     def test_real_planner_solving(
         self,
         planner: Planner,
         domain_name: str,
+        running_mode: RunningMode,
     ):
         register_all_planners()
         # Check solving the first instance does not return an error.
@@ -30,7 +33,7 @@ class TestPlannerSolving:
         problem_instance = domain.get_problem("01")
         solve_config = SolveConfig(jobs=1, memout=4 * 1024**3, timeout=5)
         rejected_status = [PlannerResultStatus.ERROR, PlannerResultStatus.UNSUPPORTED]
-        result = planner.solve(problem_instance, solve_config)
+        result = planner.solve(problem_instance, solve_config, running_mode)
         assert result.status not in rejected_status
         if result.status == PlannerResultStatus.SOLVED:
             SUCCESS_PLANNER[planner.name] = True

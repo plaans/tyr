@@ -17,6 +17,7 @@ from tyr import (
     SolveConfig,
     run_bench,
 )
+from tyr.planners.model.config import RunningMode
 
 
 class TestBench:
@@ -56,19 +57,23 @@ class TestBench:
 
     @pytest.mark.parametrize("verbosity", [0, 1])
     @pytest.mark.parametrize("result_status", PlannerResultStatus)
+    @pytest.mark.parametrize("running_mode", RunningMode)
     @patch("tyr.cli.bench.collector.collect_problems")
     @patch("tyr.cli.bench.collector.collect_planners")
     @patch("tyr.planners.model.result.PlannerResult.from_upf")
+    @patch("unified_planning.shortcuts.AnytimePlanner")
     @patch("unified_planning.shortcuts.OneshotPlanner")
     @patch("shutil.get_terminal_size")
     def testing(
         self,
         mocked_terminal_size: Mock,
         mocked_oneshot_planner: Mock,
+        mocked_anytime_planner: Mock,
         mocked_from_upf: Mock,
         mocked_collect_planners: Mock,
         mocked_collect_problems: Mock,
         result_status: PlannerResultStatus,
+        running_mode: RunningMode,
         verbosity: int,
         num_planners: Tuple[int, int] = (2, 1),
         num_problems: Tuple[int, int, int] = (50, 180, 20),
@@ -116,6 +121,7 @@ class TestBench:
         result = PlannerResult(
             "planner",
             problems[0],
+            running_mode,
             result_status,
             computation_time=15,
             plan="(move)",
@@ -128,11 +134,11 @@ class TestBench:
         expected_result_path = (
             Path(__file__).parent
             / "fixtures"
-            / f"{result_status.name.lower()}-{verbosity}.txt"
+            / f"{result_status.name.lower()}-{verbosity}-{running_mode.name.lower()}.txt"
         )
         with open(expected_result_path, "r") as expected_result_file:
             expected_result = expected_result_file.read()
 
-        run_bench(ctx, solve_config, [], [])
+        run_bench(ctx, solve_config, [], [], [running_mode])
         result = out.getvalue().replace("\r", "\n")
         assert result == expected_result
