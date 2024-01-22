@@ -114,8 +114,10 @@ class BenchTerminalWritter(Writter):
         for i, result in enumerate(results):
             if (i % num_columns) != 0:
                 self.write("  ")
+            msgl = len(result.status.name) + len(self.summary_result_header(result)) + 1
+            fill = " " * (column_width - msgl)
             tpe = self.markup(result.status.name, red=True)
-            self.write(f"{tpe} {self.summary_result_header(result)}")
+            self.write(f"{tpe} {self.summary_result_header(result)}{fill}")
             if (i % num_columns) == (num_columns - 1):
                 self.line()
         if self.current_line_width != 0:
