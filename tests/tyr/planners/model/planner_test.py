@@ -68,6 +68,7 @@ class TestPlanner(ModelTest):
     @pytest.fixture()
     def solve_config() -> SolveConfig:
         yield SolveConfig(
+            jobs=1,
             memout=4 * 1024 * 1024 * 1024,  # 4GB
             timeout=350,
         )
@@ -153,7 +154,7 @@ class TestPlanner(ModelTest):
         result = planner.solve(problem, solve_config)
         assert result == expected
 
-    @pytest.mark.parametrize("timeout", [0, 15, 6])
+    @pytest.mark.parametrize("timeout", [1, 15, 6])
     @patch("unified_planning.shortcuts.OneshotPlanner", autospec=True)
     def test_solve_using_upf(
         self,

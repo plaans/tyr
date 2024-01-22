@@ -18,5 +18,6 @@ class PlannerConfig:
 class SolveConfig:
     """Represents the configuration of the solving process."""
 
+    jobs: int
     memout: int
     timeout: int

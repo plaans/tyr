@@ -2,30 +2,31 @@
 platform linux -- Python 3.11.4 -- /home/roland/thesis/projects/tyr/.venv/bin/python
 rootdir: /home/roland/thesis/projects/tyr
 timeout: 315s (05:15) -- memout: 4831838208 Bytes (4.50 GB)
+parallel: 1 job
 collecting...
 collected 3 planners / 1 deselected / 2 selected
 collected 250 problems / 180 deselected / 20 skipped / 50 selected
 
-planner - domain-0:0:version-0 ERROR 15s                                                                            [1%]
-planner - domain-0:0:version-0 ERROR 15s                                                                            [2%]
-planner - domain-0:0:version-0 ERROR 15s                                                                            [3%]
-planner - domain-0:0:version-0 ERROR 15s                                                                            [4%]
-planner - domain-0:0:version-0 ERROR 15s                                                                            [5%]
-planner - domain-0:0:version-0 ERROR 15s                                                                            [6%]
-planner - domain-0:0:version-0 ERROR 15s                                                                            [7%]
-planner - domain-0:0:version-0 ERROR 15s                                                                            [8%]
-planner - domain-0:0:version-0 ERROR 15s                                                                            [9%]
-planner - domain-0:0:version-0 ERROR 15s                                                                           [10%]
-planner - domain-0:0:version-1 ERROR 15s                                                                           [11%]
-planner - domain-0:0:version-1 ERROR 15s                                                                           [12%]
-planner - domain-0:0:version-1 ERROR 15s                                                                           [13%]
-planner - domain-0:0:version-1 ERROR 15s                                                                           [14%]
-planner - domain-0:0:version-1 ERROR 15s                                                                           [15%]
-planner - domain-0:0:version-1 ERROR 15s                                                                           [16%]
-planner - domain-0:0:version-1 ERROR 15s                                                                           [17%]
-planner - domain-0:0:version-1 ERROR 15s                                                                           [18%]
-planner - domain-0:0:version-1 ERROR 15s                                                                           [19%]
-planner - domain-0:0:version-1 ERROR 15s                                                                           [20%]
+planner-0 - domain-0:0:version-0 ERROR 15s                                                                          [1%]
+planner-0 - domain-0:0:version-0 ERROR 15s                                                                          [2%]
+planner-0 - domain-0:0:version-0 ERROR 15s                                                                          [3%]
+planner-0 - domain-0:0:version-0 ERROR 15s                                                                          [4%]
+planner-0 - domain-0:0:version-0 ERROR 15s                                                                          [5%]
+planner-0 - domain-0:0:version-0 ERROR 15s                                                                          [6%]
+planner-0 - domain-0:0:version-0 ERROR 15s                                                                          [7%]
+planner-0 - domain-0:0:version-0 ERROR 15s                                                                          [8%]
+planner-0 - domain-0:0:version-0 ERROR 15s                                                                          [9%]
+planner-0 - domain-0:0:version-0 ERROR 15s                                                                         [10%]
+planner-1 - domain-0:0:version-1 ERROR 15s                                                                         [11%]
+planner-1 - domain-0:0:version-1 ERROR 15s                                                                         [12%]
+planner-1 - domain-0:0:version-1 ERROR 15s                                                                         [13%]
+planner-1 - domain-0:0:version-1 ERROR 15s                                                                         [14%]
+planner-1 - domain-0:0:version-1 ERROR 15s                                                                         [15%]
+planner-1 - domain-0:0:version-1 ERROR 15s                                                                         [16%]
+planner-1 - domain-0:0:version-1 ERROR 15s                                                                         [17%]
+planner-1 - domain-0:0:version-1 ERROR 15s                                                                         [18%]
+planner-1 - domain-0:0:version-1 ERROR 15s                                                                         [19%]
+planner-1 - domain-0:0:version-1 ERROR 15s                                                                         [20%]
 
 planner-0 - domain-1:1:none UNSUPPORTED                                                                            [21%]
 planner-0 - domain-1:6:none UNSUPPORTED                                                                            [22%]
@@ -37,16 +38,16 @@ planner-0 - domain-1:31:none UNSUPPORTED                                        
 planner-0 - domain-1:36:none UNSUPPORTED                                                                           [28%]
 planner-0 - domain-1:41:none UNSUPPORTED                                                                           [28%]
 planner-0 - domain-1:46:none UNSUPPORTED                                                                           [30%]
-planner - domain-0:0:version-2 ERROR 15s                                                                           [31%]
-planner - domain-0:0:version-2 ERROR 15s                                                                           [32%]
-planner - domain-0:0:version-2 ERROR 15s                                                                           [33%]
-planner - domain-0:0:version-2 ERROR 15s                                                                           [34%]
-planner - domain-0:0:version-2 ERROR 15s                                                                           [35%]
-planner - domain-0:0:version-2 ERROR 15s                                                                           [36%]
-planner - domain-0:0:version-2 ERROR 15s                                                                           [37%]
-planner - domain-0:0:version-2 ERROR 15s                                                                           [38%]
-planner - domain-0:0:version-2 ERROR 15s                                                                           [39%]
-planner - domain-0:0:version-2 ERROR 15s                                                                           [40%]
+planner-1 - domain-0:0:version-2 ERROR 15s                                                                         [31%]
+planner-1 - domain-0:0:version-2 ERROR 15s                                                                         [32%]
+planner-1 - domain-0:0:version-2 ERROR 15s                                                                         [33%]
+planner-1 - domain-0:0:version-2 ERROR 15s                                                                         [34%]
+planner-1 - domain-0:0:version-2 ERROR 15s                                                                         [35%]
+planner-1 - domain-0:0:version-2 ERROR 15s                                                                         [36%]
+planner-1 - domain-0:0:version-2 ERROR 15s                                                                         [37%]
+planner-1 - domain-0:0:version-2 ERROR 15s                                                                         [38%]
+planner-1 - domain-0:0:version-2 ERROR 15s                                                                         [39%]
+planner-1 - domain-0:0:version-2 ERROR 15s                                                                         [40%]
 
 planner-0 - domain-2:2:none UNSUPPORTED                                                                            [41%]
 planner-0 - domain-2:7:none UNSUPPORTED                                                                            [42%]
@@ -203,12 +204,12 @@ _________________________________________________ planner - domain-0:0 _________
 
 My error message
 ==================================================== short summary =====================================================
-ERROR planner - domain-0:0  ERROR planner - domain-0:0  ERROR planner - domain-0:0  ERROR planner - domain-0:0
-ERROR planner - domain-0:0  ERROR planner - domain-0:0  ERROR planner - domain-0:0  ERROR planner - domain-0:0
-ERROR planner - domain-0:0  ERROR planner - domain-0:0  ERROR planner - domain-0:0  ERROR planner - domain-0:0
-ERROR planner - domain-0:0  ERROR planner - domain-0:0  ERROR planner - domain-0:0  ERROR planner - domain-0:0
-ERROR planner - domain-0:0  ERROR planner - domain-0:0  ERROR planner - domain-0:0  ERROR planner - domain-0:0
-ERROR planner - domain-0:0  ERROR planner - domain-0:0  ERROR planner - domain-0:0  ERROR planner - domain-0:0
-ERROR planner - domain-0:0  ERROR planner - domain-0:0  ERROR planner - domain-0:0  ERROR planner - domain-0:0
-ERROR planner - domain-0:0  ERROR planner - domain-0:0
+ERROR planner - domain-0:0    ERROR planner - domain-0:0    ERROR planner - domain-0:0    ERROR planner - domain-0:0  
+ERROR planner - domain-0:0    ERROR planner - domain-0:0    ERROR planner - domain-0:0    ERROR planner - domain-0:0  
+ERROR planner - domain-0:0    ERROR planner - domain-0:0    ERROR planner - domain-0:0    ERROR planner - domain-0:0  
+ERROR planner - domain-0:0    ERROR planner - domain-0:0    ERROR planner - domain-0:0    ERROR planner - domain-0:0  
+ERROR planner - domain-0:0    ERROR planner - domain-0:0    ERROR planner - domain-0:0    ERROR planner - domain-0:0  
+ERROR planner - domain-0:0    ERROR planner - domain-0:0    ERROR planner - domain-0:0    ERROR planner - domain-0:0  
+ERROR planner - domain-0:0    ERROR planner - domain-0:0    ERROR planner - domain-0:0    ERROR planner - domain-0:0  
+ERROR planner - domain-0:0    ERROR planner - domain-0:0  
 ============================================ 30 error, 70 unsupported in 0s ============================================

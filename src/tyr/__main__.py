@@ -1,4 +1,4 @@
-# pylint: disable = missing-function-docstring
+# pylint: disable = missing-function-docstring, too-many-arguments
 
 import click
 
@@ -41,6 +41,13 @@ def cli(ctx: CliContext, verbose, out):
     help="Memout for planners in bytes. Default to 4GB.",
 )
 @click.option(
+    "-j",
+    "--jobs",
+    default=1,
+    help="Number of CPUs to use for parallel computation, \
+if negative (n_cpus + 1 + jobs) are used. Default to 1.",
+)
+@click.option(
     "-p",
     "--planners",
     type=str,
@@ -55,8 +62,8 @@ def cli(ctx: CliContext, verbose, out):
     help="A list of regex filters on problem names. A problem name is of the form DOMAIN:UID.",
 )
 @pass_context
-def cli_bench(ctx: CliContext, timeout, memout, planners, domains):
-    solve_config = SolveConfig(memout, timeout)
+def cli_bench(ctx: CliContext, timeout, memout, jobs, planners, domains):
+    solve_config = SolveConfig(jobs, memout, timeout)
     run_bench(ctx, solve_config, planners, domains)
 
 

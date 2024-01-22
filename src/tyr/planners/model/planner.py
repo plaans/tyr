@@ -1,23 +1,20 @@
 import os
 import resource
 import shutil
-import signal
 import time
 import traceback
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Tuple
 
+from timeout_decorator import timeout
 import unified_planning.shortcuts as upf
+from unified_planning.engines import PlanGenerationResult
 from unified_planning.shortcuts import AbstractProblem
 
 from tyr.core.constants import LOGS_DIR
 from tyr.planners.model.config import PlannerConfig, SolveConfig
 from tyr.planners.model.result import PlannerResult
 from tyr.problems import ProblemInstance
-
-
-def _timeout_handler(signum, frame):
-    raise TimeoutError
 
 
 class Planner:
@@ -106,10 +103,14 @@ class Planner:
                 planner.skip_checks = True
                 log_path = self.get_log_file(problem, "solve")
                 with open(log_path, "w", encoding="utf-8") as log_file:
-                    # Prepare own timeout procedure in case the planner doesn't timeout by itself.
-                    signal.signal(signal.SIGALRM, _timeout_handler)
-                    signal.alarm(config.timeout)
-                    try:
+                    # Create the resolution fonction with timeout decorator in case that
+                    # the planner does not handle it itself.
+                    @timeout(
+                        config.timeout,
+                        use_signals=config.jobs == 1,
+                        timeout_exception=TimeoutError,
+                    )
+                    def resolution() -> Tuple[PlanGenerationResult, float, float]:
                         # Record time and try the solve the problem.
                         start = time.time()
                         upf_result = planner.solve(
@@ -118,12 +119,13 @@ class Planner:
                             output_stream=log_file,
                         )
                         end = time.time()
+                        return upf_result, start, end
+
+                    try:
+                        upf_result, start, end = resolution()
                     except TimeoutError:
                         # The planner timed out.
                         return PlannerResult.timeout(problem, self, config.timeout)
-                    finally:
-                        # Disable the timeout alarm.
-                        signal.alarm(0)
 
             # Convert the result into inner format and set computation time if not present.
             result = PlannerResult.from_upf(problem, upf_result)

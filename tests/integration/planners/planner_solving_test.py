@@ -28,7 +28,7 @@ class TestPlannerSolving:
         # Check solving the first instance does not return an error.
         domain = {d.name: d for d in get_all_domains()}[domain_name]
         problem_instance = domain.get_problem("01")
-        solve_config = SolveConfig(memout=4 * 1024**3, timeout=5)
+        solve_config = SolveConfig(jobs=1, memout=4 * 1024**3, timeout=5)
         rejected_status = [PlannerResultStatus.ERROR, PlannerResultStatus.UNSUPPORTED]
         result = planner.solve(problem_instance, solve_config)
         assert result.status not in rejected_status

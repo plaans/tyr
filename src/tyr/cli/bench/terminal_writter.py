@@ -34,8 +34,6 @@ class BenchTerminalWritter(Writter):
         super().__init__(out, verbosity)
         self._solve_config = solve_config
         self._num_to_run = 0
-        self._current_domain: Optional[AbstractDomain] = None
-        self._current_version: str = ""
         self._main_color = "green"
         self._results: List[PlannerResult] = []
         self._starttime = 0
@@ -51,6 +49,10 @@ class BenchTerminalWritter(Writter):
         self.line(msg)
         self.line(f"rootdir: {os.getcwd()}")
         self.report_solve_config()
+        self.line(
+            f"parallel: {self._solve_config.jobs} job"
+            + ("" if self._solve_config.jobs == 1 else "s")
+        )
         self.write("collecting...", flush=True, bold=True)
 
     def session_finished(self):
@@ -210,39 +212,41 @@ class BenchTerminalWritter(Writter):
         Args:
             domain (AbstractDomain): The new domain.
         """
-        self._current_domain = domain
-        self.line()
-        if not self.verbose:
-            self.line(domain.name)
+        if self._solve_config.jobs == 1:
+            self.line()
+            if not self.verbose:
+                self.line(domain.name)
 
-    def report_planner(self, planner: Planner):
+    def report_planner(self, domain: AbstractDomain, planner: Planner):
         """Prints a report about a new running planner.
 
         Args:
+            domain (AbstractDomain): The domain the planner will solve.
             planner (Planner): The new planner.
 
         Raises:
             ValueError: When new current domain is registered.
         """
-        if self._current_domain is None:
-            raise ValueError("Unexpected null domain")
-        self._current_version = planner.config.problems.get(
-            self._current_domain.name, "none"
-        )
-        if not self.verbose:
-            self.write(
-                "    " + planner.name + ":" + self._current_version + " ", flush=True
-            )
+        current_version = planner.config.problems.get(domain.name, "none")
+        if not self.verbose and self._solve_config.jobs == 1:
+            self.write("    " + planner.name + ":" + current_version + " ", flush=True)
 
     def report_planner_finished(self):
         """Prints a report about a finishing planner."""
-        if not self.verbose:
+        if not self.verbose and self._solve_config.jobs == 1:
             self.report_progress()
 
-    def report_planner_result(self, result: PlannerResult):
+    def report_planner_result(
+        self,
+        domain: AbstractDomain,
+        planner: Planner,
+        result: PlannerResult,
+    ):
         """Prints a report about one resolution of a planner.
 
         Args:
+            domain (AbstractDomain): The solve domain.
+            planner (Planner): The planner performing the resolution.
             result (PlannerResult): The resolution result of the planner.
         """
         self._results.append(result)
@@ -256,8 +260,8 @@ class BenchTerminalWritter(Writter):
             if self.current_line_width + len(" [100%]") > self._fullwidth:
                 self.report_progress()
         else:
-            planner, problem = result.planner_name, result.problem.name
-            self.write(f"{planner} - {problem}:{self._current_version}")
+            current_version = planner.config.problems.get(domain.name, "none")
+            self.write(f"{planner.name} - {result.problem.name}:{current_version}")
             self.write(" " + result.status.name, **{markup_key: True})
 
             if (comp_time := result.computation_time) is not None and (

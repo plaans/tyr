@@ -3,7 +3,6 @@ from dataclasses import dataclass, field
 from typing import Generic, List, TypeVar
 
 from tyr.planners import scanner as planner_scanner
-from tyr.planners.loader import register_all_planners
 from tyr.planners.model.planner import Planner
 from tyr.problems import scanner as domain_scanner
 from tyr.problems.model.instance import ProblemInstance
@@ -36,7 +35,6 @@ def collect_planners(*filters: str) -> CollectionResult[Planner]:
     Returns:
         CollectionResult[Planner]: The collected planners for the benchmark.
     """
-    register_all_planners()
     all_planners = planner_scanner.get_all_planners()
     selected: List[Planner] = []
 
