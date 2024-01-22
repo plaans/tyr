@@ -2,6 +2,8 @@
 -e .
 
 click
+joblib
+timeout_decorator
 
 # Aries requirements symbolic link
 -r aries.txt
