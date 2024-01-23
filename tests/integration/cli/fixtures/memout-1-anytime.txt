@@ -1,9 +1,9 @@
 =============================================== Tyr bench session starts ===============================================
-platform linux -- Python 3.11.4 -- /home/roland/thesis/projects/tyr/.venv/bin/python
-rootdir: /home/roland/thesis/projects/tyr
+{machine_stuff}
 timeout: 315s (05:15) -- memout: 4831838208 Bytes (4.50 GB)
 parallel: 1 job
-collecting...collected 3 planners / 1 deselected / 2 selected
+collecting...
+collected 3 planners / 1 deselected / 2 selected
 collected 250 problems / 180 deselected / 20 skipped / 50 selected
 
 ******************************************************* Anytime ********************************************************

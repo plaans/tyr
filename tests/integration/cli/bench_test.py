@@ -1,5 +1,8 @@
 from io import StringIO
+import os
 from pathlib import Path
+import platform
+import sys
 from typing import List, TextIO, Tuple
 from unittest.mock import MagicMock, Mock, patch
 
@@ -138,6 +141,9 @@ class TestBench:
         )
         with open(expected_result_path, "r") as expected_result_file:
             expected_result = expected_result_file.read()
+        stuff = f"platform {sys.platform} -- Python {platform.python_version()} -- {sys.executable}"
+        stuff += f"\nrootdir: {os.getcwd()}"
+        expected_result = expected_result.format(machine_stuff=stuff)
 
         run_bench(ctx, solve_config, [], [], [running_mode])
         result = out.getvalue().replace("\r", "\n")
