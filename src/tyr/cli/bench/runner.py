@@ -4,12 +4,11 @@ from typing import Dict, List, TypeVar
 from joblib import Parallel, delayed
 
 from tyr.cli.bench import collector
-from tyr.cli.bench.terminal_writter import BenchTerminalWritter
+from tyr.cli.bench.terminal_writter import BenchResult, BenchTerminalWritter
 from tyr.cli.config import CliContext
 from tyr.planners.loader import register_all_planners
 from tyr.planners.model.config import RunningMode, SolveConfig
 from tyr.planners.model.planner import Planner
-from tyr.planners.model.result import PlannerResult
 from tyr.problems.model.domain import AbstractDomain
 from tyr.problems.model.instance import ProblemInstance
 
@@ -19,7 +18,7 @@ I = TypeVar("I")  # noqa: E741
 # pylint: disable = too-many-arguments
 def _solve(
     tw: BenchTerminalWritter,
-    results: List[PlannerResult],
+    results: List[BenchResult],
     planner: Planner,
     problem: ProblemInstance,
     solve_config: SolveConfig,
@@ -80,7 +79,7 @@ def run_bench(
         pb_by_dom[domain] = _sort_items(pb_by_dom[domain])
 
     # Perform resolution.
-    results: List[PlannerResult] = []
+    results: List[BenchResult] = []
     if solve_config.jobs == 1:
         for running_mode in running_modes:
             tw.report_running_mode(running_mode)

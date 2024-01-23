@@ -2,6 +2,7 @@ import os
 import platform
 import sys
 import time
+from dataclasses import dataclass
 from typing import List, Optional, TextIO, Union
 
 from tyr.cli.bench.collector import CollectionResult
@@ -11,6 +12,35 @@ from tyr.planners.model.planner import Planner
 from tyr.planners.model.result import PlannerResult, PlannerResultStatus
 from tyr.problems.model.domain import AbstractDomain
 from tyr.problems.model.instance import ProblemInstance
+
+
+@dataclass
+class BenchResult:
+    """The minimal representation of a result for the writter."""
+
+    status: PlannerResultStatus
+    planner_name: str
+    running_mode: RunningMode
+    problem_name: str
+    error_message: str
+
+    @staticmethod
+    def from_planner(result: PlannerResult) -> "BenchResult":
+        """Converts the given planner result into bench result.
+
+        Args:
+            result (PlannerResult): The result to convert.
+
+        Returns:
+            BenchResult: The converted result.
+        """
+        return BenchResult(
+            result.status,
+            result.planner_name,
+            result.running_mode,
+            result.problem.name,
+            result.error_message,
+        )
 
 
 class BenchTerminalWritter(Writter):
@@ -35,16 +65,16 @@ class BenchTerminalWritter(Writter):
         self._solve_config = solve_config
         self._num_to_run = 0
         self._main_color = "green"
-        self._results: List[PlannerResult] = []
+        self._results: List[BenchResult] = []
         self._starttime = 0
 
     # =============================== Manipulation =============================== #
 
-    def set_results(self, results: List[PlannerResult]):
+    def set_results(self, results: List[BenchResult]):
         """Modifies the stored results.
 
         Args:
-            results (List[PlannerResult]): The new results to store.
+            results (List[BenchResult]): The new results to store.
         """
         self._results = results
 
@@ -74,7 +104,7 @@ class BenchTerminalWritter(Writter):
 
     # ================================== Summary ================================= #
 
-    def summary_result_header(self, result: PlannerResult) -> str:
+    def summary_result_header(self, result: BenchResult) -> str:
         """Formats the given the result to have an header to print on summary.
 
         Args:
@@ -88,7 +118,7 @@ class BenchTerminalWritter(Writter):
             + " - "
             + result.running_mode.name.lower()
             + " - "
-            + result.problem.name
+            + result.problem_name
         )
 
     def summary_errors(self):
@@ -278,7 +308,7 @@ class BenchTerminalWritter(Writter):
             planner (Planner): The planner performing the resolution.
             result (PlannerResult): The resolution result of the planner.
         """
-        self._results.append(result)
+        self._results.append(BenchResult.from_planner(result))
         letter, markup_key = self._status_map[result.status]
 
         if markup_key == "red":
