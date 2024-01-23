@@ -176,15 +176,16 @@ class Planner:
                     ):
                         # Record time and try the solve the problem.
                         start = time.time()
-                        result = None
+                        final_result = None
                         # pylint: disable = no-member
                         for result in planner.get_solutions(
                             version,
                             timeout=config.timeout,
                             output_stream=log_file,
                         ):
+                            final_result = result
                             yield result, start, time.time()
-                        return result, start, time.time()
+                        return final_result, start, time.time()
 
                     @timeout(
                         config.timeout,
@@ -226,14 +227,6 @@ class Planner:
             result = PlannerResult.from_upf(problem, self.last_upf_result, running_mode)
             if result.computation_time is None:
                 result.computation_time = end - start
-            if result.computation_time > config.timeout:
-                # The timeout has been reached...
-                return PlannerResult.timeout(
-                    problem,
-                    self,
-                    running_mode,
-                    config.timeout,
-                )
             return result
 
         except Exception:  # pylint: disable=broad-exception-caught
