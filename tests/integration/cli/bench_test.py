@@ -127,12 +127,19 @@ class TestBench:
             running_mode,
             result_status,
             computation_time=15,
-            plan="(move)" if result_status == PlannerResultStatus.SOLVED else None,
             plan_quality=15.2654,
             error_message="My error message",
         )
         mocked_from_upf.return_value = result
         mocked_terminal_size.return_value = (120, 24)
+
+        if result_status != PlannerResultStatus.SOLVED:
+            mocked_oneshot_planner.return_value.__enter__.return_value.solve.return_value = (
+                None
+            )
+            mocked_anytime_planner.return_value.__enter__.return_value.solve.return_value = (
+                None
+            )
 
         expected_result_path = (
             Path(__file__).parent

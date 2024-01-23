@@ -1,4 +1,3 @@
-import re
 from dataclasses import dataclass
 from enum import Enum, auto
 from typing import TYPE_CHECKING, Optional
@@ -7,7 +6,6 @@ from unified_planning.engines.results import (
     PlanGenerationResult,
     PlanGenerationResultStatus,
 )
-from unified_planning.plans import Plan
 
 from tyr.planners.model.config import RunningMode
 from tyr.problems import ProblemInstance
@@ -58,28 +56,8 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
     running_mode: RunningMode
     status: PlannerResultStatus
     computation_time: Optional[float] = None
-    plan: Optional[str] = None
     plan_quality: Optional[float] = None
     error_message: str = ""
-
-    @staticmethod
-    def _convert_upf_plan(upf_plan: Plan) -> str:
-        plan = []
-
-        for line in str(upf_plan).split("\n"):
-            if line.strip() != "":
-                action_match = re.match(r"^\s*(\w+)(?:\(([^)]+)\))?\s*$", line)
-                if action_match:
-                    action_name = action_match.group(1)
-                    parameters = action_match.group(2)
-                    if parameters is not None:
-                        parameters = " " + parameters.replace(",", "")
-                    else:
-                        parameters = ""
-                    action = f"({action_name}{parameters})"
-                    plan.append(action)
-
-        return "\n".join(plan)
 
     @staticmethod
     def from_upf(
@@ -102,10 +80,9 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
         if result.metrics is not None and computation_key in result.metrics:
             computation_time = float(result.metrics[computation_key])
 
-        plan, plan_quality = None, None
+        plan_quality = None
         if result.plan is not None:
-            plan = PlannerResult._convert_upf_plan(result.plan)
-            plan_quality = problem.get_quality_of_plan(plan)
+            plan_quality = problem.get_quality_of_plan(result.plan)
 
         return PlannerResult(
             result.engine_name,
@@ -113,7 +90,6 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             running_mode,
             PlannerResultStatus.from_upf(result.status),
             computation_time,
-            plan,
             plan_quality,
         )
 
@@ -142,7 +118,6 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             running_mode,
             PlannerResultStatus.ERROR,
             computation_time,
-            plan=None,
             plan_quality=None,
             error_message=message,
         )
@@ -171,7 +146,6 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             running_mode,
             PlannerResultStatus.TIMEOUT,
             timeout,
-            plan=None,
             plan_quality=None,
         )
 
@@ -197,6 +171,5 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             running_mode,
             PlannerResultStatus.UNSUPPORTED,
             computation_time=None,
-            plan=None,
             plan_quality=None,
         )

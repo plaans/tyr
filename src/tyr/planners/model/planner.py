@@ -225,7 +225,10 @@ class Planner:
 
             # Convert the result into inner format and set computation time if not present.
             result = PlannerResult.from_upf(problem, self.last_upf_result, running_mode)
-            if result.plan is not None:
+            if (
+                self.last_upf_result is not None
+                and self.last_upf_result.plan is not None
+            ):
                 # On anytime mode, last result can be timeout even if an intermediate was solved.
                 result.status = PlannerResultStatus.SOLVED
             if result.computation_time is None:

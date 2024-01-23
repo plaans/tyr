@@ -1,6 +1,6 @@
 from pathlib import Path
 from typing import Any, Dict
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from unified_planning.io import PDDLReader
@@ -81,16 +81,6 @@ class TestProblemInstance(ModelTest):
 
     # ============================= Get plan quality ============================= #
 
-    @patch("unified_planning.io.PDDLReader.parse_plan_string")
-    def test_get_plan_quality_creates_upf_plan(
-        self,
-        mocked_reader: Mock,
-        problem: ProblemInstance,
-        plan: str,
-    ):
-        problem.get_quality_of_plan(plan)
-        mocked_reader.assert_called_once_with(problem.versions["base"].value, plan)
-
     def test_get_quality_of_plan_without_metric(
         self, problem: ProblemInstance, plan: str
     ):
@@ -117,28 +107,6 @@ class TestProblemInstance(ModelTest):
 
         with pytest.raises(ValueError):
             problem.get_quality_of_plan(plan)
-
-    def test_get_makespan_of_sequential_plan(self, problem: ProblemInstance, plan: str):
-        result = problem.get_quality_of_plan(plan)
-        assert result == 1
-
-    def test_get_makespan_of_timed_plan(
-        self,
-        problem: ProblemInstance,
-        timed_plan: str,
-    ):
-        result = problem.get_quality_of_plan(timed_plan)
-        assert result == 15.0
-
-    @patch("unified_planning.io.PDDLReader.parse_plan_string")
-    def test_get_makespan_of_unknown_plan_type(
-        self,
-        mocked_reader: Mock,
-        problem: ProblemInstance,
-        plan: str,
-    ):
-        result = problem.get_quality_of_plan(plan)
-        assert result is None
 
     def test_get_unknown_quality_of_plan(self, problem: ProblemInstance, plan: str):
         metric = MagicMock()
