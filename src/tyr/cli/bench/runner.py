@@ -1,4 +1,5 @@
-from typing import Dict, List, Optional, TypeVar
+import multiprocessing
+from typing import Dict, List, TypeVar
 
 from joblib import Parallel, delayed
 
@@ -8,16 +9,17 @@ from tyr.cli.config import CliContext
 from tyr.planners.loader import register_all_planners
 from tyr.planners.model.config import RunningMode, SolveConfig
 from tyr.planners.model.planner import Planner
+from tyr.planners.model.result import PlannerResult
 from tyr.problems.model.domain import AbstractDomain
 from tyr.problems.model.instance import ProblemInstance
 
 I = TypeVar("I")  # noqa: E741
 
-# Forced to be global for parallelization.
-tw: Optional[BenchTerminalWritter] = None
 
-
+# pylint: disable = too-many-arguments
 def _solve(
+    tw: BenchTerminalWritter,
+    results: List[PlannerResult],
     planner: Planner,
     problem: ProblemInstance,
     solve_config: SolveConfig,
@@ -25,8 +27,8 @@ def _solve(
 ):
     register_all_planners()
     result = planner.solve(problem, solve_config, running_mode)
-    if tw is not None:
-        tw.report_planner_result(problem.domain, planner, result)
+    tw.set_results(results)
+    tw.report_planner_result(problem.domain, planner, result)
 
 
 def _sort_items(items: List[I]) -> List[I]:
@@ -38,6 +40,7 @@ def _sort_items(items: List[I]) -> List[I]:
     )
 
 
+# pylint: disable = too-many-locals
 def run_bench(
     ctx: CliContext,
     solve_config: SolveConfig,
@@ -55,7 +58,6 @@ def run_bench(
         domains_filters (List[str]): A list of regex filters on problems names.
         running_modes (List[RunningMode]): A list of mode to run planner resolutions.
     """
-    global tw  # pylint: disable = global-statement
 
     # Create the writter and start the session.
     tw = BenchTerminalWritter(solve_config, ctx.out, ctx.verbosity)
@@ -78,6 +80,7 @@ def run_bench(
         pb_by_dom[domain] = _sort_items(pb_by_dom[domain])
 
     # Perform resolution.
+    results: List[PlannerResult] = []
     if solve_config.jobs == 1:
         for running_mode in running_modes:
             tw.report_running_mode(running_mode)
@@ -89,18 +92,37 @@ def run_bench(
                     tw.report_planner(domain, planner)
 
                     for problem in pb_by_dom[domain]:
-                        _solve(planner, problem, solve_config, running_mode)
+                        _solve(
+                            tw,
+                            results,
+                            planner,
+                            problem,
+                            solve_config,
+                            running_mode,
+                        )
                     tw.report_planner_finished()
 
     else:
         tw.line()
-        Parallel(n_jobs=solve_config.jobs, require="sharedmem")(
-            delayed(_solve)(planner, problem, solve_config, running_mode)
-            for running_mode in running_modes
-            for domain in srtd_domains
-            for planner in srtd_planners
-            for problem in pb_by_dom[domain]
-        )
+
+        with multiprocessing.Manager() as manager:
+            shared_results = manager.list(results)
+            Parallel(n_jobs=solve_config.jobs)(
+                delayed(_solve)(
+                    tw,
+                    shared_results,
+                    planner,
+                    problem,
+                    solve_config,
+                    running_mode,
+                )
+                for running_mode in running_modes
+                for domain in srtd_domains
+                for planner in srtd_planners
+                for problem in pb_by_dom[domain]
+            )
+            results = shared_results[:]
 
     # End the session.
+    tw.set_results(results)
     tw.session_finished()

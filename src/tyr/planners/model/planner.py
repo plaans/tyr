@@ -162,11 +162,7 @@ class Planner:
                 with open(log_path, "w", encoding="utf-8") as log_file:
                     # Create the resolution fonctions with timeout decorator in case that
                     # the planner does not handle it itself.
-                    @timeout(
-                        config.timeout,
-                        use_signals=config.jobs == 1,
-                        timeout_exception=TimeoutError,
-                    )
+                    @timeout(config.timeout, timeout_exception=TimeoutError)
                     def resolution_anytime() -> (
                         Generator[
                             Tuple[PlanGenerationResult, float, float],
@@ -187,11 +183,7 @@ class Planner:
                             yield result, start, time.time()
                         return final_result, start, time.time()
 
-                    @timeout(
-                        config.timeout,
-                        use_signals=config.jobs == 1,
-                        timeout_exception=TimeoutError,
-                    )
+                    @timeout(config.timeout, timeout_exception=TimeoutError)
                     def resolution_oneshot() -> (
                         Tuple[PlanGenerationResult, float, float]
                     ):

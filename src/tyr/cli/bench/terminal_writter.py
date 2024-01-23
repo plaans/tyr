@@ -38,6 +38,16 @@ class BenchTerminalWritter(Writter):
         self._results: List[PlannerResult] = []
         self._starttime = 0
 
+    # =============================== Manipulation =============================== #
+
+    def set_results(self, results: List[PlannerResult]):
+        """Modifies the stored results.
+
+        Args:
+            results (List[PlannerResult]): The new results to store.
+        """
+        self._results = results
+
     # ================================== Session ================================= #
 
     def session_starts(self):
