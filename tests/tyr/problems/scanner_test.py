@@ -6,7 +6,7 @@ from tyr.problems import get_all_domains
 
 
 class TestUtils:
-    @patch("tyr.problems")
+    @patch("tyr.problems.domains")
     def test_get_all_domains_mocked(self, mocked_module):
         mocked_module.__path__ = problem_module.__path__
         mocked_module.__name__ = problem_module.__name__
