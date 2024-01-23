@@ -9,6 +9,7 @@ from typing import Generator, Optional, Tuple
 import unified_planning.shortcuts as upf
 from timeout_decorator import timeout
 from unified_planning.engines import PlanGenerationResult
+from unified_planning.environment import get_environment
 from unified_planning.shortcuts import AbstractProblem
 
 from tyr.core.constants import LOGS_DIR
@@ -144,7 +145,9 @@ class Planner:
         # Start recording time in case the second `start` is not reached because of an error.
         start = time.time()
         try:
-            # Get the planner and the log file.
+            # Disable credits.
+            get_environment().credits_stream = None
+            # Get the planner based on the running mode.
             if running_mode == RunningMode.ONESHOT:
                 builder = upf.OneshotPlanner
                 name = self.oneshot_name
@@ -152,8 +155,9 @@ class Planner:
                 builder = upf.AnytimePlanner
                 name = self.anytime_name
             with builder(name=name) as planner:
-                # Disable compatibility checking
+                # Disable compatibility checking.
                 planner.skip_checks = True
+                # Get the log file.
                 log_path = self.get_log_file(problem, "solve", running_mode)
                 with open(log_path, "w", encoding="utf-8") as log_file:
                     # Create the resolution fonctions with timeout decorator in case that
