@@ -207,6 +207,7 @@ class Planner:
 
                     try:
                         end = start + config.timeout
+                        self._last_upf_result = None
                         if running_mode == RunningMode.ONESHOT:
                             self._last_upf_result, start, end = resolution_oneshot()
                         else:
