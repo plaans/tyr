@@ -2,10 +2,10 @@
 - name: aries
   problems:
     depots-hierarchical: base
-    depots-hierarchical-numeric: base
-    depots-hierarchical-temporal-numeric: no_div
-    depots-numeric: base
-    depots-temporal-numeric: no_div
+    depots-hierarchical-numeric: red
+    depots-hierarchical-temporal-numeric: red_no_div
+    depots-numeric: red
+    depots-temporal-numeric: red_no_div
     jobshop-scheduling: base
     jobshop-temporal-numeric: base
   env:
@@ -14,13 +14,13 @@
 - name: lpg
   anytime_name: lpg-anytime
   problems:
-    depots-numeric: base
-    depots-temporal-numeric: no_div
+    depots-numeric: red
+    depots-temporal-numeric: red_no_div
     jobshop-temporal-numeric: base
 
 
 - name: optic
   problems:
-    depots-numeric: base
-    depots-temporal-numeric: no_div
+    depots-numeric: red
+    depots-temporal-numeric: red_no_div
     jobshop-temporal-numeric: no_neg_cond

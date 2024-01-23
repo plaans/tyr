@@ -13,6 +13,49 @@ from unified_planning.shortcuts import (
     StartTiming,
 )
 
+from tyr.problems.model.instance import ProblemInstance
+
+
+def get_goals(problem: Problem) -> list:
+    """
+    Returns:
+        list: A flat representation of all goals of the given problem.
+    """
+    base_goals = problem.goals[:]
+    goals = []
+    while len(base_goals) > 0:
+        goal = base_goals.pop()
+        if goal.is_and():
+            base_goals.extend(goal.args)
+        else:
+            goals.append(goal)
+    return goals
+
+
+def reduce_version(problem: ProblemInstance, version: str, number: int) -> Problem:
+    """Reduces the number of goals of the given problem.
+
+    Args:
+        problem (ProblemInstance): The problem to reduce.
+        version (str): The version of the problem to reduce.
+        number (int): The number of goals to keep.
+
+    Returns:
+        Problem: The reduces problem version.
+    """
+    base = problem.versions[version].value
+    if base is None:
+        return None
+
+    result = base.clone()
+    goals_subset = get_goals(result)[:number]
+
+    result.clear_goals()
+    for goal in goals_subset:
+        result.add_goal(goal)
+
+    return result
+
 
 def goals_to_tasks(
     base_pb: Problem,
@@ -48,18 +91,8 @@ def goals_to_tasks(
     for sv, val in base_pb.explicit_initial_values.items():
         hier_pb.set_initial_value(hier_pb.fluent(sv.fluent().name)(*sv.args), val)
 
-    # Get a flat representation of all goals.
-    base_goals = base_pb.goals[:]
-    goals = []
-    while len(base_goals) > 0:
-        goal = base_goals.pop()
-        if goal.is_and():
-            base_goals.extend(goal.args)
-        else:
-            goals.append(goal)
-
     # Convert each goal into its corresponding task.
-    for goal in goals:
+    for goal in get_goals(base_pb):
         task = trans[goal.fluent()]
         hier_pb.task_network.add_subtask(task, *goal.args)
 

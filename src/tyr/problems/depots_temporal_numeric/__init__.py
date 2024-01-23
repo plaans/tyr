@@ -7,6 +7,7 @@ from typing import Any, Dict, Optional
 from unified_planning.io import PDDLReader
 from unified_planning.shortcuts import AbstractProblem
 
+from tyr.problems.converter import reduce_version
 from tyr.problems.model import AbstractDomain, ProblemInstance
 
 FOLDER = Path(__file__).parent / "base"
@@ -18,6 +19,9 @@ class DepotsTemporalNumericDomain(AbstractDomain):
 
     def build_problem_base(self, problem: ProblemInstance) -> Optional[AbstractProblem]:
         return self.load_from_files(FOLDER, problem.uid)
+
+    def build_problem_red(self, problem: ProblemInstance) -> Optional[AbstractProblem]:
+        return reduce_version(problem, "base", int(problem.uid) % 5 + 1)
 
     def build_problem_no_div(
         self, problem: ProblemInstance
@@ -72,3 +76,8 @@ class DepotsTemporalNumericDomain(AbstractDomain):
             no_div.add_quality_metric(x)
 
         return no_div
+
+    def build_problem_red_no_div(
+        self, problem: ProblemInstance
+    ) -> Optional[AbstractProblem]:
+        return reduce_version(problem, "no_div", int(problem.uid) % 5 + 1)
