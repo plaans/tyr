@@ -127,7 +127,7 @@ class TestBench:
             running_mode,
             result_status,
             computation_time=15,
-            plan="(move)",
+            plan="(move)" if result_status == PlannerResultStatus.SOLVED else None,
             plan_quality=15.2654,
             error_message="My error message",
         )

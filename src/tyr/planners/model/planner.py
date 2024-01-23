@@ -15,7 +15,7 @@ from unified_planning.shortcuts import AbstractProblem
 from tyr.core.constants import LOGS_DIR
 from tyr.planners.database import Database
 from tyr.planners.model.config import PlannerConfig, RunningMode, SolveConfig
-from tyr.planners.model.result import PlannerResult
+from tyr.planners.model.result import PlannerResult, PlannerResultStatus
 from tyr.problems import ProblemInstance
 
 
@@ -225,6 +225,9 @@ class Planner:
 
             # Convert the result into inner format and set computation time if not present.
             result = PlannerResult.from_upf(problem, self.last_upf_result, running_mode)
+            if result.plan is not None:
+                # On anytime mode, last result can be timeout even if an intermediate was solved.
+                result.status = PlannerResultStatus.SOLVED
             if result.computation_time is None:
                 result.computation_time = end - start
             return result
