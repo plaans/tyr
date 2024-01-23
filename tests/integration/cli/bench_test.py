@@ -1,8 +1,8 @@
-from io import StringIO
 import os
-from pathlib import Path
 import platform
 import sys
+from io import StringIO
+from pathlib import Path
 from typing import List, TextIO, Tuple
 from unittest.mock import MagicMock, Mock, patch
 
