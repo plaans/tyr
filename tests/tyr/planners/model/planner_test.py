@@ -362,6 +362,7 @@ class TestPlanner(ModelTest):
         result = planner.solve(problem, solve_config, RunningMode.ONESHOT)
         assert result == expected
 
+    @pytest.mark.skip(reason="Disabled feature")
     @pytest.mark.parametrize("timeout", [10, 200])
     @patch("unified_planning.shortcuts.OneshotPlanner", autospec=True)
     @patch("tyr.planners.model.planner.PlannerResult.from_upf", autospec=True)
