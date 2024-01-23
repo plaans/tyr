@@ -13,6 +13,7 @@ from unified_planning.environment import get_environment
 from unified_planning.shortcuts import AbstractProblem
 
 from tyr.core.constants import LOGS_DIR
+from tyr.planners.database import Database
 from tyr.planners.model.config import PlannerConfig, RunningMode, SolveConfig
 from tyr.planners.model.result import PlannerResult
 from tyr.problems import ProblemInstance
@@ -126,6 +127,19 @@ class Planner:
         Returns:
             PlannerResult: The result of the resolution.
         """
+        # Get the planner based on the running mode.
+        if running_mode == RunningMode.ONESHOT:
+            builder = upf.OneshotPlanner
+            planner_name = self.oneshot_name
+        else:
+            builder = upf.AnytimePlanner
+            planner_name = self.anytime_name
+
+        # Check the database.
+        db_result = Database().load_planner_result(planner_name, problem, running_mode)
+        if db_result is not None:
+            return db_result
+
         # Get the version to solve.
         version = self.get_version(problem)
         if version is None:
@@ -147,14 +161,7 @@ class Planner:
         try:
             # Disable credits.
             get_environment().credits_stream = None
-            # Get the planner based on the running mode.
-            if running_mode == RunningMode.ONESHOT:
-                builder = upf.OneshotPlanner
-                name = self.oneshot_name
-            else:
-                builder = upf.AnytimePlanner
-                name = self.anytime_name
-            with builder(name=name) as planner:
+            with builder(name=planner_name) as planner:
                 # Disable compatibility checking.
                 planner.skip_checks = True
                 # Get the log file.

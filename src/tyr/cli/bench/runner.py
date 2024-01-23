@@ -6,6 +6,7 @@ from joblib import Parallel, delayed
 from tyr.cli.bench import collector
 from tyr.cli.bench.terminal_writter import BenchResult, BenchTerminalWritter
 from tyr.cli.config import CliContext
+from tyr.planners.database import Database
 from tyr.planners.loader import register_all_planners
 from tyr.planners.model.config import RunningMode, SolveConfig
 from tyr.planners.model.planner import Planner
@@ -26,6 +27,7 @@ def _solve(
 ):
     register_all_planners()
     result = planner.solve(problem, solve_config, running_mode)
+    Database().save_planner_result(result)
     tw.set_results(results)
     tw.report_planner_result(problem.domain, planner, result)
 
