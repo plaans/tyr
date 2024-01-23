@@ -1,0 +1,47 @@
+=============================================== Tyr bench session starts ===============================================
+{machine_stuff}
+timeout: 315s (05:15) -- memout: 4831838208 Bytes (4.50 GB)
+parallel: 1 job
+collecting...
+collected 3 planners / 1 deselected / 2 selected
+collected 250 problems / 180 deselected / 20 skipped / 50 selected
+
+******************************************************* Oneshot ********************************************************
+
+domain-0
+    planner-0:version-0 UUUUUUUUUU                                                                                 [10%]
+    planner-1:version-1 UUUUUUUUUU                                                                                 [20%]
+
+domain-1
+    planner-0:none ..........                                                                                      [30%]
+    planner-1:version-2 UUUUUUUUUU                                                                                 [40%]
+
+domain-2
+    planner-0:none ..........                                                                                      [50%]
+    planner-1:none ..........                                                                                      [60%]
+
+domain-3
+    planner-0:none ..........                                                                                      [70%]
+    planner-1:none ..........                                                                                      [80%]
+
+domain-4
+    planner-0:none ..........                                                                                      [90%]
+    planner-1:none ..........                                                                                     [100%]
+
+==================================================== short summary =====================================================
+UNSOLVABLE planner - oneshot - domain-0:0    UNSOLVABLE planner - oneshot - domain-0:0  
+UNSOLVABLE planner - oneshot - domain-0:0    UNSOLVABLE planner - oneshot - domain-0:0  
+UNSOLVABLE planner - oneshot - domain-0:0    UNSOLVABLE planner - oneshot - domain-0:0  
+UNSOLVABLE planner - oneshot - domain-0:0    UNSOLVABLE planner - oneshot - domain-0:0  
+UNSOLVABLE planner - oneshot - domain-0:0    UNSOLVABLE planner - oneshot - domain-0:0  
+UNSOLVABLE planner - oneshot - domain-0:0    UNSOLVABLE planner - oneshot - domain-0:0  
+UNSOLVABLE planner - oneshot - domain-0:0    UNSOLVABLE planner - oneshot - domain-0:0  
+UNSOLVABLE planner - oneshot - domain-0:0    UNSOLVABLE planner - oneshot - domain-0:0  
+UNSOLVABLE planner - oneshot - domain-0:0    UNSOLVABLE planner - oneshot - domain-0:0  
+UNSOLVABLE planner - oneshot - domain-0:0    UNSOLVABLE planner - oneshot - domain-0:0  
+UNSOLVABLE planner - oneshot - domain-0:0    UNSOLVABLE planner - oneshot - domain-0:0  
+UNSOLVABLE planner - oneshot - domain-0:0    UNSOLVABLE planner - oneshot - domain-0:0  
+UNSOLVABLE planner - oneshot - domain-0:0    UNSOLVABLE planner - oneshot - domain-0:0  
+UNSOLVABLE planner - oneshot - domain-0:0    UNSOLVABLE planner - oneshot - domain-0:0  
+UNSOLVABLE planner - oneshot - domain-0:0    UNSOLVABLE planner - oneshot - domain-0:0  
+========================================= 30 unsolvable, 70 unsupported in 0s ==========================================

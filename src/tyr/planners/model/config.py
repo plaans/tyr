@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
-from typing import Dict
+from enum import Enum, auto
+from typing import Dict, Optional
 
 
 @dataclass(frozen=True)
@@ -9,6 +10,8 @@ class PlannerConfig:
     name: str
     problems: Dict[str, str]
     env: Dict[str, str] = field(default_factory=dict)
+    anytime_name: Optional[str] = None
+    oneshot_name: Optional[str] = None
 
     def __hash__(self) -> int:
         return hash(self.name) + hash(str(self.problems))
@@ -18,5 +21,13 @@ class PlannerConfig:
 class SolveConfig:
     """Represents the configuration of the solving process."""
 
+    jobs: int
     memout: int
     timeout: int
+
+
+class RunningMode(Enum):
+    """Different mode to run planner resolutions."""
+
+    ANYTIME = auto()
+    ONESHOT = auto()

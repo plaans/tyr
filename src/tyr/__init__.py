@@ -1,3 +1,4 @@
+from .cli import *
 from .configuration import *
 from .core import *
 from .patterns import *

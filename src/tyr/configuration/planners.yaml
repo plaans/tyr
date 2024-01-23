@@ -11,6 +11,14 @@
   env:
     ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
 
+- name: lpg
+  anytime_name: lpg-anytime
+  problems:
+    depots-numeric: base
+    depots-temporal-numeric: no_div
+    jobshop-temporal-numeric: base
+
+
 - name: optic
   problems:
     depots-numeric: base

@@ -22,6 +22,18 @@ class OpticPlanner(TyrPDDLPlanner):
         binary = (Path(__file__).parent / "optic-cplex").resolve().as_posix()
         return f"{binary} {domain_filename} {problem_filename} -N".split()
 
+    def _get_anytime_cmd(
+        self,
+        domain_filename: str,
+        problem_filename: str,
+        plan_filename: str,
+    ) -> List[str]:
+        return (
+            " ".join(self._get_cmd(domain_filename, problem_filename, plan_filename))
+            .replace("-N", "-n")
+            .split()
+        )
+
     def _get_engine_epsilon(self) -> Optional[Fraction]:
         return Fraction(1, 1000)
 
@@ -44,6 +56,15 @@ class OpticPlanner(TyrPDDLPlanner):
                 pass
         return "\n".join(plan)
 
+    def _starting_plan_str(self) -> str:
+        return ";;;; Solution Found"
+
+    def _ending_plan_str(self) -> str:
+        return "\n"
+
+    def _parse_plan_line(self, plan_line: str) -> str:
+        return plan_line
+
     def _result_status(
         self,
         problem: Problem,
@@ -51,7 +72,6 @@ class OpticPlanner(TyrPDDLPlanner):
         retval: int,
         log_messages: Optional[List[LogMessage]] = None,
     ) -> PlanGenerationResultStatus:
-        print(log_messages)
         if plan is not None:
             return PlanGenerationResultStatus.SOLVED_SATISFICING
         if retval == 0:

@@ -8,10 +8,29 @@ from tyr import TyrPDDLPlanner
 
 
 class MockPlannerPlanner(TyrPDDLPlanner):
-    def _get_cmd(
-        self, domain_filename: str, problem_filename: str, plan_filename: str
+    def _get_cmd(  # pylint: disable = useless-parent-delegation
+        self,
+        domain_filename: str,
+        problem_filename: str,
+        plan_filename: str,
     ) -> List[str]:
-        return super()._get_cmd(domain_filename, problem_filename, plan_filename)
+        return super()._get_cmd(
+            domain_filename,
+            problem_filename,
+            plan_filename,
+        )
+
+    def _get_anytime_cmd(  # pylint: disable = useless-parent-delegation
+        self,
+        domain_filename: str,
+        problem_filename: str,
+        plan_filename: str,
+    ) -> List[str]:
+        return super()._get_anytime_cmd(
+            domain_filename,
+            problem_filename,
+            plan_filename,
+        )
 
     def _result_status(
         self,

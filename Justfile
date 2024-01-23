@@ -87,3 +87,15 @@ _ci-local:
     just test
     just reset "dev" "3.11"
     just test
+
+# ==================================== CLI =================================== #
+
+# Run the tyr module.
+tyr *args:
+    {{ python }} -m tyr {{ args }}
+
+# Run the bench command.
+bench *args: (tyr "bench" args)
+
+# Run the bench command in verbose mode.
+bench-v *args: (tyr "-v bench" args)

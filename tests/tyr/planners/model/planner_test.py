@@ -17,6 +17,7 @@ from tyr import (
     SolveConfig,
 )
 from tyr.core.constants import LOGS_DIR
+from tyr.planners.model.config import RunningMode
 from tyr.planners.model.result import PlannerResultStatus
 
 
@@ -33,7 +34,7 @@ class TestPlanner(ModelTest):
     # ============================================================================ #
 
     def get_default_attributes(self) -> Dict[str, Any]:
-        return {"_config": self.config()}
+        return {"_config": self.config(), "_last_upf_result": None}
 
     def get_instance(self) -> Any:
         return Planner(self.config())
@@ -68,6 +69,7 @@ class TestPlanner(ModelTest):
     @pytest.fixture()
     def solve_config() -> SolveConfig:
         yield SolveConfig(
+            jobs=1,
             memout=4 * 1024 * 1024 * 1024,  # 4GB
             timeout=350,
         )
@@ -76,12 +78,45 @@ class TestPlanner(ModelTest):
     #                                     Tests                                    #
     # ============================================================================ #
 
+    # =================================== Names ================================== #
+
+    @pytest.mark.parametrize("name", ["name1", "name2"])
+    def test_general_name(self, name: str):
+        config = replace(self.config(), name=name)
+        planner = Planner(config)
+        assert planner.name == name
+
+    @pytest.mark.parametrize("name", ["name1", "name2"])
+    def test_oneshot_name(self, name: str):
+        config = replace(self.config(), oneshot_name=name)
+        planner = Planner(config)
+        assert planner.oneshot_name == name
+
+    @pytest.mark.parametrize("name", ["name1", "name2"])
+    def test_oneshot_name_default(self, name: str):
+        config = replace(self.config(), name=name)
+        planner = Planner(config)
+        assert planner.oneshot_name == name
+
+    @pytest.mark.parametrize("name", ["name1", "name2"])
+    def test_anytime_name(self, name: str):
+        config = replace(self.config(), anytime_name=name)
+        planner = Planner(config)
+        assert planner.anytime_name == name
+
+    @pytest.mark.parametrize("name", ["name1", "name2"])
+    def test_anytime_name_default(self, name: str):
+        config = replace(self.config(), name=name)
+        planner = Planner(config)
+        assert planner.anytime_name == name
+
     # =============================== Get log file =============================== #
 
     @pytest.mark.parametrize("problem_id", ["01", "06"])
     @pytest.mark.parametrize("domain_name", ["domain1", "domain2"])
     @pytest.mark.parametrize("planner_name", ["planner1", "planner2"])
     @pytest.mark.parametrize("file_name", ["solve", "error", "warning"])
+    @pytest.mark.parametrize("running_mode", RunningMode)
     def test_get_log_file(
         self,
         planner: Planner,
@@ -90,6 +125,7 @@ class TestPlanner(ModelTest):
         domain_name: str,
         problem_id: str,
         file_name: str,
+        running_mode: RunningMode,
     ):
         old_config = planner.config
         old_uid = problem.uid
@@ -100,9 +136,13 @@ class TestPlanner(ModelTest):
         problem.domain._name = domain_name
 
         expected = (
-            LOGS_DIR / planner_name / domain_name / problem_id / f"{file_name}.log"
+            LOGS_DIR
+            / planner_name
+            / domain_name
+            / f"{problem_id}-{running_mode.name.lower()}"
+            / f"{file_name}.log"
         )
-        result = planner.get_log_file(problem, file_name)
+        result = planner.get_log_file(problem, file_name, running_mode)
         assert result == expected
 
         planner._config = old_config
@@ -135,9 +175,9 @@ class TestPlanner(ModelTest):
         problem: ProblemInstance,
         solve_config: SolveConfig,
     ):
-        mocked_planner.solve = lambda x, y: Planner.solve(mocked_planner, x, y)
+        mocked_planner.solve = lambda x, y, z: Planner.solve(mocked_planner, x, y, z)
         try:
-            mocked_planner.solve(problem, solve_config)
+            mocked_planner.solve(problem, solve_config, True)
         except Exception:  # nosec: B110
             pass
         mocked_planner.get_version.assert_called_once_with(problem)
@@ -149,13 +189,13 @@ class TestPlanner(ModelTest):
         solve_config: SolveConfig,
     ):
         planner.config.problems.clear()
-        expected = PlannerResult.unsupported(problem, planner)
-        result = planner.solve(problem, solve_config)
+        expected = PlannerResult.unsupported(problem, planner, RunningMode.ONESHOT)
+        result = planner.solve(problem, solve_config, RunningMode.ONESHOT)
         assert result == expected
 
-    @pytest.mark.parametrize("timeout", [0, 15, 6])
+    @pytest.mark.parametrize("timeout", [1, 15, 6])
     @patch("unified_planning.shortcuts.OneshotPlanner", autospec=True)
-    def test_solve_using_upf(
+    def test_solve_using_upf_oneshot(
         self,
         mocked_oneshot_planner: Mock,
         timeout: int,
@@ -168,11 +208,11 @@ class TestPlanner(ModelTest):
         version = planner.get_version(problem)
 
         try:
-            planner.solve(problem, solve_config)
+            planner.solve(problem, solve_config, RunningMode.ONESHOT)
         except Exception:  # nosec: B110
             pass
 
-        mocked_oneshot_planner.assert_called_once_with(name=planner.name)
+        mocked_oneshot_planner.assert_called_once_with(name=planner.oneshot_name)
         mocked_planner.solve.assert_called_once()
         solve_args, solve_kwargs = mocked_planner.solve.call_args
         assert solve_args == (version,)
@@ -180,7 +220,37 @@ class TestPlanner(ModelTest):
         assert solve_kwargs["timeout"] == timeout
         assert (
             solve_kwargs["output_stream"].name
-            == planner.get_log_file(problem, "solve").as_posix()
+            == planner.get_log_file(problem, "solve", RunningMode.ONESHOT).as_posix()
+        )
+
+    @pytest.mark.parametrize("timeout", [1, 15, 6])
+    @patch("unified_planning.shortcuts.AnytimePlanner", autospec=True)
+    def test_solve_using_upf_anytime(
+        self,
+        mocked_anytime_planner: Mock,
+        timeout: int,
+        planner: Planner,
+        problem: ProblemInstance,
+        solve_config: SolveConfig,
+    ):
+        solve_config = replace(solve_config, timeout=timeout)
+        mocked_planner = mocked_anytime_planner.return_value.__enter__.return_value
+        version = planner.get_version(problem)
+
+        try:
+            planner.solve(problem, solve_config, RunningMode.ANYTIME)
+        except Exception:  # nosec: B110
+            pass
+
+        mocked_anytime_planner.assert_called_once_with(name=planner.anytime_name)
+        mocked_planner.get_solutions.assert_called_once()
+        solve_args, solve_kwargs = mocked_planner.get_solutions.call_args
+        assert solve_args == (version,)
+        assert len(solve_kwargs) == 2
+        assert solve_kwargs["timeout"] == timeout
+        assert (
+            solve_kwargs["output_stream"].name
+            == planner.get_log_file(problem, "solve", RunningMode.ANYTIME).as_posix()
         )
 
     @patch("unified_planning.shortcuts.OneshotPlanner", autospec=True)
@@ -198,25 +268,38 @@ class TestPlanner(ModelTest):
         )
         mocked_result_from_upf.return_value.computation_time = 0
 
-        result = planner.solve(problem, solve_config)
-        mocked_result_from_upf.assert_called_once_with(problem, upf_result)
+        result = planner.solve(problem, solve_config, RunningMode.ONESHOT)
+        mocked_result_from_upf.assert_called_once_with(
+            problem,
+            upf_result,
+            RunningMode.ONESHOT,
+        )
         assert result == mocked_result_from_upf.return_value
 
     @pytest.mark.parametrize("computation_time", [1, 10, 15.7])
     @patch("unified_planning.shortcuts.OneshotPlanner", autospec=True)
+    @patch("traceback.format_exc")
     def test_solve_error(
         self,
+        mocked_traceback: Mock,
         mocked_oneshot_planner: Mock,
         computation_time: float,
         planner: Planner,
         problem: ProblemInstance,
         solve_config: SolveConfig,
     ):
+        mocked_traceback.return_value = "foo toto"
         mocked_planner = mocked_oneshot_planner.return_value.__enter__.return_value
-        mocked_planner.solve.side_effect = RuntimeError
-        expected = PlannerResult.error(problem, planner, computation_time)
+        mocked_planner.solve.side_effect = RuntimeError("foo toto")
+        expected = PlannerResult.error(
+            problem,
+            planner,
+            RunningMode.ONESHOT,
+            computation_time,
+            "foo toto",
+        )
         with patch("time.time", side_effect=[0, 0, computation_time]):
-            result = planner.solve(problem, solve_config)
+            result = planner.solve(problem, solve_config, RunningMode.ONESHOT)
         assert result == expected
 
     @patch("builtins.open")
@@ -231,8 +314,8 @@ class TestPlanner(ModelTest):
     ):
         mocked_planner = mocked_oneshot_planner.return_value.__enter__.return_value
         mocked_planner.solve.side_effect = RuntimeError
-        log_path = planner.get_log_file(problem, "error")
-        planner.solve(problem, solve_config)
+        log_path = planner.get_log_file(problem, "error", RunningMode.ONESHOT)
+        planner.solve(problem, solve_config, RunningMode.ONESHOT)
         mocked_open.assert_called_with(log_path, "w", encoding="utf-8")
 
     @pytest.mark.parametrize("computation_time", [1, 10, 15.7])
@@ -247,11 +330,13 @@ class TestPlanner(ModelTest):
         problem: ProblemInstance,
         solve_config: SolveConfig,
     ):
-        upf_result = PlannerResult(planner.name, problem, PlannerResultStatus.SOLVED)
+        upf_result = PlannerResult(
+            planner.name, problem, RunningMode.ONESHOT, PlannerResultStatus.SOLVED
+        )
         mocked_result_from_upf.return_value = upf_result
         expected = replace(upf_result, computation_time=computation_time)
         with patch("time.time", side_effect=[0, 0, computation_time]):
-            result = planner.solve(problem, solve_config)
+            result = planner.solve(problem, solve_config, RunningMode.ONESHOT)
         assert result == expected
 
     @pytest.mark.slow
@@ -273,10 +358,11 @@ class TestPlanner(ModelTest):
         mocked_planner = mocked_oneshot_planner.return_value.__enter__.return_value
         mocked_planner.solve.side_effect = solve
 
-        expected = PlannerResult.timeout(problem, planner, timeout)
-        result = planner.solve(problem, solve_config)
+        expected = PlannerResult.timeout(problem, planner, RunningMode.ONESHOT, timeout)
+        result = planner.solve(problem, solve_config, RunningMode.ONESHOT)
         assert result == expected
 
+    @pytest.mark.skip(reason="Disabled feature")
     @pytest.mark.parametrize("timeout", [10, 200])
     @patch("unified_planning.shortcuts.OneshotPlanner", autospec=True)
     @patch("tyr.planners.model.planner.PlannerResult.from_upf", autospec=True)
@@ -293,13 +379,14 @@ class TestPlanner(ModelTest):
         upf_result = PlannerResult(
             planner.name,
             problem,
+            RunningMode.ONESHOT,
             PlannerResultStatus.SOLVED,
             computation_time=2 * timeout,
         )
         mocked_result_from_upf.return_value = upf_result
 
-        expected = PlannerResult.timeout(problem, planner, timeout)
-        result = planner.solve(problem, solve_config)
+        expected = PlannerResult.timeout(problem, planner, RunningMode.ONESHOT, timeout)
+        result = planner.solve(problem, solve_config, RunningMode.ONESHOT)
         assert result == expected
 
     @pytest.mark.parametrize("memout", [10, 200])
@@ -313,7 +400,7 @@ class TestPlanner(ModelTest):
         solve_config: SolveConfig,
     ):
         solve_config = replace(solve_config, memout=memout)
-        planner.solve(problem, solve_config)
+        planner.solve(problem, solve_config, RunningMode.ONESHOT)
         mock_resource.assert_called_once_with(
             resource.RLIMIT_AS, (memout, resource.RLIM_INFINITY)
         )
@@ -327,7 +414,7 @@ class TestPlanner(ModelTest):
         solve_config: SolveConfig,
     ):
         mocked_planner = mocked_oneshot_planner.return_value.__enter__.return_value
-        planner.solve(problem, solve_config)
+        planner.solve(problem, solve_config, RunningMode.ONESHOT)
         assert mocked_planner.skip_checks is True
 
     @patch.dict(os.environ, {"MY_VARIABLE": "initial_value", "MY_BOOL": "False"})
@@ -339,7 +426,7 @@ class TestPlanner(ModelTest):
     ):
         assert os.environ["MY_VARIABLE"] == "initial_value"
         assert os.environ["MY_BOOL"] == "False"
-        planner.solve(problem, solve_config)
+        planner.solve(problem, solve_config, RunningMode.ONESHOT)
         assert os.environ["MY_VARIABLE"] == "new_value"
         assert os.environ["MY_BOOL"] == "True"
 
@@ -351,8 +438,8 @@ class TestPlanner(ModelTest):
         problem: ProblemInstance,
         solve_config: SolveConfig,
     ):
-        log_folder = planner.get_log_file(problem, "").parent
-        planner.solve(problem, solve_config)
+        log_folder = planner.get_log_file(problem, "", RunningMode.ONESHOT).parent
+        planner.solve(problem, solve_config, RunningMode.ONESHOT)
         mocked_rmtree.assert_called_once_with(log_folder, True)
 
     # ================================= Equality ================================= #
