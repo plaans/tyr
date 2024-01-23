@@ -42,7 +42,6 @@ class Database(Singleton):
                 running_mode TEXT,
                 status TEXT,
                 computation_time REAL,
-                plan TEXT,
                 plan_quality REAL,
                 error_message TEXT,
                 created_at TEXT,
@@ -63,9 +62,9 @@ class Database(Singleton):
                 """
                 INSERT OR REPLACE INTO planner_results (
                     planner_name, problem_name, running_mode, status,
-                    computation_time, plan, plan_quality, error_message, created_at
+                    computation_time, plan_quality, error_message, created_at
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
                 (
                     result.planner_name,
@@ -73,7 +72,6 @@ class Database(Singleton):
                     result.running_mode.name,
                     result.status.name,
                     result.computation_time,
-                    result.plan,
                     result.plan_quality,
                     result.error_message,
                     datetime.datetime.now().isoformat(),
@@ -124,7 +122,6 @@ class Database(Singleton):
             running_mode,
             status=getattr(PlannerResultStatus, resp[3]),
             computation_time=resp[4],
-            plan=resp[5],
-            plan_quality=resp[6],
-            error_message=resp[7],
+            plan_quality=resp[5],
+            error_message=resp[6],
         )
