@@ -1,10 +1,10 @@
-from dataclasses import dataclass
-from typing import Optional, TextIO
+from dataclasses import dataclass, field
+from typing import List, TextIO
 
 
 @dataclass
 class CliContext:
     """Stores the shared arguments of the CLI."""
 
-    out: Optional[TextIO] = None
+    out: List[TextIO] = field(default_factory=list)
     verbosity: int = 0

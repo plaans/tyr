@@ -1,7 +1,7 @@
 import os
 import shutil
 import sys
-from typing import Optional, TextIO
+from typing import List, Optional, TextIO, Union
 
 
 def _should_do_markup(file: TextIO) -> bool:
@@ -44,17 +44,23 @@ class Writter:
         "invert": 7,
     }
 
-    def __init__(self, out: Optional[TextIO] = None, verbosity: int = 0) -> None:
+    def __init__(
+        self,
+        out: Union[Optional[TextIO], List[TextIO]] = None,
+        verbosity: int = 0,
+    ) -> None:
         """
         Args:
-            out (Optional[TextIO], optional): The output where to write. Defaults to stdout.
+            out (Union[Optional[TextIO], List[TextIO]], optional): The output where to write.
+                It can be a list of outputs to write in multiple places. Defaults to stdout.
             verbosity (int, optional): Verbosity level. Defaults to 0.
         """
-        if out is None:
+        if out is None or out == [] or out == tuple():
             out = sys.stdout
-        self._out = out
+        if not isinstance(out, (list, tuple)):
+            out = [out]
+        self._out = list(out)
         self._verbosity = verbosity
-        self._do_markup = _should_do_markup(out)
         self._crt_line = ""
         self._fullwidth = shutil.get_terminal_size(fallback=(80, 24))[0]
 
@@ -98,11 +104,23 @@ class Writter:
         for name in markup:
             if name not in self._esctable:
                 raise ValueError(f"Unknown markup: {name!r}")
-        if self._do_markup:
-            esc = [self._esctable[name] for name, on in markup.items() if on]
-            if esc:
-                text = "".join(f"\x1b[{cod}m" for cod in esc) + text + "\x1b[0m"
+        esc = [self._esctable[name] for name, on in markup.items() if on]
+        if esc:
+            text = "".join(f"\x1b[{cod}m" for cod in esc) + text + "\x1b[0m"
         return text
+
+    def unmarkup(self, text: str) -> str:
+        """Removes the customization tokens of the given text.
+
+        Args:
+            text (str): The text to unwrap.
+
+        Returns:
+            str: The unwrapped text.
+        """
+        for cod in self._esctable.values():
+            text = text.replace(f"\x1b[{cod}m", "")
+        return text.replace("\x1b[0m", "")
 
     def write(self, text: str, flush: bool = False, **markup: bool) -> None:
         """Writes the given text with optional effects.
@@ -120,7 +138,11 @@ class Writter:
                 self._crt_line += crt_line
 
             text = self.markup(text, **markup)
-            self._out.write(text)
+
+            for out in self._out:
+                if not _should_do_markup(out):
+                    text = self.unmarkup(text)
+                out.write(text)
 
             if flush:
                 self.flush()
@@ -138,7 +160,8 @@ class Writter:
 
     def flush(self) -> None:
         """Flushes the output."""
-        self._out.flush()
+        for out in self._out:
+            out.flush()
 
     def line(self, text: str = "", **markup: bool) -> None:
         """Writes the given text and finishes with a new line.

@@ -2,7 +2,7 @@ import os
 import platform
 import sys
 import time
-from typing import List, Optional, TextIO
+from typing import List, Optional, TextIO, Union
 
 from tyr.cli.bench.collector import CollectionResult
 from tyr.cli.writter import Writter
@@ -28,7 +28,7 @@ class BenchTerminalWritter(Writter):
     def __init__(
         self,
         solve_config: SolveConfig,
-        out: Optional[TextIO] = None,
+        out: Union[Optional[TextIO], List[TextIO]] = None,
         verbosity: int = 0,
     ) -> None:
         super().__init__(out, verbosity)

@@ -19,9 +19,9 @@ pass_context = click.make_pass_decorator(CliContext, ensure=True)
 @click.option(
     "-o",
     "--out",
+    multiple=True,
     type=click.File("w"),
-    default="-",
-    help="Output file. Default to stdout.",
+    help="Output files. Default to stdout.",
 )
 @pass_context
 def cli(ctx: CliContext, verbose, out):
