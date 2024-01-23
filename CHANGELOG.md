@@ -4,6 +4,34 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [1.6.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.5.0...v1.6.0) (2024-1-23)
+
+
+### Bug Fixes
+
+* **bench termimal writter:** right fill short summary items ([3b1472f](https://gitlab.laas.fr/rgodet1/tyr/commit/3b1472fb5956a5accb5478dc43b66d7ffb0fbdd6))
+* **planner:** anytime behavior ([fa86f57](https://gitlab.laas.fr/rgodet1/tyr/commit/fa86f576be45389edb42d542546a5627bb58a28a))
+* **planner:** reset last result ([7fb9a6a](https://gitlab.laas.fr/rgodet1/tyr/commit/7fb9a6a65b6b02a44f8b4225ed1c6ca55722c31d))
+* **tests:** disable crop timeout feature ([e78df6b](https://gitlab.laas.fr/rgodet1/tyr/commit/e78df6bce965227498ecfbffd7da74f4426761b5))
+* **tests:** make bench cli tests machine independent ([5905317](https://gitlab.laas.fr/rgodet1/tyr/commit/59053173a028c12db71a5c64c383361d6c340542))
+
+
+### Features
+
+* **bench:** handle multiple jobs ([51f851d](https://gitlab.laas.fr/rgodet1/tyr/commit/51f851d926e62a38e04f17a80ed3fe1c35e48d22))
+* **cli:** add basic benchmark ([17edd9b](https://gitlab.laas.fr/rgodet1/tyr/commit/17edd9b36e3420b0cd8a947369a31272da451032))
+* **cli:** add filters on planners and problems ([6de24e3](https://gitlab.laas.fr/rgodet1/tyr/commit/6de24e3d8e0aaefb569ad13e42ec8fa2d15459a0))
+* **cli:** can specify multiple outputs ([a678a7b](https://gitlab.laas.fr/rgodet1/tyr/commit/a678a7b9cf1a0a18965da401e927a86cccde755e))
+* **planner config:** add oneshot/anytime names ([54c6ff0](https://gitlab.laas.fr/rgodet1/tyr/commit/54c6ff093f120dc418ce6ca411ce293df5a97a86))
+* **planner:** disable credit stream ([cf619aa](https://gitlab.laas.fr/rgodet1/tyr/commit/cf619aa7cfad710da0033b325fefe6226b34a918))
+* **planners:** add lpg ([06d6f9e](https://gitlab.laas.fr/rgodet1/tyr/commit/06d6f9ea3bc5624868455ca6d2d72f80c0c2b59e))
+* **planners:** support anytime ([082a744](https://gitlab.laas.fr/rgodet1/tyr/commit/082a744da919037afea6e6db994a6a69c699ebb1))
+
+
+### Reverts
+
+* **tests:** planner solving ([706bf14](https://gitlab.laas.fr/rgodet1/tyr/commit/706bf147a3a687aa027de0fefae10a6efe65bdcd))
+
 # [1.5.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.4.1...v1.5.0) (2024-1-19)
 
 
