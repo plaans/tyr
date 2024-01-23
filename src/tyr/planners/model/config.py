@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Dict
+from typing import Dict, Optional
 
 
 @dataclass(frozen=True)
@@ -10,6 +10,8 @@ class PlannerConfig:
     name: str
     problems: Dict[str, str]
     env: Dict[str, str] = field(default_factory=dict)
+    anytime_name: Optional[str] = None
+    oneshot_name: Optional[str] = None
 
     def __hash__(self) -> int:
         return hash(self.name) + hash(str(self.problems))

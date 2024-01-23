@@ -41,6 +41,26 @@ class Planner:
         return self.config.name
 
     @property
+    def anytime_name(self) -> str:
+        """
+        Returns:
+            str: The name of the planner for anytime resolution.
+        """
+        if self.config.anytime_name is None:
+            return self.name
+        return self.config.anytime_name
+
+    @property
+    def oneshot_name(self) -> str:
+        """
+        Returns:
+            str: The name of the planner for oneshot resolution.
+        """
+        if self.config.oneshot_name is None:
+            return self.name
+        return self.config.oneshot_name
+
+    @property
     def last_upf_result(self) -> Optional[PlanGenerationResult]:
         """
         Returns:
@@ -125,12 +145,13 @@ class Planner:
         start = time.time()
         try:
             # Get the planner and the log file.
-            builder = (
-                upf.OneshotPlanner
-                if running_mode == RunningMode.ONESHOT
-                else upf.AnytimePlanner
-            )
-            with builder(name=self.name) as planner:
+            if running_mode == RunningMode.ONESHOT:
+                builder = upf.OneshotPlanner
+                name = self.oneshot_name
+            else:
+                builder = upf.AnytimePlanner
+                name = self.anytime_name
+            with builder(name=name) as planner:
                 # Disable compatibility checking
                 planner.skip_checks = True
                 log_path = self.get_log_file(problem, "solve", running_mode)

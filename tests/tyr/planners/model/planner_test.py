@@ -78,6 +78,38 @@ class TestPlanner(ModelTest):
     #                                     Tests                                    #
     # ============================================================================ #
 
+    # =================================== Names ================================== #
+
+    @pytest.mark.parametrize("name", ["name1", "name2"])
+    def test_general_name(self, name: str):
+        config = replace(self.config(), name=name)
+        planner = Planner(config)
+        assert planner.name == name
+
+    @pytest.mark.parametrize("name", ["name1", "name2"])
+    def test_oneshot_name(self, name: str):
+        config = replace(self.config(), oneshot_name=name)
+        planner = Planner(config)
+        assert planner.oneshot_name == name
+
+    @pytest.mark.parametrize("name", ["name1", "name2"])
+    def test_oneshot_name_default(self, name: str):
+        config = replace(self.config(), name=name)
+        planner = Planner(config)
+        assert planner.oneshot_name == name
+
+    @pytest.mark.parametrize("name", ["name1", "name2"])
+    def test_anytime_name(self, name: str):
+        config = replace(self.config(), anytime_name=name)
+        planner = Planner(config)
+        assert planner.anytime_name == name
+
+    @pytest.mark.parametrize("name", ["name1", "name2"])
+    def test_anytime_name_default(self, name: str):
+        config = replace(self.config(), name=name)
+        planner = Planner(config)
+        assert planner.anytime_name == name
+
     # =============================== Get log file =============================== #
 
     @pytest.mark.parametrize("problem_id", ["01", "06"])
@@ -180,7 +212,7 @@ class TestPlanner(ModelTest):
         except Exception:  # nosec: B110
             pass
 
-        mocked_oneshot_planner.assert_called_once_with(name=planner.name)
+        mocked_oneshot_planner.assert_called_once_with(name=planner.oneshot_name)
         mocked_planner.solve.assert_called_once()
         solve_args, solve_kwargs = mocked_planner.solve.call_args
         assert solve_args == (version,)
@@ -210,7 +242,7 @@ class TestPlanner(ModelTest):
         except Exception:  # nosec: B110
             pass
 
-        mocked_anytime_planner.assert_called_once_with(name=planner.name)
+        mocked_anytime_planner.assert_called_once_with(name=planner.anytime_name)
         mocked_planner.get_solutions.assert_called_once()
         solve_args, solve_kwargs = mocked_planner.get_solutions.call_args
         assert solve_args == (version,)
