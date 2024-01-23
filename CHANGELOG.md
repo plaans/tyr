@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.2](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.6.1...v1.6.2) (2024-1-23)
+
+
+### Bug Fixes
+
+* **cli:** shared variable through processes ([ab3163c](https://gitlab.laas.fr/rgodet1/tyr/commit/ab3163c5b1e0ed14eeb2bf85811c0d9e09f45eb1))
+
 ## [1.6.1](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.6.0...v1.6.1) (2024-1-23)
 
 
