@@ -135,16 +135,16 @@ class Planner:
             builder = upf.AnytimePlanner
             planner_name = self.anytime_name
 
-        # Check the database.
-        db_result = Database().load_planner_result(planner_name, problem, running_mode)
-        if db_result is not None:
-            return db_result
-
         # Get the version to solve.
         version = self.get_version(problem)
         if version is None:
             # No version found, the problem is not supported.
             return PlannerResult.unsupported(problem, self, running_mode)
+
+        # Check the database.
+        db_result = Database().load_planner_result(planner_name, problem, running_mode)
+        if db_result is not None:
+            return db_result
 
         # Limits the virtual memory of the current process.
         resource.setrlimit(resource.RLIMIT_AS, (config.memout, resource.RLIM_INFINITY))
