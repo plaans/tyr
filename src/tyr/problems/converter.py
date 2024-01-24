@@ -82,7 +82,7 @@ def goals_to_tasks(
         raise ValueError(f"{hier_dom_file} does not defined a hierarchical problem")
 
     # Get the fluents and the tasks from their names.
-    trans = {hier_pb.fluent(k): hier_pb.get_task(v) for k, v in mapping.items()}
+    trans = {k: hier_pb.get_task(v) for k, v in mapping.items()}
 
     # Add all objects.
     hier_pb.add_objects(base_pb.all_objects)
@@ -93,7 +93,7 @@ def goals_to_tasks(
 
     # Convert each goal into its corresponding task.
     for goal in get_goals(base_pb):
-        task = trans[goal.fluent()]
+        task = trans[goal.fluent().name]
         hier_pb.task_network.add_subtask(task, *goal.args)
 
     # Add all metrics.
