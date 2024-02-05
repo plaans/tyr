@@ -183,6 +183,11 @@ class TestAbstractDomain(AbstractSingletonModelTest):
     def test_get_number_of_problems(self, domain: AbstractDomain):
         assert domain.get_num_problems() == 10
 
+    # ============================= Get version names ============================ #
+
+    def test_get_versions(self, domain: AbstractDomain):
+        assert domain.get_versions() == ["base", "no_speed"]
+
     # ================================ Get problem =============================== #
 
     @pytest.mark.parametrize("problem", ["01", "05", "-02"], indirect=True)

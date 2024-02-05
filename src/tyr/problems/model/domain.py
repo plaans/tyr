@@ -1,7 +1,7 @@
 import functools
 import re
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from unified_planning.io import PDDLReader
 from unified_planning.plans import Plan
@@ -49,6 +49,13 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
             int: The number of problems present in the domain.
         """
         raise NotImplementedError()
+
+    def get_versions(self) -> List[str]:
+        """
+        Returns:
+            List[str]: The list of available versions.
+        """
+        return [v[14:] for v in dir(self) if v.startswith("build_problem_")]
 
     def build_problem(self, problem_id: str) -> Optional[ProblemInstance]:
         """Builds the problem with the given id.
