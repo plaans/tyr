@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional
 
 from unified_planning.io import PDDLReader
 from unified_planning.model.htn import HierarchicalProblem
@@ -61,6 +61,7 @@ def goals_to_tasks(
     base_pb: Problem,
     hier_dom_file: Path,
     mapping: Dict[str, str],
+    freedom: Optional[Dict[str, str]] = None,
 ) -> HierarchicalProblem:
     """Converts the goals of the given problem into a hierarchical task network.
 
@@ -68,6 +69,8 @@ def goals_to_tasks(
         base_pb (Problem): The problem to convert.
         hier_dom_file (Path): The file describing the equivalent hierarchical domain.
         mapping (Dict[str, str]): A map from goals name to tasks name.
+        freedom (Optional[Dict[str, str]], optional): A type -> task map of freedom.
+            Default to None. A task will be created in the task network for every object of type.
 
     Raises:
         ValueError: When the given file describes a non hierarchical domain.
@@ -99,6 +102,12 @@ def goals_to_tasks(
     # Add all metrics.
     for m in base_pb.quality_metrics:
         hier_pb.add_quality_metric(m)
+
+    # Add freedom tasks.
+    if freedom:
+        for tpe, task_name in freedom.items():
+            for obj in hier_pb.objects(hier_pb.user_type(tpe)):
+                hier_pb.task_network.add_subtask(hier_pb.get_task(task_name), obj)
 
     return hier_pb
 
