@@ -28,29 +28,31 @@ class TestDomainCreation:
 
     @pytest.mark.slow
     @pytest.mark.parametrize(
-        ["domain", "problem_id"],
+        ["domain", "problem_id", "version_name"],
         [
-            (d, f"{p:0>2}")
+            (d, f"{p:0>2}", v)
             for d in get_all_domains()
+            for v in d.get_versions()
             for p in range(1, d.get_num_problems() + 2)
             # Test one more problem (+2) in order to check behaviour on non existant problem
         ],
         ids=lambda x: x if isinstance(x, str) else x.name,
     )
-    def test_real_domain_creation(self, domain: AbstractDomain, problem_id: str):
+    def test_real_domain_creation(
+        self,
+        domain: AbstractDomain,
+        problem_id: str,
+        version_name: str,
+    ):
         problem = domain.get_problem(problem_id)
-        assert (
-            problem is not None
-        ), f"The domain {domain.name} is empty, please consider to remove it"
-        # Check all versions can successfully be built.
-        for version_name, version in problem.versions.items():
-            print(f"Checking version {version_name}")
-            value = version.value  # Check the value can be accessed without error.
-            if value is not None:
-                # Check the problems have goals to achieve.
-                if isinstance(value, HierarchicalProblem):
-                    assert len(value.task_network.subtasks) != 0
-                elif isinstance(value, SchedulingProblem):
-                    assert len(value.activities) != 0
-                else:
-                    assert len(value.goals) != 0
+        assert problem is not None, "The domain is empty, consider to remove it."
+        version = problem.versions[version_name]
+        value = version.value  # Check the value can be accessed without error.
+        if value is not None:
+            # Check the problems have goals to achieve.
+            if isinstance(value, HierarchicalProblem):
+                assert len(value.task_network.subtasks) != 0
+            elif isinstance(value, SchedulingProblem):
+                assert len(value.activities) != 0
+            else:
+                assert len(value.goals) != 0
