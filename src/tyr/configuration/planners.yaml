@@ -8,6 +8,18 @@
     depots-temporal-numeric: red_no_div
     jobshop-scheduling: base
     jobshop-temporal-numeric: base
+    rcpsp-scheduling: base
+    rcpsp-temporal-numeric: base
+    rovers-hierarchical: base
+    rovers-hierarchical-numeric: red
+    rovers-hierarchical-temporal-numeric: red_no_div
+    rovers-numeric: red
+    rovers-temporal-numeric: red_no_div
+    satellite-hierarchical: base
+    satellite-hierarchical-numeric: red
+    satellite-hierarchical-temporal-numeric: red_no_float
+    satellite-numeric: red
+    satellite-temporal-numeric: red_no_float
   env:
     ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
 
@@ -17,10 +29,19 @@
     depots-numeric: red
     depots-temporal-numeric: red_no_div
     jobshop-temporal-numeric: base
-
+    rcpsp-temporal-numeric: base
+    rovers-numeric: red
+    rovers-temporal-numeric: red_no_div
+    satellite-numeric: red
+    satellite-temporal-numeric: red_no_float
 
 - name: optic
   problems:
     depots-numeric: red
     depots-temporal-numeric: red_no_div
     jobshop-temporal-numeric: no_neg_cond
+    rcpsp-temporal-numeric: no_neg_cond
+    rovers-numeric: red
+    rovers-temporal-numeric: red_no_div
+    satellite-numeric: red
+    satellite-temporal-numeric: red_no_float
