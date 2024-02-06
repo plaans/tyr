@@ -110,7 +110,7 @@ class Planner:
         except KeyError:
             return None
 
-    # pylint: disable = too-many-locals
+    # pylint: disable = too-many-locals, too-many-branches
     def solve(
         self,
         problem: ProblemInstance,

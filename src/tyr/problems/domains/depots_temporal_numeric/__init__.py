@@ -1,5 +1,3 @@
-# pylint: disable = missing-class-docstring, missing-function-docstring
-
 from collections import defaultdict
 from pathlib import Path
 from typing import Any, Dict, Optional

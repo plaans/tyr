@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING, Dict, Optional
 
-from unified_planning.io import PDDLReader
 from unified_planning.plans import Plan, PlanKind
 from unified_planning.shortcuts import AbstractProblem
 

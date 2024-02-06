@@ -1,5 +1,3 @@
-# pylint: disable = missing-class-docstring, missing-function-docstring
-
 from typing import Optional
 
 from unified_planning.engines.mixins.compiler import CompilationKind

@@ -2,8 +2,8 @@ import datetime
 import sqlite3
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Optional
-from tyr.core.constants import DB_FILE
 
+from tyr.core.constants import DB_FILE
 from tyr.patterns.singleton import Singleton
 from tyr.problems.model.instance import ProblemInstance
 
@@ -99,21 +99,10 @@ class Database(Singleton):
         # pylint: disable = import-outside-toplevel
         from tyr.planners.model.result import PlannerResult, PlannerResultStatus
 
+        # pylint: disable = line-too-long
+        request = f"SELECT * FROM planner_results WHERE planner_name='{planner_name}' AND problem_name='{problem.name}' AND running_mode='{running_mode.name}' LIMIT 1"  # nosec: B608  # noqa: E501
         conn = sqlite3.connect(DB_FILE)
-        resp = (
-            conn.cursor()
-            .execute(
-                f"""
-            SELECT *
-            FROM planner_results
-            WHERE planner_name='{planner_name}'
-                AND problem_name='{problem.name}'
-                AND running_mode='{running_mode.name}'
-            LIMIT 1
-            """
-            )
-            .fetchone()
-        )
+        resp = conn.cursor().execute(request).fetchone()
         if resp is None:
             return None
         return PlannerResult(
