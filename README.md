@@ -145,8 +145,7 @@ Please take a look at [`src/tyr/configuration/planners.yaml`](https://gitlab.laa
 
 # License
 
-This project is privately licensed.
-All rights reserved.
+This project licensed under MIT license.
 See [LICENSE.md](https://gitlab.laas.fr/rgodet1/tyr/-/blob/master/LICENSE.md) for more details.
 
 # Contact
