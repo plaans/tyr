@@ -67,8 +67,10 @@ class TestBench:
     @patch("unified_planning.shortcuts.AnytimePlanner")
     @patch("unified_planning.shortcuts.OneshotPlanner")
     @patch("shutil.get_terminal_size")
+    @patch("time.time", return_value=0)
     def testing(
         self,
+        mocked_time: Mock,
         mocked_terminal_size: Mock,
         mocked_oneshot_planner: Mock,
         mocked_anytime_planner: Mock,
