@@ -29,7 +29,10 @@ def cli(ctx: CliContext, verbose, out):
     ctx.verbosity = verbose
 
 
-@cli.command("bench")
+@cli.command(
+    "bench",
+    help="Run several planners on different domains.",
+)
 @click.option(
     "-t",
     "--timeout",
