@@ -3,7 +3,7 @@ from typing import Dict, List, TypeVar
 
 from joblib import Parallel, delayed
 
-from tyr.cli.bench import collector
+from tyr.cli import collector
 from tyr.cli.bench.terminal_writter import BenchResult, BenchTerminalWritter
 from tyr.cli.config import CliContext
 from tyr.planners.database import Database

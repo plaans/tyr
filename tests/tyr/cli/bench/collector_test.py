@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 
 from tyr import AbstractDomain, Planner, collect_planners
-from tyr.cli.bench.collector import collect_problems
+from tyr.cli.collector import collect_problems
 from tyr.patterns.singleton import Singleton
 
 

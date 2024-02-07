@@ -2,7 +2,7 @@ import time
 from pathlib import Path
 from typing import List, Literal, Optional, TextIO, Tuple, Union
 
-from tyr.cli.bench.collector import CollectionResult
+from tyr.cli.collector import CollectionResult
 from tyr.cli.writter import Writter
 from tyr.planners.model.config import RunningMode, SolveConfig
 from tyr.planners.model.planner import Planner

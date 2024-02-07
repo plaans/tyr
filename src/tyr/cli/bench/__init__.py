@@ -1,6 +1,5 @@
-from . import collector, runner, terminal_writter
-from .collector import *
+from . import runner, terminal_writter
 from .runner import *
 from .terminal_writter import *
 
-__all__ = collector.__all__ + runner.__all__ + terminal_writter.__all__
+__all__ = runner.__all__ + terminal_writter.__all__
