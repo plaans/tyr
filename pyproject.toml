@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tyr"
-version = "1.6.2"
+version = "1.7.0"
 description = "Python-based tool designed for comparing a set of task planners over a variety of problems."
 readme = "README.md"
 requires-python = ">=3.8"

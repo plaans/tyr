@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [1.7.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.6.2...v1.7.0) (2024-2-7)
+
+
+### Bug Fixes
+
+* **planner:** quality computation ([6012ed5](https://gitlab.laas.fr/rgodet1/tyr/commit/6012ed5f3767e569d8ef7c9b8ded3fbb21f340a9))
+* **planner:** timeout on intermediate anytime result ([11f9c4e](https://gitlab.laas.fr/rgodet1/tyr/commit/11f9c4efc129a3fe78a2b4de13ce39bb1e8ea4c0))
+* **problem:** convertion of goals into tasks ([71b132e](https://gitlab.laas.fr/rgodet1/tyr/commit/71b132ea12f3e47939067926b41296220827925e))
+* **tests:** patch time.time for cli tests ([5e2212e](https://gitlab.laas.fr/rgodet1/tyr/commit/5e2212ead06e04d747b967f5c20a021a71dfefa1))
+* **tests:** test_solve_get_version ([3cefbac](https://gitlab.laas.fr/rgodet1/tyr/commit/3cefbacc5b9f605c255f85062a60a63e883775e9))
+
+
+### Features
+
+* **database:** save and load planner results ([a16a74f](https://gitlab.laas.fr/rgodet1/tyr/commit/a16a74ff575a4eb049a2319560b90e2f931ecc54))
+* **depots:** add reduce version ([469e286](https://gitlab.laas.fr/rgodet1/tyr/commit/469e2861435baf912b67d06e673c2c4216dd62ec))
+* **domains:** add rcpsp ([a5245b1](https://gitlab.laas.fr/rgodet1/tyr/commit/a5245b1b2636279b261930e2786eadc0687c75d7))
+* **domains:** add rovers ([30880f6](https://gitlab.laas.fr/rgodet1/tyr/commit/30880f6ea7efebbe9ac4eaf5bc289d067bcb9c4e))
+* **domains:** add satellite ([fdea0d4](https://gitlab.laas.fr/rgodet1/tyr/commit/fdea0d459c0c9a2b6ca5950d7a0aeab598c76310))
+* **domains:** getter for version names ([a11513e](https://gitlab.laas.fr/rgodet1/tyr/commit/a11513e558589bceab6cbaa37cb4ce10e58f07ec))
+* **planners:** config for new domains ([a8bfc88](https://gitlab.laas.fr/rgodet1/tyr/commit/a8bfc8830de33c272482ebf85b3b6d1d8910922f))
+
 ## [1.6.2](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.6.1...v1.6.2) (2024-1-23)
 
 
