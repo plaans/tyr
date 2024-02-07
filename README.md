@@ -20,6 +20,7 @@ This project aims to provide a understanding analysis of task planners' performa
 - [Installation](#installation)
     - [Cloning the Repository](#cloning-the-repository)
     - [Installing the Dependencies](#installing-the-dependencies)
+- [Usage](#usage)
 - [Configuration](#configuration)
   - [Domains](#domains)
   - [Planners](#planners)
@@ -57,6 +58,16 @@ pip install -r requirements/prod.txt
 
 To install development dependencies, replace `prod` by `dev`.
 You can also run `just install dev`.
+
+# Usage
+
+To get the help of the tyr module, run:
+
+```bash
+python -m tyr --help
+```
+
+The help should be sufficiently documented to guide you.
 
 # Configuration
 
