@@ -10,7 +10,8 @@ def get_all_domains() -> List[AbstractDomain]:
     Returns:
         List[AbstractDomain]: All domains defined in `tyr.problems` module.
     """
-    import tyr.problems as problem_module  # pylint: disable=import-outside-toplevel, cyclic-import
+    # pylint: disable=import-outside-toplevel, cyclic-import
+    import tyr.problems.domains as problem_module
 
     domains = []
 

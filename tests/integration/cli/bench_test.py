@@ -67,8 +67,10 @@ class TestBench:
     @patch("unified_planning.shortcuts.AnytimePlanner")
     @patch("unified_planning.shortcuts.OneshotPlanner")
     @patch("shutil.get_terminal_size")
+    @patch("time.time", return_value=0)
     def testing(
         self,
+        mocked_time: Mock,
         mocked_terminal_size: Mock,
         mocked_oneshot_planner: Mock,
         mocked_anytime_planner: Mock,
@@ -127,12 +129,19 @@ class TestBench:
             running_mode,
             result_status,
             computation_time=15,
-            plan="(move)",
             plan_quality=15.2654,
             error_message="My error message",
         )
         mocked_from_upf.return_value = result
         mocked_terminal_size.return_value = (120, 24)
+
+        if result_status != PlannerResultStatus.SOLVED:
+            mocked_oneshot_planner.return_value.__enter__.return_value.solve.return_value = (
+                None
+            )
+            mocked_anytime_planner.return_value.__enter__.return_value.solve.return_value = (
+                None
+            )
 
         expected_result_path = (
             Path(__file__).parent

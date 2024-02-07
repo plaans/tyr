@@ -13,8 +13,9 @@ from unified_planning.environment import get_environment
 from unified_planning.shortcuts import AbstractProblem
 
 from tyr.core.constants import LOGS_DIR
+from tyr.planners.database import Database
 from tyr.planners.model.config import PlannerConfig, RunningMode, SolveConfig
-from tyr.planners.model.result import PlannerResult
+from tyr.planners.model.result import PlannerResult, PlannerResultStatus
 from tyr.problems import ProblemInstance
 
 
@@ -109,7 +110,7 @@ class Planner:
         except KeyError:
             return None
 
-    # pylint: disable = too-many-locals
+    # pylint: disable = too-many-locals, too-many-branches
     def solve(
         self,
         problem: ProblemInstance,
@@ -126,11 +127,24 @@ class Planner:
         Returns:
             PlannerResult: The result of the resolution.
         """
+        # Get the planner based on the running mode.
+        if running_mode == RunningMode.ONESHOT:
+            builder = upf.OneshotPlanner
+            planner_name = self.oneshot_name
+        else:
+            builder = upf.AnytimePlanner
+            planner_name = self.anytime_name
+
         # Get the version to solve.
         version = self.get_version(problem)
         if version is None:
             # No version found, the problem is not supported.
             return PlannerResult.unsupported(problem, self, running_mode)
+
+        # Check the database.
+        db_result = Database().load_planner_result(planner_name, problem, running_mode)
+        if db_result is not None:
+            return db_result
 
         # Limits the virtual memory of the current process.
         resource.setrlimit(resource.RLIMIT_AS, (config.memout, resource.RLIM_INFINITY))
@@ -147,14 +161,7 @@ class Planner:
         try:
             # Disable credits.
             get_environment().credits_stream = None
-            # Get the planner based on the running mode.
-            if running_mode == RunningMode.ONESHOT:
-                builder = upf.OneshotPlanner
-                name = self.oneshot_name
-            else:
-                builder = upf.AnytimePlanner
-                name = self.anytime_name
-            with builder(name=name) as planner:
+            with builder(name=planner_name) as planner:
                 # Disable compatibility checking.
                 planner.skip_checks = True
                 # Get the log file.
@@ -218,6 +225,12 @@ class Planner:
 
             # Convert the result into inner format and set computation time if not present.
             result = PlannerResult.from_upf(problem, self.last_upf_result, running_mode)
+            if (
+                self.last_upf_result is not None
+                and self.last_upf_result.plan is not None
+            ):
+                # On anytime mode, last result can be timeout even if an intermediate was solved.
+                result.status = PlannerResultStatus.SOLVED
             if result.computation_time is None:
                 result.computation_time = end - start
             return result

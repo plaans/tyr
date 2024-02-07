@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING, Dict, Optional
 
-from unified_planning.io import PDDLReader
 from unified_planning.plans import Plan, PlanKind
 from unified_planning.shortcuts import AbstractProblem
 
@@ -74,11 +73,11 @@ class ProblemInstance:
         """
         self._versions[version_name] = version
 
-    def get_quality_of_plan(self, plan: str) -> Optional[float]:
+    def get_quality_of_plan(self, plan: Plan) -> Optional[float]:
         """Extracts the quality of the given plan.
 
         Args:
-            plan (str): The plan to study.
+            plan (Plan): The plan to study.
 
         Raises:
             ValueError: When multiple quality metrics have to be measured.
@@ -87,7 +86,6 @@ class ProblemInstance:
             Optional[float]: The quality of the plan if any.
         """
         version = self.versions["base"].value
-        upf_plan = PDDLReader().parse_plan_string(version, plan)
 
         if (num_metrics := len(version.quality_metrics)) == 0:
             return None
@@ -96,12 +94,16 @@ class ProblemInstance:
 
         metric = version.quality_metrics[0]
         if metric.is_minimize_makespan():
-            return self._get_makespan_of_plan(upf_plan)
-        return self.domain.get_quality_of_plan(upf_plan)
+            return self._get_makespan_of_plan(plan)
+        return self.domain.get_quality_of_plan(plan)
 
     def _get_makespan_of_plan(self, plan: Plan) -> Optional[float]:
         if plan.kind == PlanKind.TIME_TRIGGERED_PLAN:
             return float(max(s + (d or 0) for (s, _, d) in plan.timed_actions))
         if plan.kind == PlanKind.SEQUENTIAL_PLAN:
             return len(plan.actions)
+        if plan.kind == PlanKind.SCHEDULE:
+            return float(
+                max(float(str(plan.assignment[a.end])) for a in plan.activities)
+            )
         return None

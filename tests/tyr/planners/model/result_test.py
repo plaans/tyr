@@ -86,54 +86,6 @@ class TestPlannerResult:
         result = PlannerResult.from_upf(problem, upf_result, RunningMode.ONESHOT)
         assert result.computation_time == expected
 
-    mock_plan = """Hierarchical SequentialPlan:
-    nop
-    nop
-    lift(hoist0, crate1, pallet0, depot0)
-    load(hoist0, crate1, truck1, depot0)
-    drive(truck1, depot0, distributor0)
-    nop
-    lift(hoist1, crate0, pallet1, distributor0)
-    drive(truck0, distributor1, distributor0)
-    load(hoist1, crate0, truck0, distributor0)
-    unload(hoist1, crate1, truck1, distributor0)
-    drop(hoist1, crate1, pallet1, distributor0)
-    drive(truck0, distributor0, distributor1)
-    nop
-    unload(hoist2, crate0, truck0, distributor1)
-    drop(hoist2, crate0, pallet2, distributor1)
-"""
-
-    mock_expected_plan = """(nop)
-(nop)
-(lift hoist0 crate1 pallet0 depot0)
-(load hoist0 crate1 truck1 depot0)
-(drive truck1 depot0 distributor0)
-(nop)
-(lift hoist1 crate0 pallet1 distributor0)
-(drive truck0 distributor1 distributor0)
-(load hoist1 crate0 truck0 distributor0)
-(unload hoist1 crate1 truck1 distributor0)
-(drop hoist1 crate1 pallet1 distributor0)
-(drive truck0 distributor0 distributor1)
-(nop)
-(unload hoist2 crate0 truck0 distributor1)
-(drop hoist2 crate0 pallet2 distributor1)"""
-
-    @pytest.mark.parametrize(
-        ["plan", "expected"], [(None, None), (mock_plan, mock_expected_plan)]
-    )
-    def test_from_upf_plan(
-        self,
-        plan: Optional[Mock],
-        expected: Optional[str],
-        problem: Mock,
-        upf_result: PlanGenerationResult,
-    ):
-        upf_result.plan = plan
-        result = PlannerResult.from_upf(problem, upf_result, RunningMode.ONESHOT)
-        assert result.plan == expected
-
     @pytest.mark.parametrize(
         ["plan", "quality"], [(None, None), (MagicMock(), 15), (MagicMock(), 7.6)]
     )
@@ -152,8 +104,7 @@ class TestPlannerResult:
         if plan is None:
             problem.get_quality_of_plan.assert_not_called()
         else:
-            plan_str = PlannerResult._convert_upf_plan(str(plan))
-            problem.get_quality_of_plan.assert_called_once_with(plan_str)
+            problem.get_quality_of_plan.assert_called_once_with(plan)
 
     # =================================== Error ================================== #
 
@@ -176,7 +127,6 @@ class TestPlannerResult:
             RunningMode.ONESHOT,
             PlannerResultStatus.ERROR,
             computation_time,
-            plan=None,
             plan_quality=None,
             error_message=message,
         )
@@ -199,7 +149,6 @@ class TestPlannerResult:
             RunningMode.ONESHOT,
             PlannerResultStatus.TIMEOUT,
             timeout,
-            plan=None,
             plan_quality=None,
         )
         result = PlannerResult.timeout(problem, planner, RunningMode.ONESHOT, timeout)
@@ -218,7 +167,6 @@ class TestPlannerResult:
             RunningMode.ONESHOT,
             PlannerResultStatus.UNSUPPORTED,
             computation_time=None,
-            plan=None,
             plan_quality=None,
         )
         result = PlannerResult.unsupported(problem, planner, RunningMode.ONESHOT)
