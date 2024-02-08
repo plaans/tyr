@@ -199,7 +199,7 @@ class Writter:
         msg = f"timeout: {self.format_seconds(solve_config.timeout)}"
 
         num_bytes = solve_config.memout * 1.0
-        msg += f" -- memout: {num_bytes} Bytes"
+        msg += f" -- memout: {int(num_bytes)} Bytes"
         for unit in ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB"]:
             if num_bytes < 1024:
                 msg += f" ({num_bytes:.2f} {unit})"

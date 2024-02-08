@@ -78,7 +78,7 @@ class BenchTerminalWritter(Writter):
     # ================================== Session ================================= #
 
     def session_name(self) -> str:
-        return "benchmark"
+        return "bench"
 
     def session_starts(self):
         super().session_starts()
