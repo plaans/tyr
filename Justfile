@@ -96,3 +96,6 @@ tyr *args:
 
 # Run the bench command.
 bench *args: (tyr "bench" args)
+
+# Run the solve command.
+solve *args: (tyr "solve" args)

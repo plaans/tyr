@@ -4,7 +4,7 @@ from typing import List
 
 import click
 
-from tyr import CliContext, RunningMode, SolveConfig, run_bench
+from tyr import CliContext, RunningMode, SolveConfig, run_bench, run_solve
 
 
 # ============================================================================ #
@@ -57,7 +57,7 @@ def cli(ctx: CliContext, verbose, out):
 
 def update_context(ctx, verbose, out):
     ctx.verbosity += verbose
-    ctx.out.append(out)
+    ctx.out.extend(out)
 
 
 # ============================================================================ #
@@ -129,33 +129,39 @@ def cli_bench(
 # ============================================================================ #
 
 
-# @click.argument("planner", type=str, help="Name of the planner to use.")
-# @click.argument(
-#     "problem",
-#     type=str,
-#     help="Name of the problem to solve. For example: 'rovers-numeric:02'.",
-# )
-# @timeout_option
-# @memout_option
-# @click.option(
-#     "--fs",
-#     "--first-solution",
-#     is_flag=True,
-#     help="Stop the search after the first found solution.",
-# )
-# @pass_context
-# def cli_solve(
-#     ctx: CliContext,
-#     planner: str,
-#     problem: str,
-#     timeout: int,
-#     memout: int,
-#     first_solution: bool,
-# ):
-#     running_mode = RunningMode.ONESHOT if first_solution else RunningMode.ANYTIME
+@cli.command(
+    "solve",
+    help="Solve a specific problem with a planner.",
+)
+@verbose_option
+@out_option
+@click.argument("planner", type=str)
+@click.argument("problem", type=str)
+@timeout_option
+@memout_option
+@click.option(
+    "--fs",
+    "--first-solution",
+    is_flag=True,
+    help="Stop the search after the first found solution.",
+)
+@pass_context
+def cli_solve(
+    ctx: CliContext,
+    verbose,
+    out,
+    planner: str,
+    problem: str,
+    timeout: int,
+    memout: int,
+    fs: bool,
+):
+    update_context(ctx, verbose, out)
 
-#     solve_config = SolveConfig(1, memout, timeout)
-#     # run_solve(ctx, solve_config, planner, problem, running_mode)
+    running_mode = RunningMode.ONESHOT if fs else RunningMode.ANYTIME
+
+    solve_config = SolveConfig(1, memout, timeout)
+    run_solve(ctx, solve_config, planner, problem, running_mode)
 
 
 if __name__ == "__main__":
