@@ -1,5 +1,6 @@
 import time
-from typing import List, Optional, TextIO, Tuple, Union
+from typing import List, Literal, Optional, TextIO, Tuple, Union
+
 from tyr.cli.bench.collector import CollectionResult
 from tyr.cli.writter import Writter
 from tyr.planners.model.config import RunningMode, SolveConfig
@@ -28,7 +29,7 @@ class SolveTerminalWritter(Writter):
         planners: CollectionResult[Planner],
         problems: CollectionResult[ProblemInstance],
         running_mode: RunningMode,
-    ) -> Union[False, Tuple[Planner, ProblemInstance]]:
+    ) -> Union[Literal[False], Tuple[Planner, ProblemInstance]]:
         """Prints a report about the collection of planners and problems.
 
         Args:

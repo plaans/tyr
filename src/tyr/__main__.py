@@ -6,7 +6,6 @@ import click
 
 from tyr import CliContext, RunningMode, SolveConfig, run_bench, run_solve
 
-
 # ============================================================================ #
 #                                    Options                                   #
 # ============================================================================ #
