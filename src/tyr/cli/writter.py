@@ -1,7 +1,11 @@
 import os
+import platform
 import shutil
 import sys
+import time
 from typing import List, Optional, TextIO, Union
+
+from tyr.planners.model.config import SolveConfig
 
 
 def _should_do_markup(file: TextIO) -> bool:
@@ -63,6 +67,11 @@ class Writter:
         self._verbosity = verbosity
         self._crt_line = ""
         self._fullwidth = shutil.get_terminal_size(fallback=(80, 24))[0]
+        self._starttime = 0
+
+    # ============================================================================ #
+    #                                    Getters                                   #
+    # ============================================================================ #
 
     @property
     def verbosity(self) -> int:
@@ -88,39 +97,9 @@ class Writter:
         """
         return len(self._crt_line)
 
-    def markup(self, text: str, **markup: bool) -> str:
-        """Adds tokens to customize the given text.
-
-        Args:
-            text (str): The text to customize.
-            markup (Dict[str, bool], optional): The effects to apply to the text.
-
-        Raises:
-            ValueError: When a markup name is unknown.
-
-        Returns:
-            str: The customized text.
-        """
-        for name in markup:
-            if name not in self._esctable:
-                raise ValueError(f"Unknown markup: {name!r}")
-        esc = [self._esctable[name] for name, on in markup.items() if on]
-        if esc:
-            text = "".join(f"\x1b[{cod}m" for cod in esc) + text + "\x1b[0m"
-        return text
-
-    def unmarkup(self, text: str) -> str:
-        """Removes the customization tokens of the given text.
-
-        Args:
-            text (str): The text to unwrap.
-
-        Returns:
-            str: The unwrapped text.
-        """
-        for cod in self._esctable.values():
-            text = text.replace(f"\x1b[{cod}m", "")
-        return text.replace("\x1b[0m", "")
+    # ============================================================================ #
+    #                                  Print stuff                                 #
+    # ============================================================================ #
 
     def write(self, text: str, flush: bool = False, **markup: bool) -> None:
         """Writes the given text with optional effects.
@@ -202,3 +181,103 @@ class Writter:
             line += sepchar.rstrip()
 
         self.line(line, **markup)
+
+    # ============================================================================ #
+    #                                    Report                                    #
+    # ============================================================================ #
+
+    def report_collecting(self):
+        """Reports the beginning of a collection process."""
+        self.write("collecting...", flush=True, bold=True)
+
+    def report_solve_config(self, solve_config: SolveConfig):
+        """Prints a report about the configuration being used for the resolution.
+
+        Args:
+            solve_config (SolveConfig): The configuration being used.
+        """
+        msg = f"timeout: {self.format_seconds(solve_config.timeout)}"
+
+        num_bytes = solve_config.memout * 1.0
+        msg += f" -- memout: {num_bytes} Bytes"
+        for unit in ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB"]:
+            if num_bytes < 1024:
+                msg += f" ({num_bytes:.2f} {unit})"
+                break
+            num_bytes /= 1024
+        self.line(msg)
+
+    # ============================================================================ #
+    #                                    Session                                   #
+    # ============================================================================ #
+
+    def session_name(self) -> str:
+        """The name of the sessions."""
+        raise NotImplementedError
+
+    def session_starts(self):
+        """Prints information about the starting session."""
+        self._starttime = time.time()
+
+        self.separator("=", f"Tyr {self.session_name()} session starts", bold=True)
+        msg = f"platform {sys.platform} -- Python {platform.python_version()} -- {sys.executable}"
+        self.line(msg)
+        self.line(f"rootdir: {os.getcwd()}")
+
+    # ============================================================================ #
+    #                                  Formatting                                  #
+    # ============================================================================ #
+
+    def format_seconds(self, seconds: int) -> str:
+        """Formats the given number of seconds into a more readable format.
+
+        Args:
+            seconds (int): The seconds to format.
+
+        Returns:
+            str: The readable string.
+        """
+        msg = f"{seconds}s"
+        if seconds >= 60:
+            hours = seconds // 3600
+            minutes = (seconds // 60) % 60
+            seconds = seconds % 60
+            if hours > 0:
+                msg += f" ({hours:0>2}:{minutes:0>2}:{seconds:0>2})"
+            else:
+                msg += f" ({minutes:0>2}:{seconds:0>2})"
+        return msg
+
+    def markup(self, text: str, **markup: bool) -> str:
+        """Adds tokens to customize the given text.
+
+        Args:
+            text (str): The text to customize.
+            markup (Dict[str, bool], optional): The effects to apply to the text.
+
+        Raises:
+            ValueError: When a markup name is unknown.
+
+        Returns:
+            str: The customized text.
+        """
+        for name in markup:
+            if name not in self._esctable:
+                raise ValueError(f"Unknown markup: {name!r}")
+        esc = [self._esctable[name] for name, on in markup.items() if on]
+        if esc:
+            text = "".join(f"\x1b[{cod}m" for cod in esc) + text + "\x1b[0m"
+        return text
+
+    def unmarkup(self, text: str) -> str:
+        """Removes the customization tokens of the given text.
+
+        Args:
+            text (str): The text to unwrap.
+
+        Returns:
+            str: The unwrapped text.
+        """
+        for cod in self._esctable.values():
+            text = text.replace(f"\x1b[{cod}m", "")
+        return text.replace("\x1b[0m", "")
