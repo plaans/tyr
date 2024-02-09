@@ -97,5 +97,5 @@ tyr *args:
 # Run the bench command.
 bench *args: (tyr "bench" args)
 
-# Run the bench command in verbose mode.
-bench-v *args: (tyr "-v bench" args)
+# Run the solve command.
+solve *args: (tyr "solve" args)

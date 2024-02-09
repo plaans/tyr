@@ -1,6 +1,3 @@
-import os
-import platform
-import sys
 import time
 from dataclasses import dataclass
 from typing import List, Optional, TextIO, Union
@@ -80,20 +77,17 @@ class BenchTerminalWritter(Writter):
 
     # ================================== Session ================================= #
 
-    def session_starts(self):
-        """Prints information about the starting benchmark session."""
-        self._starttime = time.time()
+    def session_name(self) -> str:
+        return "bench"
 
-        self.separator("=", "Tyr bench session starts", bold=True)
-        msg = f"platform {sys.platform} -- Python {platform.python_version()} -- {sys.executable}"
-        self.line(msg)
-        self.line(f"rootdir: {os.getcwd()}")
-        self.report_solve_config()
+    def session_starts(self):
+        super().session_starts()
+        self.report_solve_config(self._solve_config)
         self.line(
             f"parallel: {self._solve_config.jobs} job"
             + ("" if self._solve_config.jobs == 1 else "s")
         )
-        self.write("collecting...", flush=True, bold=True)
+        self.report_collecting()
 
     def session_finished(self):
         """Prints summary of the finished benchmark session."""
@@ -350,38 +344,3 @@ class BenchTerminalWritter(Writter):
         msg = f" [{int(len(self._results) / self._num_to_run * 100)}%]"
         fill = self._fullwidth - self.current_line_width
         self.line(msg.rjust(fill), **{self._main_color: True})
-
-    def report_solve_config(self):
-        """Prints a report about the configuration being used for the resolution."""
-        msg = f"timeout: {self.format_seconds(self._solve_config.timeout)}"
-
-        num_bytes = self._solve_config.memout
-        msg += f" -- memout: {num_bytes} Bytes"
-        for unit in ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB"]:
-            if num_bytes < 1024:
-                msg += f" ({num_bytes:.2f} {unit})"
-                break
-            num_bytes /= 1024
-        self.line(msg)
-
-    # ================================== Format ================================== #
-
-    def format_seconds(self, seconds: int) -> str:
-        """Formats the given number of seconds into a more readable format.
-
-        Args:
-            seconds (int): The seconds to format.
-
-        Returns:
-            str: The readable string.
-        """
-        msg = f"{seconds}s"
-        if seconds >= 60:
-            hours = seconds // 3600
-            minutes = (seconds // 60) % 60
-            seconds = seconds % 60
-            if hours > 0:
-                msg += f" ({hours:0>2}:{minutes:0>2}:{seconds:0>2})"
-            else:
-                msg += f" ({minutes:0>2}:{seconds:0>2})"
-        return msg
