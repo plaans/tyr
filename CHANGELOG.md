@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [1.8.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.7.0...v1.8.0) (2024-2-9)
+
+
+### Bug Fixes
+
+* **tests:** cli bench ([2d0a75f](https://gitlab.laas.fr/rgodet1/tyr/commit/2d0a75fd7e0c4badc5eee4c2bc7c11df79c5792a))
+
+
+### Features
+
+* **cli:** command to solve one single problem ([f050f20](https://gitlab.laas.fr/rgodet1/tyr/commit/f050f20b4e08622aece57b7fc51dd90013a995d6))
+
 # [1.7.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.6.2...v1.7.0) (2024-2-7)
 
 
