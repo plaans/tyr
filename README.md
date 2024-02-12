@@ -24,10 +24,10 @@ This project aims to provide a understanding analysis of task planners' performa
     - [Installing the Dependencies](#installing-the-dependencies)
     - [Installing the Module](#installing-the-module)
 - [Usage](#usage)
+- [Available Tools](#available-tools)
 - [Configuration](#configuration)
   - [Domains](#domains)
   - [Planners](#planners)
-- [Available Tools](#available-tools)
 - [License](#license)
 - [Contact](#contact)
 
@@ -71,6 +71,37 @@ python -m tyr --help
 ```
 
 The help should be sufficiently documented to guide you.
+
+# Available Tools
+
+The following table lists the domains and planners available, as well as the version used by the planners to solve the domain.
+
+|                                 |   **Aries**    |    **LPG**     |   **Optic**    |
+| ------------------------------- | :------------: | :------------: | :------------: |
+| **Depots**                      |                |                |                |
+| *Hierarchical*                  |     `base`     |       ❌       |       ❌       |
+| *Hierarchical Numeric*          |     `red`      |       ❌       |       ❌       |
+| *Hierarchical Temporal Numeric* |  `red_no_div`  |       ❌       |       ❌       |
+| *Numeric*                       |     `red`      |     `red`      |     `red`      |
+| *Temporal Numeric*              |  `red_no_div`  |  `red_no_div`  |  `red_no_div`  |
+| **Rovers**                      |                |                |                |
+| *Hierarchical*                  |     `base`     |       ❌       |       ❌       |
+| *Hierarchical Numeric*          |     `red`      |       ❌       |       ❌       |
+| *Hierarchical Temporal Numeric* |  `red_no_div`  |       ❌       |       ❌       |
+| *Numeric*                       |     `red`      |     `red`      |     `red`      |
+| *Temporal Numeric*              |  `red_no_div`  |  `red_no_div`  |  `red_no_div`  |
+| **Satellite**                   |                |                |                |
+| *Hierarchical*                  |     `base`     |       ❌       |       ❌       |
+| *Hierarchical Numeric*          |     `red`      |       ❌       |       ❌       |
+| *Hierarchical Temporal Numeric* | `red_no_float` |       ❌       |       ❌       |
+| *Numeric*                       |     `red`      |     `red`      |     `red`      |
+| *Temporal Numeric*              | `red_no_float` | `red_no_float` | `red_no_float` |
+| **JobShop**                     |                |                |                |
+| *Sheduling*                     |     `base`     |       ❌       |       ❌       |
+| *Temporal Numeric*              |     `base`     |     `base`     | `no_neg_cond`  |
+| **RCPSP**                       |                |                |                |
+| *Sheduling*                     |     `base`     |       ❌       |       ❌       |
+| *Temporal Numeric*              |     `base`     |     `base`     | `no_neg_cond`  |
 
 # Configuration
 
@@ -133,37 +164,6 @@ The class must be defined inside the `tyr.planners` module.
 The created planner will be automatically registered in the unified-planning factory.
 
 A full example can be found in [`src/tyr/planners/optic/__init__.py`](https://gitlab.laas.fr/rgodet1/tyr/-/blob/master/src/tyr/planners/optic/__init__.py) to add the **Optic** planner.
-
-# Available Tools
-
-The following table lists the domains and planners available, as well as the version used by the planners to solve the domain.
-
-|                                 |   **Aries**    |    **LPG**     |   **Optic**    |
-| ------------------------------- | :------------: | :------------: | :------------: |
-| **Depots**                      |                |                |                |
-| *Hierarchical*                  |     `base`     |       ❌       |       ❌       |
-| *Hierarchical Numeric*          |     `red`      |       ❌       |       ❌       |
-| *Hierarchical Temporal Numeric* |  `red_no_div`  |       ❌       |       ❌       |
-| *Numeric*                       |     `red`      |     `red`      |     `red`      |
-| *Temporal Numeric*              |  `red_no_div`  |  `red_no_div`  |  `red_no_div`  |
-| **Rovers**                      |                |                |                |
-| *Hierarchical*                  |     `base`     |       ❌       |       ❌       |
-| *Hierarchical Numeric*          |     `red`      |       ❌       |       ❌       |
-| *Hierarchical Temporal Numeric* |  `red_no_div`  |       ❌       |       ❌       |
-| *Numeric*                       |     `red`      |     `red`      |     `red`      |
-| *Temporal Numeric*              |  `red_no_div`  |  `red_no_div`  |  `red_no_div`  |
-| **Satellite**                   |                |                |                |
-| *Hierarchical*                  |     `base`     |       ❌       |       ❌       |
-| *Hierarchical Numeric*          |     `red`      |       ❌       |       ❌       |
-| *Hierarchical Temporal Numeric* | `red_no_float` |       ❌       |       ❌       |
-| *Numeric*                       |     `red`      |     `red`      |     `red`      |
-| *Temporal Numeric*              | `red_no_float` | `red_no_float` | `red_no_float` |
-| **JobShop**                     |                |                |                |
-| *Sheduling*                     |     `base`     |       ❌       |       ❌       |
-| *Temporal Numeric*              |     `base`     |     `base`     | `no_neg_cond`  |
-| **RCPSP**                       |                |                |                |
-| *Sheduling*                     |     `base`     |       ❌       |       ❌       |
-| *Temporal Numeric*              |     `base`     |     `base`     | `no_neg_cond`  |
 
 # License
 
