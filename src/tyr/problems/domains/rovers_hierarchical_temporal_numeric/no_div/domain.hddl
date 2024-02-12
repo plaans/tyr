@@ -36,6 +36,7 @@
      (visible ?x ?y - waypoint)
      (visible_from ?objective - objective ?waypoint - waypoint)
      (visited ?mid - waypoint)
+	   (in_sun ?w - waypoint)
   )  
   
   (:functions 
@@ -59,6 +60,27 @@
   (:task send_image_data :parameters (?rover - rover ?objective - objective ?mode - mode))
   (:task send_rock_data :parameters (?rover - rover ?waypoint - waypoint))
   (:task send_soil_data :parameters (?rover - rover ?waypoint - waypoint))
+  (:task free_to_recharge :parameters (?rover - rover))
+
+  (:method m-free_to_recharge-1
+    :parameters (?rover - rover)
+    :task
+    (free_to_recharge ?rover)
+    :ordered-subtasks
+    ()
+  )
+
+  (:method m-free_to_recharge-2
+    :parameters (?rover - rover ?waypoint - waypoint)
+    :task
+    (free_to_recharge ?rover)
+    :ordered-subtasks
+    (and
+      (recharge ?rover ?waypoint)
+      (free_to_recharge ?rover)
+    )
+  )
+
   
   (:method m-empty-store-1
     :parameters (?s - store ?rover - rover)
