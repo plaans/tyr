@@ -36,7 +36,12 @@ class TestDomainCreation:
                 v,
                 marks=(
                     [pytest.mark.xfail]
-                    if ("rovers" in d.name and "temporal" in d.name and p != 21)
+                    if (
+                        "rovers" in d.name
+                        and "temporal" in d.name
+                        and v in ["base", "red"]
+                        and p != 21
+                    )
                     else []
                 ),
             )

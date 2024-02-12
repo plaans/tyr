@@ -21,11 +21,21 @@ class RoversTemporalNumericDomain(AbstractDomain):
     def build_problem_red(self, problem: ProblemInstance) -> Optional[AbstractProblem]:
         return reduce_version(problem, "base", int(problem.uid) % 5 + 1)
 
+    def build_problem_fix_dur(
+        self, problem: ProblemInstance
+    ) -> Optional[AbstractProblem]:
+        return self.load_from_files(FOLDER.parent / "fix_dur", problem.uid)
+
+    def build_problem_red_fix_dur(
+        self, problem: ProblemInstance
+    ) -> Optional[AbstractProblem]:
+        return reduce_version(problem, "fix_dur", int(problem.uid) % 5 + 1)
+
     def build_problem_no_div(
         self, problem: ProblemInstance
     ) -> Optional[AbstractProblem]:
         # Get the base version of the problem.
-        base = problem.versions["base"].value
+        base = problem.versions["fix_dur"].value
         if base is None:
             return None
 
