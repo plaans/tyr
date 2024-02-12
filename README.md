@@ -27,8 +27,6 @@ This project aims to provide a understanding analysis of task planners' performa
   - [Domains](#domains)
   - [Planners](#planners)
 - [Available Tools](#available-tools)
-  - [Domains](#domains-1)
-  - [Planners](#planners-1)
 - [License](#license)
 - [Contact](#contact)
 
@@ -135,26 +133,34 @@ A full example can be found in [`src/tyr/planners/optic/__init__.py`](https://gi
 
 # Available Tools
 
-## Domains
+The following table lists the domains and planners available, as well as the version used by the planners to solve the domain.
 
-The following table lists the versions of the domains already present in the repo.
-
-|               | Scheduling | Hierarchical | Hierarchical Numeric | Hierarchical Temporal Numeric             | Numeric      | Temporal Numeric                          |
-| ------------- | ---------- | ------------ | -------------------- | ----------------------------------------- | ------------ | ----------------------------------------- |
-| **Depots**    |            | `base`       | `base`, `red`        | `base`, `red`,`no_div`,`red_no_div`       | `base`,`red` | `base`, `red`, `no_div`, `red_no_div`     |
-| **Jobshop**   | `base`     |              |                      |                                           |              | `base`, `no_neg_cond`                     |
-| **RCPSP**     | `base`     |              |                      |                                           |              | `base`, `no_neg_cond`                     |
-| **Rovers**    |            | `base`       | `base`, `red`        | `base`, `red`, `no_div`, `red_no_div`     | `base`,`red` | `base`, `red`, `no_div`, `red_no_div`     |
-| **Satellite** |            | `base`       | `base`, `red`        | `base`, `red`, `no_float`, `red_no_float` | `base`,`red` | `base`, `red`, `no_float`, `red_no_float` |
-
-## Planners
-
-List of the planners already present in the repo.
-Please take a look at [`src/tyr/configuration/planners.yaml`](https://gitlab.laas.fr/rgodet1/tyr/-/blob/master/src/tyr/configuration/planners.yaml) for the supported domains.
-
-- Aries
-- LPG
-- Optic
+|                                 |   **Aries**    |    **LPG**     |   **Optic**    |
+| ------------------------------- | :------------: | :------------: | :------------: |
+| **Depots**                      |                |                |                |
+| *Hierarchical*                  |     `base`     |       ❌       |       ❌       |
+| *Hierarchical Numeric*          |     `red`      |       ❌       |       ❌       |
+| *Hierarchical Temporal Numeric* |  `red_no_div`  |       ❌       |       ❌       |
+| *Numeric*                       |     `red`      |     `red`      |     `red`      |
+| *Temporal Numeric*              |  `red_no_div`  |  `red_no_div`  |  `red_no_div`  |
+| **Rovers**                      |                |                |                |
+| *Hierarchical*                  |     `base`     |       ❌       |       ❌       |
+| *Hierarchical Numeric*          |     `red`      |       ❌       |       ❌       |
+| *Hierarchical Temporal Numeric* |  `red_no_div`  |       ❌       |       ❌       |
+| *Numeric*                       |     `red`      |     `red`      |     `red`      |
+| *Temporal Numeric*              |  `red_no_div`  |  `red_no_div`  |  `red_no_div`  |
+| **Satellite**                   |                |                |                |
+| *Hierarchical*                  |     `base`     |       ❌       |       ❌       |
+| *Hierarchical Numeric*          |     `red`      |       ❌       |       ❌       |
+| *Hierarchical Temporal Numeric* | `red_no_float` |       ❌       |       ❌       |
+| *Numeric*                       |     `red`      |     `red`      |     `red`      |
+| *Temporal Numeric*              | `red_no_float` | `red_no_float` | `red_no_float` |
+| **JobShop**                     |                |                |                |
+| *Sheduling*                     |     `base`     |       ❌       |       ❌       |
+| *Temporal Numeric*              |     `base`     |     `base`     | `no_neg_cond`  |
+| **RCPSP**                       |                |                |                |
+| *Sheduling*                     |     `base`     |       ❌       |       ❌       |
+| *Temporal Numeric*              |     `base`     |     `base`     | `no_neg_cond`  |
 
 # License
 
