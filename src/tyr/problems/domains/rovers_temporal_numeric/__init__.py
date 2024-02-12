@@ -31,7 +31,7 @@ class RoversTemporalNumericDomain(AbstractDomain):
 
         # Load the domain of the no_div version from a PDDL file.
         no_div = PDDLReader().parse_problem(
-            (Path(__file__).parent / "no_div/domain.pddl").resolve().as_posix()
+            (Path(__file__).parent / "no_div/domain.hddl").resolve().as_posix()
         )
 
         # Add all objects.
@@ -50,8 +50,8 @@ class RoversTemporalNumericDomain(AbstractDomain):
         # Replace state variables involved in a division by static ones.
         for x in no_div.objects(no_div.user_type("rover")):
             energy = saved_values["energy"][(x.name,)]
-            rate = saved_values["rate"][(x.name,)]
-            atom = int(round(1 / rate * 100))
+            rate = saved_values["recharge-rate"][(x.name,)]
+            atom = int(round(eval(str(1 / rate * 100))))  # pylint: disable = eval-used
             for multi, suffix in [
                 (energy, ""),
                 (80, "-max"),
