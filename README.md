@@ -22,6 +22,7 @@ This project aims to provide a understanding analysis of task planners' performa
 - [Installation](#installation)
     - [Cloning the Repository](#cloning-the-repository)
     - [Installing the Dependencies](#installing-the-dependencies)
+    - [Installing the Module](#installing-the-module)
 - [Usage](#usage)
 - [Configuration](#configuration)
   - [Domains](#domains)
@@ -42,22 +43,24 @@ git clone --recurse-submodules https://gitlab.laas.fr/rgodet1/tyr
 
 ### Installing the Dependencies
 
-To install dependencies using [Justfile](https://github.com/casey/just), use the following command, this will create a virtual environment in `.venv`:
+Before running the installation script you need to install some dependencies:
 
 ```bash
-just install
+# Python 3.8+
+sudo apt install python3 python3-venv
+# Curl, needed to install cargo
+sudo apt install curl
+# Cargo
+curl https://sh.rustup.rs -sSf | sh
 ```
 
-To install dependencies without Justfile, use the following commands (think to create a virtual environment if you want to):
+### Installing the Module
+
+Once the dependencies are installed, just run the install script:
 
 ```bash
-cargo build --release --bin up-server --manifest-path libs/aries/Cargo.toml
-cp libs/aries/target/release/up-server libs/aries/planning/unified/plugin/up_aries/bin/up-aries_linux_amd64
-pip install -r requirements/prod.txt
+./install.sh
 ```
-
-To install development dependencies, replace `prod` by `dev`.
-You can also run `just install dev`.
 
 # Usage
 
