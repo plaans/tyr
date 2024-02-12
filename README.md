@@ -74,34 +74,34 @@ The help should be sufficiently documented to guide you.
 
 # Available Tools
 
-The following table lists the domains and planners available, as well as the version used by the planners to solve the domain.
+The following table lists the domains (with the number of instances) and planners available, as well as the version used by the planners to solve the domain.
 
-|                                 |   **Aries**    |    **LPG**     |   **Optic**    |
-| ------------------------------- | :------------: | :------------: | :------------: |
-| **Depots**                      |                |                |                |
-| *Hierarchical*                  |     `base`     |       ❌       |       ❌       |
-| *Hierarchical Numeric*          |     `red`      |       ❌       |       ❌       |
-| *Hierarchical Temporal Numeric* |  `red_no_div`  |       ❌       |       ❌       |
-| *Numeric*                       |     `red`      |     `red`      |     `red`      |
-| *Temporal Numeric*              |  `red_no_div`  |  `red_no_div`  |  `red_no_div`  |
-| **Rovers**                      |                |                |                |
-| *Hierarchical*                  |     `base`     |       ❌       |       ❌       |
-| *Hierarchical Numeric*          |     `red`      |       ❌       |       ❌       |
-| *Hierarchical Temporal Numeric* |  `red_no_div`  |       ❌       |       ❌       |
-| *Numeric*                       |     `red`      |     `red`      |     `red`      |
-| *Temporal Numeric*              |  `red_no_div`  |  `red_no_div`  |  `red_no_div`  |
-| **Satellite**                   |                |                |                |
-| *Hierarchical*                  |     `base`     |       ❌       |       ❌       |
-| *Hierarchical Numeric*          |     `red`      |       ❌       |       ❌       |
-| *Hierarchical Temporal Numeric* | `red_no_float` |       ❌       |       ❌       |
-| *Numeric*                       |     `red`      |     `red`      |     `red`      |
-| *Temporal Numeric*              | `red_no_float` | `red_no_float` | `red_no_float` |
-| **JobShop**                     |                |                |                |
-| *Sheduling*                     |     `base`     |       ❌       |       ❌       |
-| *Temporal Numeric*              |     `base`     |     `base`     | `no_neg_cond`  |
-| **RCPSP**                       |                |                |                |
-| *Sheduling*                     |     `base`     |       ❌       |       ❌       |
-| *Temporal Numeric*              |     `base`     |     `base`     | `no_neg_cond`  |
+|                                      |   **Aries**    |    **LPG**     |   **Optic**    |
+| ------------------------------------ | :------------: | :------------: | :------------: |
+| **Depots**                           |                |                |                |
+| *Hierarchical (30)*                  |     `base`     |       ❌       |       ❌       |
+| *Hierarchical Numeric (22)*          |     `red`      |       ❌       |       ❌       |
+| *Hierarchical Temporal Numeric (22)* |  `red_no_div`  |       ❌       |       ❌       |
+| *Numeric (22)*                       |     `red`      |     `red`      |     `red`      |
+| *Temporal Numeric (22)*              |  `red_no_div`  |  `red_no_div`  |  `red_no_div`  |
+| **Rovers**                           |                |                |                |
+| *Hierarchical (20)*                  |     `base`     |       ❌       |       ❌       |
+| *Hierarchical Numeric (20)*          |     `red`      |       ❌       |       ❌       |
+| *Hierarchical Temporal Numeric (20)* |  `red_no_div`  |       ❌       |       ❌       |
+| *Numeric (20)*                       |     `red`      |     `red`      |     `red`      |
+| *Temporal Numeric (20)*              |  `red_no_div`  |  `red_no_div`  |  `red_no_div`  |
+| **Satellite**                        |                |                |                |
+| *Hierarchical (22)*                  |     `base`     |       ❌       |       ❌       |
+| *Hierarchical Numeric (16)*          |     `red`      |       ❌       |       ❌       |
+| *Hierarchical Temporal Numeric (16)* | `red_no_float` |       ❌       |       ❌       |
+| *Numeric (16)*                       |     `red`      |     `red`      |     `red`      |
+| *Temporal Numeric (16)*              | `red_no_float` | `red_no_float` | `red_no_float` |
+| **JobShop**                          |                |                |                |
+| *Sheduling (40)*                     |     `base`     |       ❌       |       ❌       |
+| *Temporal Numeric (40)*              |     `base`     |     `base`     | `no_neg_cond`  |
+| **RCPSP**                            |                |                |                |
+| *Sheduling (30)*                     |     `base`     |       ❌       |       ❌       |
+| *Temporal Numeric (30)*              |     `base`     |     `base`     | `no_neg_cond`  |
 
 # Configuration
 
