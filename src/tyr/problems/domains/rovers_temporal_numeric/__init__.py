@@ -21,17 +21,27 @@ class RoversTemporalNumericDomain(AbstractDomain):
     def build_problem_red(self, problem: ProblemInstance) -> Optional[AbstractProblem]:
         return reduce_version(problem, "base", int(problem.uid) % 5 + 1)
 
+    def build_problem_fix_dur(
+        self, problem: ProblemInstance
+    ) -> Optional[AbstractProblem]:
+        return self.load_from_files(FOLDER.parent / "fix_dur", problem.uid)
+
+    def build_problem_red_fix_dur(
+        self, problem: ProblemInstance
+    ) -> Optional[AbstractProblem]:
+        return reduce_version(problem, "fix_dur", int(problem.uid) % 5 + 1)
+
     def build_problem_no_div(
         self, problem: ProblemInstance
     ) -> Optional[AbstractProblem]:
         # Get the base version of the problem.
-        base = problem.versions["base"].value
+        base = problem.versions["fix_dur"].value
         if base is None:
             return None
 
         # Load the domain of the no_div version from a PDDL file.
         no_div = PDDLReader().parse_problem(
-            (Path(__file__).parent / "no_div/domain.pddl").resolve().as_posix()
+            (Path(__file__).parent / "no_div/domain.hddl").resolve().as_posix()
         )
 
         # Add all objects.
@@ -50,8 +60,8 @@ class RoversTemporalNumericDomain(AbstractDomain):
         # Replace state variables involved in a division by static ones.
         for x in no_div.objects(no_div.user_type("rover")):
             energy = saved_values["energy"][(x.name,)]
-            rate = saved_values["rate"][(x.name,)]
-            atom = int(round(1 / rate * 100))
+            rate = saved_values["recharge-rate"][(x.name,)]
+            atom = int(round(eval(str(1 / rate * 100))))  # pylint: disable = eval-used
             for multi, suffix in [
                 (energy, ""),
                 (80, "-max"),

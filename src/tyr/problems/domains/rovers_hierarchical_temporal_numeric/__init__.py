@@ -35,6 +35,31 @@ class RoversHierarchicalTemporalNumericDomain(AbstractDomain):
     def build_problem_red(self, problem: ProblemInstance) -> Optional[AbstractProblem]:
         return self._build_problem_base(problem, "red")
 
+    def _build_problem_fix_dur(
+        self, pb: ProblemInstance, version: str
+    ) -> Optional[AbstractProblem]:
+        base_tn = RoversTemporalNumericDomain().get_problem_version(pb.uid, version)
+        if base_tn is None:
+            return None
+        mapping = {
+            "communicated_soil_data": "get_soil_data",
+            "communicated_rock_data": "get_rock_data",
+            "communicated_image_data": "get_image_data",
+        }
+        freedom = {"rover": "free_to_recharge"}
+        hier_dom_file = (Path(__file__).parent / "fix_dur/domain.hddl").resolve()
+        return goals_to_tasks(base_tn, hier_dom_file, mapping, freedom)
+
+    def build_problem_fix_dur(
+        self, problem: ProblemInstance
+    ) -> Optional[AbstractProblem]:
+        return self._build_problem_fix_dur(problem, "fix_dur")
+
+    def build_problem_red_fix_dur(
+        self, problem: ProblemInstance
+    ) -> Optional[AbstractProblem]:
+        return self._build_problem_fix_dur(problem, "red_fix_dur")
+
     def _build_problem_no_div(
         self, pb: ProblemInstance, version: str
     ) -> Optional[AbstractProblem]:

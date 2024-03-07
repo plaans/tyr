@@ -22,13 +22,12 @@ This project aims to provide a understanding analysis of task planners' performa
 - [Installation](#installation)
     - [Cloning the Repository](#cloning-the-repository)
     - [Installing the Dependencies](#installing-the-dependencies)
+    - [Installing the Module](#installing-the-module)
 - [Usage](#usage)
+- [Available Tools](#available-tools)
 - [Configuration](#configuration)
   - [Domains](#domains)
   - [Planners](#planners)
-- [Available Tools](#available-tools)
-  - [Domains](#domains-1)
-  - [Planners](#planners-1)
 - [License](#license)
 - [Contact](#contact)
 
@@ -44,22 +43,24 @@ git clone --recurse-submodules https://gitlab.laas.fr/rgodet1/tyr
 
 ### Installing the Dependencies
 
-To install dependencies using [Justfile](https://github.com/casey/just), use the following command, this will create a virtual environment in `.venv`:
+Before running the installation script you need to install some dependencies:
 
 ```bash
-just install
+# Python 3.8+
+sudo apt install python3 python3-venv
+# Curl, needed to install cargo
+sudo apt install curl
+# Cargo
+curl https://sh.rustup.rs -sSf | sh
 ```
 
-To install dependencies without Justfile, use the following commands (think to create a virtual environment if you want to):
+### Installing the Module
+
+Once the dependencies are installed, just run the install script:
 
 ```bash
-cargo build --release --bin up-server --manifest-path libs/aries/Cargo.toml
-cp libs/aries/target/release/up-server libs/aries/planning/unified/plugin/up_aries/bin/up-aries_linux_amd64
-pip install -r requirements/prod.txt
+./install.sh
 ```
-
-To install development dependencies, replace `prod` by `dev`.
-You can also run `just install dev`.
 
 # Usage
 
@@ -70,6 +71,37 @@ python -m tyr --help
 ```
 
 The help should be sufficiently documented to guide you.
+
+# Available Tools
+
+The following table lists the domains (with the number of instances) and planners available, as well as the version used by the planners to solve the domain.
+
+|                                      |   **Aries**    |    **LPG**     |   **Optic**    |
+| ------------------------------------ | :------------: | :------------: | :------------: |
+| **Depots**                           |                |                |                |
+| *Hierarchical (30)*                  |     `base`     |       ❌       |       ❌       |
+| *Hierarchical Numeric (22)*          |     `red`      |       ❌       |       ❌       |
+| *Hierarchical Temporal Numeric (22)* |  `red_no_div`  |       ❌       |       ❌       |
+| *Numeric (22)*                       |     `red`      |     `red`      |     `red`      |
+| *Temporal Numeric (22)*              |  `red_no_div`  |  `red_no_div`  |  `red_no_div`  |
+| **Rovers**                           |                |                |                |
+| *Hierarchical (20)*                  |     `base`     |       ❌       |       ❌       |
+| *Hierarchical Numeric (20)*          |     `red`      |       ❌       |       ❌       |
+| *Hierarchical Temporal Numeric (20)* |  `red_no_div`  |       ❌       |       ❌       |
+| *Numeric (20)*                       |     `red`      |     `red`      |     `red`      |
+| *Temporal Numeric (20)*              |  `red_no_div`  |  `red_no_div`  |  `red_no_div`  |
+| **Satellite**                        |                |                |                |
+| *Hierarchical (22)*                  |     `base`     |       ❌       |       ❌       |
+| *Hierarchical Numeric (16)*          |     `red`      |       ❌       |       ❌       |
+| *Hierarchical Temporal Numeric (16)* | `red_no_float` |       ❌       |       ❌       |
+| *Numeric (16)*                       |     `red`      |     `red`      |     `red`      |
+| *Temporal Numeric (16)*              | `red_no_float` | `red_no_float` | `red_no_float` |
+| **JobShop**                          |                |                |                |
+| *Sheduling (40)*                     |     `base`     |       ❌       |       ❌       |
+| *Temporal Numeric (40)*              |     `base`     |     `base`     | `no_neg_cond`  |
+| **RCPSP**                            |                |                |                |
+| *Sheduling (30)*                     |     `base`     |       ❌       |       ❌       |
+| *Temporal Numeric (30)*              |     `base`     |     `base`     | `no_neg_cond`  |
 
 # Configuration
 
@@ -132,29 +164,6 @@ The class must be defined inside the `tyr.planners` module.
 The created planner will be automatically registered in the unified-planning factory.
 
 A full example can be found in [`src/tyr/planners/optic/__init__.py`](https://gitlab.laas.fr/rgodet1/tyr/-/blob/master/src/tyr/planners/optic/__init__.py) to add the **Optic** planner.
-
-# Available Tools
-
-## Domains
-
-The following table lists the versions of the domains already present in the repo.
-
-|               | Scheduling | Hierarchical | Hierarchical Numeric | Hierarchical Temporal Numeric             | Numeric      | Temporal Numeric                          |
-| ------------- | ---------- | ------------ | -------------------- | ----------------------------------------- | ------------ | ----------------------------------------- |
-| **Depots**    |            | `base`       | `base`, `red`        | `base`, `red`,`no_div`,`red_no_div`       | `base`,`red` | `base`, `red`, `no_div`, `red_no_div`     |
-| **Jobshop**   | `base`     |              |                      |                                           |              | `base`, `no_neg_cond`                     |
-| **RCPSP**     | `base`     |              |                      |                                           |              | `base`, `no_neg_cond`                     |
-| **Rovers**    |            | `base`       | `base`, `red`        | `base`, `red`, `no_div`, `red_no_div`     | `base`,`red` | `base`, `red`, `no_div`, `red_no_div`     |
-| **Satellite** |            | `base`       | `base`, `red`        | `base`, `red`, `no_float`, `red_no_float` | `base`,`red` | `base`, `red`, `no_float`, `red_no_float` |
-
-## Planners
-
-List of the planners already present in the repo.
-Please take a look at [`src/tyr/configuration/planners.yaml`](https://gitlab.laas.fr/rgodet1/tyr/-/blob/master/src/tyr/configuration/planners.yaml) for the supported domains.
-
-- Aries
-- LPG
-- Optic
 
 # License
 
