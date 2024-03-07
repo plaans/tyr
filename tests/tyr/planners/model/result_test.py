@@ -135,6 +135,28 @@ class TestPlannerResult:
         )
         assert result == expected
 
+    # ================================== Not Run ================================= #
+
+    @pytest.mark.parametrize("name", ["mockplanner", "mockplannerbis"])
+    @pytest.mark.parametrize("problem", [MagicMock(), MagicMock()])
+    def test_not_run(
+        self,
+        name: str,
+        problem: Mock,
+    ):
+        planner = MagicMock()
+        planner.name = name
+        expected = PlannerResult(
+            name,
+            problem,
+            RunningMode.ONESHOT,
+            PlannerResultStatus.NOT_RUN,
+            computation_time=None,
+            plan_quality=None,
+        )
+        result = PlannerResult.not_run(problem, planner, RunningMode.ONESHOT)
+        assert result == expected
+
     # ================================== Timeout ================================= #
 
     @pytest.mark.parametrize("name", ["mockplanner", "mockplannerbis"])

@@ -17,6 +17,7 @@ from tyr import (
     SolveConfig,
 )
 from tyr.core.constants import LOGS_DIR
+from tyr.planners.database import Database
 from tyr.planners.model.config import RunningMode
 from tyr.planners.model.result import PlannerResultStatus
 
@@ -67,11 +68,13 @@ class TestPlanner(ModelTest):
 
     @staticmethod
     @pytest.fixture()
-    def solve_config() -> SolveConfig:
+    def solve_config():
         yield SolveConfig(
             jobs=1,
             memout=4 * 1024 * 1024 * 1024,  # 4GB
             timeout=350,
+            db_only=False,
+            no_db=False,
         )
 
     # ============================================================================ #
@@ -166,6 +169,56 @@ class TestPlanner(ModelTest):
         planner.config.problems.clear()
         version = planner.get_version(problem)
         assert version is None
+
+    # ================================= Database ================================= #
+
+    def test_solver_database_result(
+        self,
+        planner: Planner,
+        problem: ProblemInstance,
+        solve_config: SolveConfig,
+    ):
+        db = Database()
+        with patch.object(db, "load_planner_result") as load_mock:
+            result = planner.solve(problem, solve_config, RunningMode.ONESHOT)
+            assert result == load_mock.return_value
+
+    def test_solver_database_result_no_db(
+        self,
+        planner: Planner,
+        problem: ProblemInstance,
+        solve_config: SolveConfig,
+    ):
+        solve_config = replace(solve_config, no_db=True)
+        db = Database()
+        with patch.object(db, "load_planner_result") as load_mock:
+            planner.solve(problem, solve_config, RunningMode.ONESHOT)
+            load_mock.assert_not_called()
+
+    def test_solver_database_result_db_only(
+        self,
+        planner: Planner,
+        problem: ProblemInstance,
+        solve_config: SolveConfig,
+    ):
+        solve_config = replace(solve_config, db_only=True)
+        db = Database()
+        with patch.object(db, "load_planner_result") as load_mock:
+            result = planner.solve(problem, solve_config, RunningMode.ONESHOT)
+            assert result == load_mock.return_value
+
+    def test_solver_database_result_db_only_not_found(
+        self,
+        planner: Planner,
+        problem: ProblemInstance,
+        solve_config: SolveConfig,
+    ):
+        solve_config = replace(solve_config, db_only=True)
+        db = Database()
+        with patch.object(db, "load_planner_result") as load_mock:
+            load_mock.return_value = None
+            result = planner.solve(problem, solve_config, RunningMode.ONESHOT)
+            assert result.status == PlannerResultStatus.NOT_RUN
 
     # =================================== Solve ================================== #
 

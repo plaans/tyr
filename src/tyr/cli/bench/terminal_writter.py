@@ -50,6 +50,7 @@ class BenchTerminalWritter(Writter):
         PlannerResultStatus.MEMOUT: ("M", "yellow"),
         PlannerResultStatus.ERROR: ("E", "red"),
         PlannerResultStatus.UNSUPPORTED: (".", "blue"),
+        PlannerResultStatus.NOT_RUN: ("N", "purple"),
     }
 
     def __init__(

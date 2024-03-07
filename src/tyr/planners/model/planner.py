@@ -142,9 +142,12 @@ class Planner:
             return PlannerResult.unsupported(problem, self, running_mode)
 
         # Check the database.
-        db_result = Database().load_planner_result(planner_name, problem, running_mode)
-        if db_result is not None:
-            return db_result
+        if config.no_db is False:
+            db = Database().load_planner_result(planner_name, problem, running_mode)
+            if db is not None:
+                return db
+            if config.db_only:
+                return PlannerResult.not_run(problem, self, running_mode)
 
         # Limits the virtual memory of the current process.
         resource.setrlimit(resource.RLIMIT_AS, (config.memout, resource.RLIM_INFINITY))

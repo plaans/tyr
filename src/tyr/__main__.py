@@ -101,6 +101,8 @@ if negative (n_cpus + 1 + jobs) are used. Default to 1.",
 )
 @click.option("--anytime", is_flag=True, help="Perform anytime solving method only.")
 @click.option("--oneshot", is_flag=True, help="Perform oneshot solving method only.")
+@click.option("--db-only", is_flag=True, help="Only use the database for results.")
+@click.option("--no-db", is_flag=True, help="Do not use the database for results.")
 @pass_context
 def cli_bench(
     ctx: CliContext,
@@ -113,6 +115,8 @@ def cli_bench(
     domains: List[str],
     anytime: bool,
     oneshot: bool,
+    db_only: bool,
+    no_db: bool,
 ):
     update_context(ctx, verbose, out)
 
@@ -125,7 +129,13 @@ def cli_bench(
     else:
         running_modes = [RunningMode.ANYTIME, RunningMode.ONESHOT]
 
-    solve_config = SolveConfig(jobs, memout, timeout)
+    if db_only and no_db:
+        raise click.BadOptionUsage(
+            "--db-only --no-db",
+            "Cannot use both --db-only and --no-db.",
+        )
+
+    solve_config = SolveConfig(jobs, memout, timeout, db_only, no_db)
     run_bench(ctx, solve_config, planners, domains, running_modes)
 
 
@@ -165,7 +175,7 @@ def cli_solve(
 
     running_mode = RunningMode.ONESHOT if fs else RunningMode.ANYTIME
 
-    solve_config = SolveConfig(1, memout, timeout)
+    solve_config = SolveConfig(1, memout, timeout, False, False)
     run_solve(ctx, solve_config, planner, problem, running_mode)
 
 

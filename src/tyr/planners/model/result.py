@@ -23,6 +23,7 @@ class PlannerResultStatus(Enum):
     MEMOUT = auto()
     ERROR = auto()
     UNSUPPORTED = auto()
+    NOT_RUN = auto()
 
     @staticmethod
     def from_upf(status: PlanGenerationResultStatus) -> "PlannerResultStatus":
@@ -121,6 +122,31 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             computation_time,
             plan_quality=None,
             error_message=message,
+        )
+
+    @staticmethod
+    def not_run(
+        problem: ProblemInstance,
+        planner: "Planner",
+        running_mode: RunningMode,
+    ) -> "PlannerResult":
+        """Creates a not run result.
+
+        Args:
+            problem (ProblemInstance): The problem not run.
+            planner (Planner): The planner trying the solve the problem.
+            running_mode (RunningMode): The mode used by the planner.
+
+        Returns:
+            PlannerResult: The not run result.
+        """
+        return PlannerResult(
+            planner.name,
+            problem,
+            running_mode,
+            PlannerResultStatus.NOT_RUN,
+            computation_time=None,
+            plan_quality=None,
         )
 
     @staticmethod
