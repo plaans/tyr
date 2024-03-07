@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.1](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.8.0...v1.8.1) (2024-3-7)
+
+
+### Bug Fixes
+
+* **rovers:** add fix_dur version to fix upf issue ([1750e93](https://gitlab.laas.fr/rgodet1/tyr/commit/1750e93e919b1f4e5bdb990faff74b3c0c395266))
+* **rovers:** add free_to_recharge task and methods ([15ba921](https://gitlab.laas.fr/rgodet1/tyr/commit/15ba92147f855e60db44f64a3b8ea22147b599e6))
+* **rovers:** energy recharge rate calculation ([af0e82b](https://gitlab.laas.fr/rgodet1/tyr/commit/af0e82b70c99c41b91960791069d731ddeb991ad))
+
 # [1.8.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.7.0...v1.8.0) (2024-2-9)
 
 
