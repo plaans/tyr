@@ -58,6 +58,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
     computation_time: Optional[float] = None
     plan_quality: Optional[float] = None
     error_message: str = ""
+    from_database: bool = False
 
     @staticmethod
     def from_upf(

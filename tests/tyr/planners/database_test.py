@@ -109,6 +109,7 @@ class TestDatabase:
             result_mock.computation_time,
             result_mock.plan_quality,
             result_mock.error_message,
+            from_database=True,
         )
 
         loaded_result = database.load_planner_result(

@@ -1,6 +1,6 @@
 import time
 from dataclasses import dataclass
-from typing import List, Optional, TextIO, Union
+from typing import Dict, List, Optional, TextIO, Tuple, Union
 
 from tyr.cli.bench.collector import CollectionResult
 from tyr.cli.writter import Writter
@@ -43,7 +43,7 @@ class BenchResult:
 class BenchTerminalWritter(Writter):
     """Utility class to write content of the benchmark on the terminal."""
 
-    _status_map = {
+    _status_map: Dict[PlannerResultStatus, Tuple[str, str]] = {
         PlannerResultStatus.SOLVED: (".", "green"),
         PlannerResultStatus.UNSOLVABLE: ("U", "red"),
         PlannerResultStatus.TIMEOUT: ("T", "yellow"),
@@ -305,11 +305,15 @@ class BenchTerminalWritter(Writter):
         self._results.append(BenchResult.from_planner(result))
         letter, markup_key = self._status_map[result.status]
 
+        markup = {markup_key: True}
+        if result.from_database:
+            markup["invert"] = True
+
         if markup_key == "red":
             self._main_color = "red"
 
         if not self.verbose:
-            self.write(letter, **{markup_key: True})
+            self.write(letter, **markup)
             if self.current_line_width + len(" [100%]") > self._fullwidth:
                 self.report_progress()
         else:
@@ -323,7 +327,8 @@ class BenchTerminalWritter(Writter):
                     f"{planner.name} - {result.running_mode.name.lower()} - \
 {result.problem.name}:{current_version}"
                 )
-            self.write(" " + result.status.name, **{markup_key: True})
+            self.write(" ")
+            self.write(result.status.name, **markup)
 
             if (comp_time := result.computation_time) is not None and (
                 result.status

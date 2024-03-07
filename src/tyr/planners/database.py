@@ -113,6 +113,7 @@ class Database(Singleton):
             computation_time=resp[4],
             plan_quality=resp[5],
             error_message=resp[6],
+            from_database=True,
         )
 
 
