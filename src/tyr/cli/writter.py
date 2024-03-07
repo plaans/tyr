@@ -134,6 +134,7 @@ class Writter:
             erase (bool, optional): Whether to erase the full previous line. Defaults to False.
             markup (Dict[str, bool], optional): The effects to apply to the text.
         """
+        self._crt_line = ""
         fill = (" " * (self._fullwidth - len(text))) if erase else ""
         self.write(f"\r{text}{fill}", **markup)
 

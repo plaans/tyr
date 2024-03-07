@@ -315,7 +315,9 @@ class BenchTerminalWritter(Writter):
         else:
             current_version = planner.config.problems.get(domain.name, "none")
             if self._solve_config.jobs == 1:
-                self.write(f"{planner.name} - {result.problem.name}:{current_version}")
+                self.rewrite(
+                    f"{planner.name} - {result.problem.name}:{current_version}"
+                )
             else:
                 self.write(
                     f"{planner.name} - {result.running_mode.name.lower()} - \
@@ -338,6 +340,27 @@ class BenchTerminalWritter(Writter):
             self.report_progress()
 
         self.flush()
+
+    def report_planner_started(
+        self,
+        domain: AbstractDomain,
+        planner: Planner,
+        problem: ProblemInstance,
+    ):
+        """Prints a report about a starting planner.
+
+        Args:
+            domain (AbstractDomain): The domain the planner will solve.
+            planner (Planner): The planner starting the resolution.
+            problem (ProblemInstance): The problem to solve.
+        """
+        if self.verbose and self._solve_config.jobs == 1:
+            current_version = planner.config.problems.get(domain.name, "none")
+            current_date = self.markup(time.strftime("%Y-%m-%d %H:%M:%S"), purple=True)
+            self.write(
+                f"{planner.name} - {problem.name}:{current_version} started at {current_date}",
+                flush=True,
+            )
 
     def report_progress(self):
         """Prints a report about the current progression status."""
