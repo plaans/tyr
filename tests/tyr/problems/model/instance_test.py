@@ -3,8 +3,8 @@ from typing import Any, Dict
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-from unified_planning.plans import Plan, PlanKind
 from unified_planning.io import PDDLReader
+from unified_planning.plans import Plan, PlanKind
 
 from tests.utils import ModelTest
 from tyr import Lazy, ProblemInstance

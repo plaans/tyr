@@ -1,5 +1,4 @@
 from . import converter, model, scanner
-
 from .converter import *
 from .model import *
 from .scanner import *

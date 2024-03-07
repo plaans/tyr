@@ -1,5 +1,4 @@
 from . import cli, configuration, core, patterns, planners, problems
-
 from .cli import *
 from .configuration import *
 from .core import *

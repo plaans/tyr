@@ -1,5 +1,4 @@
 from . import abstract, lazy, singleton
-
 from .abstract import *
 from .lazy import *
 from .singleton import *

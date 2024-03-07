@@ -1,5 +1,4 @@
 from . import domain, instance
-
 from .domain import AbstractDomain
 from .instance import ProblemInstance
 

@@ -1,5 +1,4 @@
 from . import config, pddl_planner, planner, result
-
 from .config import *
 from .pddl_planner import *
 from .planner import *

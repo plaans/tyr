@@ -3,8 +3,8 @@ from unittest.mock import Mock
 
 import pytest
 import unified_planning.model.htn.task
-from unified_planning.shortcuts import Problem
 from unified_planning.io import PDDLReader
+from unified_planning.shortcuts import Problem
 
 from tyr import get_goals, goals_to_tasks
 

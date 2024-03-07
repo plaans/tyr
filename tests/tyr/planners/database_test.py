@@ -116,7 +116,7 @@ class TestDatabase:
         )
 
         cursor_mock.execute.assert_called_once_with(
-            f"SELECT * FROM planner_results WHERE planner_name='{result_mock.planner_name}' AND problem_name='{result_mock.problem.name}' AND running_mode='{result_mock.running_mode.name}' LIMIT 1"  # noqa: E501
+            f"SELECT * FROM planner_results WHERE planner_name='{result_mock.planner_name}' AND problem_name='{result_mock.problem.name}' AND running_mode='{result_mock.running_mode.name}' LIMIT 1"  # nosec: B608 # noqa: E501
         )
         conn_mock.commit.assert_not_called()
         assert loaded_result == expected
