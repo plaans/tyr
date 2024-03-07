@@ -114,3 +114,6 @@ class Database(Singleton):
             plan_quality=resp[5],
             error_message=resp[6],
         )
+
+
+__all__ = ["Database"]

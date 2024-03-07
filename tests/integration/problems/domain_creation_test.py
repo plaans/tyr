@@ -1,3 +1,6 @@
+import os
+import sys
+
 import pytest
 from unified_planning.model.htn import HierarchicalProblem
 from unified_planning.model.scheduling import SchedulingProblem
@@ -27,6 +30,12 @@ class TestDomainCreation:
             assert isinstance(version.value, AbstractProblem)
 
     @pytest.mark.slow
+    @pytest.mark.skipif(
+        sys.version_info < (3, 12)
+        and os.environ.get("FORCE_REAL_DOMAIN_CREATION", "0").lower()
+        not in ["1", "true", "t"],
+        reason="Skipping test for Python version < 3.12",
+    )
     @pytest.mark.parametrize(
         ["domain", "problem_id", "version_name"],
         [

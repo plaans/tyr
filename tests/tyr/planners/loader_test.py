@@ -9,7 +9,7 @@ from tyr import Planner, get_all_planners, register_all_planners
 
 
 class TestLoader:
-    @patch("tyr.planners")
+    @patch("tyr.planners.planners")
     @patch("tyr.configuration")
     def test_register_all_planners_mocked(self, mocked_config, mocked_planners):
         mocked_planners.__path__ = planner_module.__path__

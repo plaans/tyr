@@ -8,3 +8,6 @@ class CliContext:
 
     out: List[TextIO] = field(default_factory=list)
     verbosity: int = 0
+
+
+__all__ = ["CliContext"]

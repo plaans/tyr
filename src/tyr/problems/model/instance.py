@@ -107,3 +107,6 @@ class ProblemInstance:
                 max(float(str(plan.assignment[a.end])) for a in plan.activities)
             )
         return None
+
+
+__all__ = ["ProblemInstance"]

@@ -1,3 +1,4 @@
+from ast import literal_eval
 from collections import defaultdict
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -61,7 +62,7 @@ class RoversTemporalNumericDomain(AbstractDomain):
         for x in no_div.objects(no_div.user_type("rover")):
             energy = saved_values["energy"][(x.name,)]
             rate = saved_values["recharge-rate"][(x.name,)]
-            atom = int(round(eval(str(1 / rate * 100))))  # pylint: disable = eval-used
+            atom = int(round(literal_eval(str(1 / rate * 100))))
             for multi, suffix in [
                 (energy, ""),
                 (80, "-max"),

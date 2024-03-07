@@ -11,6 +11,11 @@
     "material-icon-theme.files.associations": {
         "requirements/aries.txt": "python-misc"
     },
+    "material-icon-theme.folders.associations": {
+        "planners": "resolver",
+        "problems": "context",
+        "tyr": "project"
+    },
     "python.testing.pytestArgs": [
         "tests"
     ],

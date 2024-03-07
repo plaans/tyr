@@ -26,6 +26,7 @@ def _solve(
     running_mode: RunningMode,
 ):
     register_all_planners()
+    tw.report_planner_started(problem.domain, planner, problem)
     result = planner.solve(problem, solve_config, running_mode)
     Database().save_planner_result(result)
     tw.set_results(results)
@@ -35,9 +36,11 @@ def _solve(
 def _sort_items(items: List[I]) -> List[I]:
     return sorted(
         items,
-        key=lambda x: (x.name.split(":")[0], int(x.name.split(":")[1]))  # type: ignore
-        if ":" in x.name  # type: ignore
-        else x.name,  # type: ignore
+        key=lambda x: (
+            (x.name.split(":")[0], int(x.name.split(":")[1]))  # type: ignore
+            if ":" in x.name  # type: ignore
+            else x.name  # type: ignore
+        ),
     )
 
 
@@ -127,3 +130,6 @@ def run_bench(
     # End the session.
     tw.set_results(results)
     tw.session_finished()
+
+
+__all__ = ["run_bench"]

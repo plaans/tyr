@@ -4,7 +4,13 @@ from typing import List
 
 import click
 
-from tyr import CliContext, RunningMode, SolveConfig, run_bench, run_solve
+from tyr import (  # type: ignore
+    CliContext,
+    RunningMode,
+    SolveConfig,
+    run_bench,
+    run_solve,
+)
 
 # ============================================================================ #
 #                                    Options                                   #

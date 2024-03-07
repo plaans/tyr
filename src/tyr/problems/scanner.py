@@ -8,7 +8,7 @@ from tyr.problems.model.domain import AbstractDomain
 def get_all_domains() -> List[AbstractDomain]:
     """
     Returns:
-        List[AbstractDomain]: All domains defined in `tyr.problems` module.
+        List[AbstractDomain]: All domains defined in `tyr.problems.domains` module.
     """
     # pylint: disable=import-outside-toplevel, cyclic-import
     import tyr.problems.domains as problem_module
@@ -24,3 +24,6 @@ def get_all_domains() -> List[AbstractDomain]:
                     domains.append(obj())
 
     return list(set(domains))  # Remove duplicates, note that domains are singleton
+
+
+__all__ = ["get_all_domains"]
