@@ -64,6 +64,10 @@ _lint linter folder *args:
 test-all +args="tests/":
     {{ python }} -m pytest {{ args }}
 
+# Run pytest with really slow tests.
+test-slow +args="tests/":
+    FORCE_REAL_DOMAIN_CREATION=1 {{ python }} -m pytest {{ args }}
+
 # Run pytest without slow tests.
 test +args="tests/": (test-all "-m 'not slow'" args)
 
