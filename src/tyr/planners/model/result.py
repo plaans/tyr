@@ -7,7 +7,7 @@ from unified_planning.engines.results import (
     PlanGenerationResultStatus,
 )
 
-from tyr.planners.model.config import RunningMode
+from tyr.planners.model.config import RunningMode, SolveConfig
 from tyr.problems import ProblemInstance
 
 if TYPE_CHECKING:
@@ -56,6 +56,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
     problem: ProblemInstance
     running_mode: RunningMode
     status: PlannerResultStatus
+    config: SolveConfig
     computation_time: Optional[float] = None
     plan_quality: Optional[float] = None
     error_message: str = ""
@@ -65,6 +66,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
     def from_upf(
         problem: ProblemInstance,
         result: PlanGenerationResult,
+        config: SolveConfig,
         running_mode: RunningMode,
     ) -> "PlannerResult":
         """Converts a result from the unified planning library to our inner result format.
@@ -72,6 +74,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
         Args:
             problem (ProblemInstance): The problem solved by the planner.
             result (PlanGenerationResult): The result to convert.
+            config (SolveConfig): The configuration used to solve the problem.
             running_mode (RunningMode): The mode used by the planner.
 
         Returns:
@@ -91,14 +94,16 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             problem,
             running_mode,
             PlannerResultStatus.from_upf(result.status),
+            config,
             computation_time,
             plan_quality,
         )
 
     @staticmethod
-    def error(
+    def error(  # pylint: disable = too-many-arguments
         problem: ProblemInstance,
         planner: "Planner",
+        config: SolveConfig,
         running_mode: RunningMode,
         computation_time: float,
         message: str,
@@ -108,6 +113,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
         Args:
             problem (ProblemInstance): The erroneous problem.
             planner (Planner): The planner trying the solve the problem.
+            config (SolveConfig): The configuration used to solve the problem.
             running_mode (RunningMode): The mode used by the planner.
             computation_time (float): Time to reach the error.
 
@@ -119,6 +125,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             problem,
             running_mode,
             PlannerResultStatus.ERROR,
+            config,
             computation_time,
             plan_quality=None,
             error_message=message,
@@ -128,6 +135,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
     def not_run(
         problem: ProblemInstance,
         planner: "Planner",
+        config: SolveConfig,
         running_mode: RunningMode,
     ) -> "PlannerResult":
         """Creates a not run result.
@@ -135,6 +143,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
         Args:
             problem (ProblemInstance): The problem not run.
             planner (Planner): The planner trying the solve the problem.
+            config (SolveConfig): The configuration used to solve the problem.
             running_mode (RunningMode): The mode used by the planner.
 
         Returns:
@@ -145,6 +154,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             problem,
             running_mode,
             PlannerResultStatus.NOT_RUN,
+            config,
             computation_time=None,
             plan_quality=None,
         )
@@ -153,6 +163,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
     def timeout(
         problem: ProblemInstance,
         planner: "Planner",
+        config: SolveConfig,
         running_mode: RunningMode,
         timeout: int,
     ) -> "PlannerResult":
@@ -161,6 +172,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
         Args:
             problem (ProblemInstance): The timed out problem.
             planner (Planner): The planner trying the solve the problem.
+            config (SolveConfig): The configuration used to solve the problem.
             running_mode (RunningMode): The mode used by the planner.
             timeout (int): The limit time to solve the problem.
 
@@ -172,6 +184,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             problem,
             running_mode,
             PlannerResultStatus.TIMEOUT,
+            config,
             timeout,
             plan_quality=None,
         )
@@ -180,6 +193,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
     def unsupported(
         problem: ProblemInstance,
         planner: "Planner",
+        config: SolveConfig,
         running_mode: RunningMode,
     ) -> "PlannerResult":
         """Creates an unsupported result.
@@ -187,6 +201,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
         Args:
             problem (ProblemInstance): The unsupported problem.
             planner (Planner): The planner trying the solve the problem.
+            config (SolveConfig): The configuration used to solve the problem.
             running_mode (RunningMode): The mode used by the planner.
 
         Returns:
@@ -197,6 +212,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             problem,
             running_mode,
             PlannerResultStatus.UNSUPPORTED,
+            config,
             computation_time=None,
             plan_quality=None,
         )

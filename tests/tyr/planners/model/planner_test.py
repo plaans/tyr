@@ -242,7 +242,12 @@ class TestPlanner(ModelTest):
         solve_config: SolveConfig,
     ):
         planner.config.problems.clear()
-        expected = PlannerResult.unsupported(problem, planner, RunningMode.ONESHOT)
+        expected = PlannerResult.unsupported(
+            problem,
+            planner,
+            solve_config,
+            RunningMode.ONESHOT,
+        )
         result = planner.solve(problem, solve_config, RunningMode.ONESHOT)
         assert result == expected
 
@@ -325,6 +330,7 @@ class TestPlanner(ModelTest):
         mocked_result_from_upf.assert_called_once_with(
             problem,
             upf_result,
+            solve_config,
             RunningMode.ONESHOT,
         )
         assert result == mocked_result_from_upf.return_value
@@ -347,6 +353,7 @@ class TestPlanner(ModelTest):
         expected = PlannerResult.error(
             problem,
             planner,
+            solve_config,
             RunningMode.ONESHOT,
             computation_time,
             "foo toto",
@@ -384,7 +391,11 @@ class TestPlanner(ModelTest):
         solve_config: SolveConfig,
     ):
         upf_result = PlannerResult(
-            planner.name, problem, RunningMode.ONESHOT, PlannerResultStatus.SOLVED
+            planner.name,
+            problem,
+            RunningMode.ONESHOT,
+            PlannerResultStatus.SOLVED,
+            solve_config,
         )
         mocked_result_from_upf.return_value = upf_result
         expected = replace(upf_result, computation_time=computation_time)
@@ -411,7 +422,13 @@ class TestPlanner(ModelTest):
         mocked_planner = mocked_oneshot_planner.return_value.__enter__.return_value
         mocked_planner.solve.side_effect = solve
 
-        expected = PlannerResult.timeout(problem, planner, RunningMode.ONESHOT, timeout)
+        expected = PlannerResult.timeout(
+            problem,
+            planner,
+            solve_config,
+            RunningMode.ONESHOT,
+            timeout,
+        )
         result = planner.solve(problem, solve_config, RunningMode.ONESHOT)
         assert result == expected
 
@@ -434,11 +451,18 @@ class TestPlanner(ModelTest):
             problem,
             RunningMode.ONESHOT,
             PlannerResultStatus.SOLVED,
+            solve_config,
             computation_time=2 * timeout,
         )
         mocked_result_from_upf.return_value = upf_result
 
-        expected = PlannerResult.timeout(problem, planner, RunningMode.ONESHOT, timeout)
+        expected = PlannerResult.timeout(
+            problem,
+            planner,
+            solve_config,
+            RunningMode.ONESHOT,
+            timeout,
+        )
         result = planner.solve(problem, solve_config, RunningMode.ONESHOT)
         assert result == expected
 

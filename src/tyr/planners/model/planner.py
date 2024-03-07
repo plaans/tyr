@@ -139,15 +139,20 @@ class Planner:
         version = self.get_version(problem)
         if version is None:
             # No version found, the problem is not supported.
-            return PlannerResult.unsupported(problem, self, running_mode)
+            return PlannerResult.unsupported(problem, self, config, running_mode)
 
         # Check the database.
         if config.no_db is False:
-            db = Database().load_planner_result(planner_name, problem, running_mode)
+            db = Database().load_planner_result(
+                planner_name,
+                problem,
+                config,
+                running_mode,
+            )
             if db is not None:
                 return db
             if config.db_only:
-                return PlannerResult.not_run(problem, self, running_mode)
+                return PlannerResult.not_run(problem, self, config, running_mode)
 
         # Limits the virtual memory of the current process.
         resource.setrlimit(resource.RLIMIT_AS, (config.memout, resource.RLIM_INFINITY))
@@ -220,12 +225,18 @@ class Planner:
                             return PlannerResult.timeout(
                                 problem,
                                 self,
+                                config,
                                 running_mode,
                                 config.timeout,
                             )
 
             # Convert the result into inner format and set computation time if not present.
-            result = PlannerResult.from_upf(problem, self.last_upf_result, running_mode)
+            result = PlannerResult.from_upf(
+                problem,
+                self.last_upf_result,
+                config,
+                running_mode,
+            )
             if (
                 self.last_upf_result is not None
                 and self.last_upf_result.plan is not None
@@ -245,6 +256,7 @@ class Planner:
             return PlannerResult.error(
                 problem,
                 self,
+                config,
                 running_mode,
                 computation_time,
                 traceback.format_exc(),
