@@ -7,8 +7,9 @@ from tyr.planners.model.pddl_planner import TyrPDDLPlanner
 
 
 def register_all_planners():
-    """Registers all planners defined in `tyr.planners` into unified planning factory."""
-    import tyr.planners as planners_module  # pylint: disable=import-outside-toplevel, cyclic-import
+    """Registers all planners defined in `tyr.planners.planners` into unified planning factory."""
+    # pylint: disable=import-outside-toplevel, cyclic-import
+    import tyr.planners.planners as planners_module
 
     env = get_environment()
     env.factory.add_engine(

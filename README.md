@@ -111,7 +111,7 @@ A **domain** contains a set of **problems** and each problem has a set of **vers
 The different versions are used to make a same problem compatible for different planners.
 
 To add a new domain to the analysis process, create a class inheriting from `tyr.AbstractDomain` and with a name finishing by *Domain*.
-The class must be defined inside the `tyr.problems` module and must override the `get_num_problems` method returning the number of instances.
+The class must be defined inside the `tyr.problems.domains` module and must override the `get_num_problems` method returning the number of instances.
 For example, you can create the domain *Rovers* with:
 
 ```python
@@ -160,7 +160,7 @@ Each entry contains:
 
 It is possible to add a planner which is not supported by the unified-planning library.
 To do so, create a class inheriting from `tyr.TyrPDDLPlanner` and with a name finishing by *Planner*.
-The class must be defined inside the `tyr.planners` module.
+The class must be defined inside the `tyr.planners.planners` module.
 The created planner will be automatically registered in the unified-planning factory.
 
 A full example can be found in [`src/tyr/planners/optic/__init__.py`](https://gitlab.laas.fr/rgodet1/tyr/-/blob/master/src/tyr/planners/optic/__init__.py) to add the **Optic** planner.

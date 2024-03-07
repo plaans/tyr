@@ -39,7 +39,7 @@ class TyrPDDLPlanner(PDDLAnytimePlanner):
         raise NotImplementedError()
 
     # pylint: disable=too-many-arguments, too-many-locals
-    def _solve(
+    def _solve(  # pragma: no cover # Copy of the original method with really small changes
         self,
         problem: AbstractProblem,
         heuristic: Optional[Callable[[State], Optional[float]]] = None,
