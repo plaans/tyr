@@ -85,3 +85,6 @@ def collect_problems(*filters: str) -> CollectionResult[ProblemInstance]:
     selected = list(set(selected))  # Remove duplicates
     desectected = [p for p in available if p not in selected]
     return CollectionResult(selected, desectected, skipped)
+
+
+__all__ = ["collect_planners", "collect_problems", "CollectionResult"]

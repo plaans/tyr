@@ -367,3 +367,6 @@ class BenchTerminalWritter(Writter):
         msg = f" [{int(len(self._results) / self._num_to_run * 100)}%]"
         fill = self._fullwidth - self.current_line_width
         self.line(msg.rjust(fill), **{self._main_color: True})
+
+
+__all__ = ["BenchResult", "BenchTerminalWritter"]

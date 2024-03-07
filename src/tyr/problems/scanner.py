@@ -24,3 +24,6 @@ def get_all_domains() -> List[AbstractDomain]:
                     domains.append(obj())
 
     return list(set(domains))  # Remove duplicates, note that domains are singleton
+
+
+__all__ = ["get_all_domains"]

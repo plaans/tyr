@@ -282,3 +282,6 @@ class Writter:
         for cod in self._esctable.values():
             text = text.replace(f"\x1b[{cod}m", "")
         return text.replace("\x1b[0m", "")
+
+
+__all__ = ["Writter"]

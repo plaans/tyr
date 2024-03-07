@@ -13,3 +13,6 @@ class AbstractMeta(type):
 # pylint: disable = too-few-public-methods
 class Abstract(metaclass=AbstractMeta):
     """An abstract class which cannot be instantiated but its children can."""
+
+
+__all__ = ["Abstract"]

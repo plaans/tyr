@@ -186,3 +186,6 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         """
         if problem is not None:
             self.problems[problem.uid] = problem
+
+
+__all__ = ["AbstractDomain"]

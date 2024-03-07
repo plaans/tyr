@@ -170,13 +170,11 @@ class Planner:
                     # Create the resolution fonctions with timeout decorator in case that
                     # the planner does not handle it itself.
                     @timeout(config.timeout, timeout_exception=TimeoutError)
-                    def resolution_anytime() -> (
-                        Generator[
-                            Tuple[PlanGenerationResult, float, float],
-                            None,
-                            Tuple[PlanGenerationResult, float, float],
-                        ]
-                    ):
+                    def resolution_anytime() -> Generator[
+                        Tuple[PlanGenerationResult, float, float],
+                        None,
+                        Tuple[PlanGenerationResult, float, float],
+                    ]:
                         # Record time and try the solve the problem.
                         start = time.time()
                         final_result = None
@@ -256,3 +254,6 @@ class Planner:
 
     def __hash__(self) -> int:
         return hash(self.config)
+
+
+__all__ = ["Planner"]

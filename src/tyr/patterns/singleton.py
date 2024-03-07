@@ -18,3 +18,6 @@ class SingletonMeta(type):
 # pylint: disable = too-few-public-methods
 class Singleton(metaclass=SingletonMeta):
     """A thread-safe implementation of Singleton."""
+
+
+__all__ = ["Singleton"]

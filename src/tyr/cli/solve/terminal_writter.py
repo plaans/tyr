@@ -116,3 +116,6 @@ class SolveTerminalWritter(Writter):
         session_duration = int(time.time() - self._starttime)
         msg = f"{self._status.name} in {self.format_seconds(session_duration)}"
         self.separator("=", msg, **{status_map[self._status]: True})
+
+
+__all__ = ["SolveTerminalWritter"]

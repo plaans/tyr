@@ -185,3 +185,11 @@ def scheduling_to_actions(schd_pb: SchedulingProblem) -> Problem:
 
     # Return the generated problem
     return pddl_pb
+
+
+__all__ = [
+    "get_goals",
+    "reduce_version",
+    "goals_to_tasks",
+    "scheduling_to_actions",
+]

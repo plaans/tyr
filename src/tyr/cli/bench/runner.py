@@ -130,3 +130,6 @@ def run_bench(
     # End the session.
     tw.set_results(results)
     tw.session_finished()
+
+
+__all__ = ["run_bench"]

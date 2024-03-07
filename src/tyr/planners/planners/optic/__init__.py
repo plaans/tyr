@@ -77,3 +77,6 @@ class OpticPlanner(TyrPDDLPlanner):
         if retval == 0:
             return PlanGenerationResultStatus.UNSOLVABLE_INCOMPLETELY
         return PlanGenerationResultStatus.INTERNAL_ERROR
+
+
+__all__ = ["OpticPlanner"]

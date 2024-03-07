@@ -26,3 +26,6 @@ def register_all_planners():
                 obj = getattr(module, obj_name)
                 if issubclass(obj, TyrPDDLPlanner):
                     env.factory.add_engine(obj().name, module.__name__, obj.__name__)
+
+
+__all__ = ["register_all_planners"]
