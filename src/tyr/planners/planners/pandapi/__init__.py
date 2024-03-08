@@ -7,6 +7,7 @@ from unified_planning.shortcuts import Problem
 from tyr.planners.model.pddl_planner import TyrPDDLPlanner
 
 
+# pylint: disable=too-many-ancestors
 class PandaPiPlanner(TyrPDDLPlanner):
     """The PandaPi planner wrapped into local PDDL planner."""
 
