@@ -175,7 +175,7 @@ def cli_solve(
 
     running_mode = RunningMode.ONESHOT if fs else RunningMode.ANYTIME
 
-    solve_config = SolveConfig(1, memout, timeout, False, False)
+    solve_config = SolveConfig(1, memout, timeout, False, True)
     run_solve(ctx, solve_config, planner, problem, running_mode)
 
 
