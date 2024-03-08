@@ -230,6 +230,12 @@ class Planner:
                                 config.timeout,
                             )
 
+            if self.last_upf_result is not None:
+                # Save the plan in logs
+                plan_path = self.get_log_file(problem, "plan", running_mode)
+                with open(plan_path, "w", encoding="utf-8") as log_file:
+                    log_file.write(str(self.last_upf_result.plan))
+
             # Convert the result into inner format and set computation time if not present.
             result = PlannerResult.from_upf(
                 problem,
