@@ -8,7 +8,7 @@ from typing import Generator, Optional, Tuple
 
 import unified_planning.shortcuts as upf
 from timeout_decorator import timeout
-from unified_planning.engines import PlanGenerationResult
+from unified_planning.engines import PlanGenerationResult, PlanGenerationResultStatus
 from unified_planning.environment import get_environment
 from unified_planning.shortcuts import AbstractProblem
 
@@ -246,6 +246,7 @@ class Planner:
             if (
                 self.last_upf_result is not None
                 and self.last_upf_result.plan is not None
+                and self.last_upf_result.status == PlanGenerationResultStatus.TIMEOUT
             ):
                 # On anytime mode, last result can be timeout even if an intermediate was solved.
                 result.status = PlannerResultStatus.SOLVED
