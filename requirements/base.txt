@@ -8,5 +8,5 @@ joblib
 -r aries.txt
 
 # Unified Planning
-git+https://github.com/aiplan4eu/unified-planning.git@master#egg=unified_planning
+git+https://github.com/aiplan4eu/unified-planning.git@hddl-writer#egg=unified_planning
 git+https://github.com/aiplan4eu/up-lpg.git@master#egg=up-lpg
