@@ -104,6 +104,8 @@ The following table lists the domains (with the number of instances) and planner
 | **RCPSP**                            |                   |                |                |                   |
 | *Sheduling (30)*                     |      `base`       |       ❌       |       ❌       |        ❌         |
 | *Temporal Numeric (30)*              |      `base`       |     `base`     | `no_neg_cond`  |        ❌         |
+| **Simple Goto**                      |                   |                |                |                   |
+| *Hierarchical(10)*                   | `base` & `linear` |       ❌       |       ❌       | `base` & `linear` |
 
 # Configuration
 
