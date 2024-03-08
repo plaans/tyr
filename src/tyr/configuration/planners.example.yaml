@@ -20,6 +20,13 @@
     satellite-hierarchical-temporal-numeric: red_no_float
     satellite-numeric: red
     satellite-temporal-numeric: red_no_float
+    simple-goto-hierarchical: base
+  env:
+    ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
+
+- name: aries-linear
+  problems:
+    simple-goto-hierarchical: linear
   env:
     ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
 

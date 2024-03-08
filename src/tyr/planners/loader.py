@@ -15,6 +15,9 @@ def register_all_planners():
     env.factory.add_engine(
         "aries", "libs.aries.planning.unified.plugin.up_aries", "Aries"
     )
+    env.factory.add_engine(
+        "aries-linear", "libs.aries.planning.unified.plugin.up_aries", "Aries"
+    )
 
     for _, name, _ in walk_packages(planners_module.__path__):
         module = import_module(f"{planners_module.__name__}.{name}")
