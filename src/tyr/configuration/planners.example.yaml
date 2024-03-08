@@ -30,6 +30,12 @@
   env:
     ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
 
+- name: aries-insertion
+  problems:
+    simple-goto-hierarchical: insertion
+  env:
+    ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
+
 - name: lpg
   anytime_name: lpg-anytime
   problems:
@@ -63,3 +69,7 @@
 - name: panda-pi-linear
   problems:
     simple-goto-hierarchical: linear
+
+- name: panda-pi-insertion
+  problems:
+    simple-goto-hierarchical: insertion

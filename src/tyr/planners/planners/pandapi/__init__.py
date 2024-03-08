@@ -89,4 +89,8 @@ class PandaPiLinearPlanner(PandaPiPlanner):
     """The PandaPi planner configured to use linear version of some problems."""
 
 
-__all__ = ["PandaPiPlanner", "PandaPiLinearPlanner"]
+class PandaPiInsertionPlanner(PandaPiPlanner):
+    """The PandaPi planner configured to use task insertion version of some problems."""
+
+
+__all__ = ["PandaPiPlanner", "PandaPiInsertionPlanner", "PandaPiLinearPlanner"]

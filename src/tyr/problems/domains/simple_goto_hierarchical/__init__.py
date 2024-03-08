@@ -3,7 +3,7 @@ from typing import Optional, Union
 
 from unified_planning.io.pddl_reader import PDDLReader
 from unified_planning.model.htn import HierarchicalProblem
-from unified_planning.shortcuts import AbstractProblem, Problem
+from unified_planning.shortcuts import AbstractProblem
 
 from tyr.problems.model import AbstractDomain, ProblemInstance
 
@@ -14,7 +14,7 @@ class SimpleGotoHierarchicalDomain(AbstractDomain):
 
     def build_problem_base(self, problem: ProblemInstance) -> Optional[AbstractProblem]:
         domain_file = Path(__file__).parent / "base" / "domain.hddl"
-        pb = PDDLReader().parse_problem(domain_file.as_posix())
+        pb: HierarchicalProblem = PDDLReader().parse_problem(domain_file.as_posix())
 
         roads = [
             (1, 2),
@@ -97,5 +97,37 @@ class SimpleGotoHierarchicalDomain(AbstractDomain):
         # Add the goals.
         for task in base.task_network.subtasks:
             pb.task_network.add_subtask(task)
+
+        return pb
+
+    def build_problem_insertion(
+        self, problem: ProblemInstance
+    ) -> Optional[AbstractProblem]:
+        # Get the base version of the problem.
+        base: HierarchicalProblem = problem.versions["base"].value
+        if base is None:
+            return None
+
+        # Create the new domain.
+        domain_file = Path(__file__).parent / "insertion" / "domain.hddl"
+        pb: HierarchicalProblem = PDDLReader().parse_problem(domain_file.as_posix())
+
+        # Add all objects.
+        pb.add_objects(base.all_objects)
+
+        # Initialize all state variables.
+        for sv, val in base.explicit_initial_values.items():
+            pb.set_initial_value(pb.fluent(sv.fluent().name)(*sv.args), val)
+
+        # Add the goals.
+        for task in base.task_network.subtasks:
+            # Convert the goto task into a at goal.
+            if task.task.name == "goto":
+                pb.add_goal(pb.fluent("at")(task.parameters[0], task.parameters[1]))
+            else:
+                pb.task_network.add_subtask(task)
+
+        # Add the freedom task for task insertion.
+        pb.task_network.add_subtask(pb.get_task("freedom"), pb.object("T1"))
 
         return pb
