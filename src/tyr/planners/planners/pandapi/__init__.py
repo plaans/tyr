@@ -84,4 +84,8 @@ class PandaPiPlanner(TyrPDDLPlanner):
         return PlanGenerationResultStatus.INTERNAL_ERROR
 
 
-__all__ = ["PandaPiPlanner"]
+class PandaPiLinearPlanner(PandaPiPlanner):
+    """The PandaPi planner configured to use linear version of some problems."""
+
+
+__all__ = ["PandaPiPlanner", "PandaPiLinearPlanner"]

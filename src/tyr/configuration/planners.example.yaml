@@ -58,3 +58,8 @@
     depots-hierarchical: base
     rovers-hierarchical: base
     satellite-hierarchical: base
+    simple-goto-hierarchical: base
+
+- name: panda-pi-linear
+  problems:
+    simple-goto-hierarchical: linear
