@@ -10,7 +10,7 @@ from tyr.problems.model import AbstractDomain, ProblemInstance
 
 class SimpleGotoHierarchicalDomain(AbstractDomain):
     def get_num_problems(self) -> int:
-        return 10
+        return 30
 
     def build_problem_base(self, problem: ProblemInstance) -> Optional[AbstractProblem]:
         domain_file = Path(__file__).parent / "base" / "domain.hddl"
