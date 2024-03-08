@@ -64,6 +64,32 @@ class SolveTerminalWritter(Writter):
         self.line(f"{problem.name} with {planner.name} in {running_mode}", bold=True)
         return planner, problem
 
+    def report_file(
+        self,
+        planner: Planner,
+        result: PlannerResult,
+        filename: str,
+        title: str,
+        color: str,
+    ):
+        """Prints a report about a file.
+
+        Args:
+            planner (Planner): The planner which did the resolution.
+            result (PlannerResult): The result of the planner.
+            filename (str): The filename to report.
+            title (str): The title of the report.
+            color (str): The color of the title.
+        """
+
+        file = planner.get_log_file(result.problem, filename, result.running_mode)
+        if file.exists():
+            self.line()
+            self.separator("*", title, **{color: True})
+            self.line()
+            with open(file, "r", encoding="utf-8") as f:
+                self.write(f.read())
+
     def report_result(self, planner: Planner, result: PlannerResult):
         """Prints a report about the resolution of the planner.
 
@@ -72,17 +98,10 @@ class SolveTerminalWritter(Writter):
             result (PlannerResult): The result of the planner.
         """
         self._status = result.status
-
+        self.report_file(planner, result, "solve", "Logs", "cyan")
+        self.report_file(planner, result, "error", "Errors", "red")
+        self.report_file(planner, result, "plan", "Plan", "green")
         self.line()
-        self.separator("*", "Resolution result", cyan=True)
-        self.line()
-
-        with open(
-            planner.get_log_file(result.problem, "solve", result.running_mode),
-            "r",
-            encoding="utf-8",
-        ) as file:
-            self.write(file.read())
 
     # ================================== Session ================================= #
 
