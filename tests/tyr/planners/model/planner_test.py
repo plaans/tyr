@@ -421,13 +421,13 @@ class TestPlanner(ModelTest):
         solve_config = replace(solve_config, timeout=timeout)
         mocked_planner = mocked_oneshot_planner.return_value.__enter__.return_value
         mocked_planner.solve.side_effect = solve
+        solve_config = replace(solve_config, timeout=timeout)
 
         expected = PlannerResult.timeout(
             problem,
             planner,
             solve_config,
             RunningMode.ONESHOT,
-            timeout,
         )
         result = planner.solve(problem, solve_config, RunningMode.ONESHOT)
         assert result == expected
@@ -455,13 +455,10 @@ class TestPlanner(ModelTest):
             computation_time=2 * timeout,
         )
         mocked_result_from_upf.return_value = upf_result
+        solve_config = replace(solve_config, timeout=timeout)
 
         expected = PlannerResult.timeout(
-            problem,
-            planner,
-            solve_config,
-            RunningMode.ONESHOT,
-            timeout,
+            problem, planner, solve_config, RunningMode.ONESHOT
         )
         result = planner.solve(problem, solve_config, RunningMode.ONESHOT)
         assert result == expected
