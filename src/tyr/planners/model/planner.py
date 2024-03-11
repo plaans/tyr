@@ -303,5 +303,8 @@ class Planner:
     def __hash__(self) -> int:
         return hash(self.config)
 
+    def __str__(self) -> str:
+        return self.name
+
 
 __all__ = ["Planner"]
