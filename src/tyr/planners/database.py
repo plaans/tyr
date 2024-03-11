@@ -1,6 +1,7 @@
 import datetime
 import sqlite3
 from contextlib import contextmanager
+from dataclasses import replace
 from typing import TYPE_CHECKING, Optional
 
 from tyr.core.constants import DB_FILE
@@ -108,29 +109,27 @@ class Database(Singleton):
         from tyr.planners.model.result import PlannerResult, PlannerResultStatus
 
         with self.database() as conn:
-            candidates = (
+            resp = (
                 conn.cursor()
                 .execute(
                     """
                     SELECT * FROM "results"
-                    WHERE "planner"=? AND "problem"=? AND "mode"=?
-                    AND "jobs"=? AND "memout"=? AND "timeout"=?
+                    WHERE "planner"=? AND "problem"=? AND "mode"=? AND "memout"=?
+                    ORDER BY "creation" DESC
+                    LIMIT 1;
                     """,
-                    (
-                        planner_name,
-                        problem.name,
-                        running_mode.name,
-                        config.jobs,
-                        config.memout,
-                        config.timeout,
-                    ),
+                    (planner_name, problem.name, running_mode.name, config.memout),
                 )
-                .fetchall()
+                .fetchone()
             )
 
-        if not candidates:
+        if resp is None:
             return None
-        resp = candidates[0]
+
+        if resp[5] > config.timeout:
+            result = PlannerResult.timeout(problem, planner_name, config, running_mode)
+            return replace(result, from_database=True)
+
         return PlannerResult(
             planner_name,
             problem,
