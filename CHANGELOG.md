@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [1.9.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.8.1...v1.9.0) (2024-03-11)
+
+
+### Bug Fixes
+
+* **rovers:** use eval instead of ast.literal_eval ([39ce1b8](https://gitlab.laas.fr/rgodet1/tyr/commit/39ce1b8102153ff8b78b0ac29b0389d60f667339))
+
+
+### Features
+
+* **cli:** print starting time of resolution in bench verbose mode ([db83e41](https://gitlab.laas.fr/rgodet1/tyr/commit/db83e41b8d27e9cc0fb83caaaf4b1c7939e81a70))
+
 ## [1.8.1](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.8.0...v1.8.1) (2024-3-7)
 
 
