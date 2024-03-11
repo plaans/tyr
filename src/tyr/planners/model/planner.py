@@ -1,10 +1,10 @@
-from io import TextIOWrapper
 import os
 import resource
 import shutil
 import signal
 import time
 import traceback
+from io import TextIOWrapper
 from pathlib import Path
 from typing import Generator, Optional, Tuple
 
@@ -209,7 +209,6 @@ class Planner:
                                 self,
                                 config,
                                 running_mode,
-                                config.timeout,
                             )
 
             if self.last_upf_result is not None:

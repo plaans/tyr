@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Union
 
 from unified_planning.engines.results import (
     PlanGenerationResult,
@@ -162,31 +162,28 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
     @staticmethod
     def timeout(
         problem: ProblemInstance,
-        planner: "Planner",
+        planner: Union["Planner", str],
         config: SolveConfig,
         running_mode: RunningMode,
-        timeout: int,
     ) -> "PlannerResult":
         """Creates a timeout result.
 
         Args:
             problem (ProblemInstance): The timed out problem.
-            planner (Planner): The planner trying the solve the problem.
+            planner (Planner | str): The planner trying the solve the problem or its name.
             config (SolveConfig): The configuration used to solve the problem.
             running_mode (RunningMode): The mode used by the planner.
-            timeout (int): The limit time to solve the problem.
 
         Returns:
             PlannerResult: The timeout result.
         """
         return PlannerResult(
-            planner.name,
+            str(planner),
             problem,
             running_mode,
             PlannerResultStatus.TIMEOUT,
             config,
-            timeout,
-            plan_quality=None,
+            config.timeout,
         )
 
     @staticmethod

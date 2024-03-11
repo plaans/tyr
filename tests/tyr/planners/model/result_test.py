@@ -216,22 +216,16 @@ class TestPlannerResult:
     def test_timeout(self, name: str, problem: Mock, config: Mock, timeout: float):
         planner = MagicMock()
         planner.name = name
+        config.timeout = timeout
         expected = PlannerResult(
-            name,
+            str(planner),
             problem,
             RunningMode.ONESHOT,
             PlannerResultStatus.TIMEOUT,
             config,
             timeout,
-            plan_quality=None,
         )
-        result = PlannerResult.timeout(
-            problem,
-            planner,
-            config,
-            RunningMode.ONESHOT,
-            timeout,
-        )
+        result = PlannerResult.timeout(problem, planner, config, RunningMode.ONESHOT)
         assert result == expected
 
     # ================================ Unsupported =============================== #
