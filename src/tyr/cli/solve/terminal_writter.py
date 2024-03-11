@@ -64,7 +64,7 @@ class SolveTerminalWritter(Writter):
         self.line(f"{problem.name} with {planner.name} in {running_mode}", bold=True)
         return planner, problem
 
-    def report_file(
+    def report_file(  # pylint: disable=too-many-arguments
         self,
         planner: Planner,
         result: PlannerResult,
