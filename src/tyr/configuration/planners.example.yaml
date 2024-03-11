@@ -36,6 +36,21 @@
   env:
     ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
 
+- name: linear
+  problems:
+    depots-hierarchical: base
+    rovers-hierarchical: base
+    satellite-hierarchical: base
+    simple-goto-hierarchical: base
+
+- name: linear-linear
+  problems:
+    simple-goto-hierarchical: linear
+
+- name: linear-insertion
+  problems:
+    simple-goto-hierarchical: insertion
+
 - name: lpg
   anytime_name: lpg-anytime
   problems:
