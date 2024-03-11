@@ -28,8 +28,7 @@ def _solve(
     register_all_planners()
     tw.report_planner_started(problem.domain, planner, problem)
     result = planner.solve(problem, solve_config, running_mode)
-    if solve_config.no_db is False and solve_config.db_only is False:
-        Database().save_planner_result(result)
+    Database().save_planner_result(result)
     tw.set_results(results)
     tw.report_planner_result(problem.domain, planner, result)
 

@@ -1,6 +1,7 @@
 from tyr.cli.bench import collector
 from tyr.cli.config import CliContext
 from tyr.cli.solve.terminal_writter import SolveTerminalWritter
+from tyr.planners.database import Database
 from tyr.planners.loader import register_all_planners
 from tyr.planners.model.config import RunningMode, SolveConfig
 
@@ -36,6 +37,7 @@ def run_solve(
     # Perform resolution.
     register_all_planners()
     result = planner.solve(problem, solve_config, running_mode)
+    Database().save_planner_result(result)
     tw.report_result(planner, result)
 
     # End the session.
