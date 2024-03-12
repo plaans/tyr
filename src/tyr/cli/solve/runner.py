@@ -24,7 +24,7 @@ def run_solve(
     """
 
     # Create the writter and start the session.
-    tw = SolveTerminalWritter(solve_config, ctx.out, ctx.verbosity)
+    tw = SolveTerminalWritter(solve_config, ctx.out, ctx.verbosity, ctx.config)
     tw.session_starts()
 
     # Collect the planner and the problem to use.

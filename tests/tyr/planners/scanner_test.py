@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest.mock import patch
 
 import tests.tyr.planners.fixtures.configuration as config_module
@@ -28,6 +29,32 @@ class TestScanner:
         mocked_yaml.return_value = None
         result = get_all_planner_configs()
         assert result == []
+
+    @patch("builtins.open")
+    @patch("tyr.configuration")
+    @patch("pathlib.Path.exists")
+    def test_get_all_planner_configs_loads_local_file_if_present(
+        self, mock_path, mock_module, mock_open
+    ):
+        mock_module.__path__ = config_module.__path__
+        mock_open.return_value.__enter__.return_value.read.return_value = ""
+        mock_path.side_effect = [True, True]
+        file = (Path(config_module.__path__[0]) / "planners.yaml").resolve()
+        get_all_planner_configs()
+        mock_open.assert_called_once_with(file, "r", encoding="utf-8")
+
+    @patch("builtins.open")
+    @patch("tyr.configuration")
+    @patch("pathlib.Path.exists")
+    def test_get_all_planner_configs_loads_example_file_if_local_is_absent(
+        self, mock_path, mock_module, mock_open
+    ):
+        mock_module.__path__ = config_module.__path__
+        mock_open.return_value.__enter__.return_value.read.return_value = ""
+        mock_path.side_effect = [False, True]
+        file = (Path(config_module.__path__[0]) / "planners.example.yaml").resolve()
+        get_all_planner_configs()
+        mock_open.assert_called_once_with(file, "r", encoding="utf-8")
 
     def test_get_all_planner_configs_real(self):
         # Check no crash

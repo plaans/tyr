@@ -3,8 +3,10 @@ import platform
 import shutil
 import sys
 import time
+from pathlib import Path
 from typing import List, Optional, TextIO, Union
 
+from tyr.configuration.loader import get_config_file
 from tyr.planners.model.config import SolveConfig
 
 
@@ -52,12 +54,14 @@ class Writter:
         self,
         out: Union[Optional[TextIO], List[TextIO]] = None,
         verbosity: int = 0,
+        config: Optional[Path] = None,
     ) -> None:
         """
         Args:
             out (Union[Optional[TextIO], List[TextIO]], optional): The output where to write.
                 It can be a list of outputs to write in multiple places. Defaults to stdout.
             verbosity (int, optional): Verbosity level. Defaults to 0.
+            config (Optional[Path], optional): The configuration file used.
         """
         if out is None or out == [] or out == tuple():
             out = sys.stdout
@@ -65,6 +69,7 @@ class Writter:
             out = [out]
         self._out = list(out)
         self._verbosity = verbosity
+        self._config = get_config_file("cli", config)
         self._crt_line = ""
         self._fullwidth = shutil.get_terminal_size(fallback=(80, 24))[0]
         self._starttime = 0
@@ -224,6 +229,7 @@ class Writter:
         msg = f"platform {sys.platform} -- Python {platform.python_version()} -- {sys.executable}"
         self.line(msg)
         self.line(f"rootdir: {os.getcwd()}")
+        self.line(f"config: {self._config}")
 
     # ============================================================================ #
     #                                  Formatting                                  #
