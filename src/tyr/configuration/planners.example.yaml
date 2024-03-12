@@ -21,6 +21,7 @@
     satellite-numeric: red
     satellite-temporal-numeric: red_no_float
     simple-goto-hierarchical: base
+    transport-hierarchical: base
   env:
     ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
 
@@ -42,6 +43,7 @@
     rovers-hierarchical: base
     satellite-hierarchical: base
     simple-goto-hierarchical: base
+    transport-hierarchical: base
 
 - name: linear-linear
   problems:
@@ -80,6 +82,7 @@
     rovers-hierarchical: base
     satellite-hierarchical: base
     simple-goto-hierarchical: base
+    transport-hierarchical: base
 
 - name: panda-pi-linear
   problems:
