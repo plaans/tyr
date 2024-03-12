@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [1.11.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.10.1...v1.11.0) (2024-03-12)
+
+
+### Features
+
+* **cli:** can specify a specific config file ([4ed8d9d](https://gitlab.laas.fr/rgodet1/tyr/commit/4ed8d9d79283a0fc1c7f17e23393ca9323dde259))
+* **cli:** display the used config file ([7e8049c](https://gitlab.laas.fr/rgodet1/tyr/commit/7e8049cc07efe9d6a13b8425f0bfea9083daee4c))
+* **cli:** get argument values from config file before cli values ([b04b255](https://gitlab.laas.fr/rgodet1/tyr/commit/b04b25526c97e66f942d51759ad231df59fc1403))
+* **config:** add config loader ([4d3213d](https://gitlab.laas.fr/rgodet1/tyr/commit/4d3213d9ad1f819dc652e4b0a7ef70cb3ab5df8c))
+* **config:** can specify the full path of the configuration file to the loader ([e72597c](https://gitlab.laas.fr/rgodet1/tyr/commit/e72597ceb74e2d4caa4fd37049672c3465bc543b))
+* **config:** load example file if local is not present ([0628ccd](https://gitlab.laas.fr/rgodet1/tyr/commit/0628ccdb2e0c0cc757ba44870c8537eff850a224))
+
 ## [1.10.1](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.10.0...v1.10.1) (2024-03-12)
 
 
