@@ -1,3 +1,4 @@
+from pathlib import Path
 import time
 from dataclasses import dataclass
 from typing import Dict, List, Optional, TextIO, Tuple, Union
@@ -58,8 +59,9 @@ class BenchTerminalWritter(Writter):
         solve_config: SolveConfig,
         out: Union[Optional[TextIO], List[TextIO]] = None,
         verbosity: int = 0,
+        config: Optional[Path] = None,
     ) -> None:
-        super().__init__(out, verbosity)
+        super().__init__(out, verbosity, config)
         self._solve_config = solve_config
         self._num_to_run = 0
         self._main_color = "green"

@@ -64,7 +64,7 @@ def run_bench(
     """
 
     # Create the writter and start the session.
-    tw = BenchTerminalWritter(solve_config, ctx.out, ctx.verbosity)
+    tw = BenchTerminalWritter(solve_config, ctx.out, ctx.verbosity, ctx.config)
     tw.session_starts()
 
     # Collect the planners and the problems to use for the benchmark.

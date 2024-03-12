@@ -1,3 +1,4 @@
+from pathlib import Path
 import time
 from typing import List, Literal, Optional, TextIO, Tuple, Union
 
@@ -17,8 +18,9 @@ class SolveTerminalWritter(Writter):
         solve_config: SolveConfig,
         out: Union[Optional[TextIO], List[TextIO]] = None,
         verbosity: int = 0,
+        config: Optional[Path] = None,
     ) -> None:
-        super().__init__(out, verbosity)
+        super().__init__(out, verbosity, config)
         self._solve_config = solve_config
         self._status = PlannerResultStatus.UNSUPPORTED
 
