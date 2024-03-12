@@ -1,16 +1,17 @@
 import os
 import resource
 import shutil
+import signal
 import time
 import traceback
+from io import TextIOWrapper
 from pathlib import Path
 from typing import Generator, Optional, Tuple
 
 import unified_planning.shortcuts as upf
-from timeout_decorator import timeout
-from unified_planning.engines import PlanGenerationResult
+from unified_planning.engines import PlanGenerationResult, PlanGenerationResultStatus
 from unified_planning.environment import get_environment
-from unified_planning.shortcuts import AbstractProblem
+from unified_planning.shortcuts import AbstractProblem, Engine
 
 from tyr.core.constants import LOGS_DIR
 from tyr.planners.database import Database
@@ -139,12 +140,20 @@ class Planner:
         version = self.get_version(problem)
         if version is None:
             # No version found, the problem is not supported.
-            return PlannerResult.unsupported(problem, self, running_mode)
+            return PlannerResult.unsupported(problem, self, config, running_mode)
 
         # Check the database.
-        db_result = Database().load_planner_result(planner_name, problem, running_mode)
-        if db_result is not None:
-            return db_result
+        if config.no_db is False:
+            db = Database().load_planner_result(
+                planner_name,
+                problem,
+                config,
+                running_mode,
+            )
+            if db is not None:
+                return db
+            if config.db_only:
+                return PlannerResult.not_run(problem, self, config, running_mode)
 
         # Limits the virtual memory of the current process.
         resource.setrlimit(resource.RLIMIT_AS, (config.memout, resource.RLIM_INFINITY))
@@ -167,65 +176,58 @@ class Planner:
                 # Get the log file.
                 log_path = self.get_log_file(problem, "solve", running_mode)
                 with open(log_path, "w", encoding="utf-8") as log_file:
-                    # Create the resolution fonctions with timeout decorator in case that
-                    # the planner does not handle it itself.
-                    @timeout(config.timeout, timeout_exception=TimeoutError)
-                    def resolution_anytime() -> Generator[
-                        Tuple[PlanGenerationResult, float, float],
-                        None,
-                        Tuple[PlanGenerationResult, float, float],
-                    ]:
-                        # Record time and try the solve the problem.
-                        start = time.time()
-                        final_result = None
-                        # pylint: disable = no-member
-                        for result in planner.get_solutions(
-                            version,
-                            timeout=config.timeout,
-                            output_stream=log_file,
-                        ):
-                            final_result = result
-                            yield result, start, time.time()
-                        return final_result, start, time.time()
-
-                    @timeout(config.timeout, timeout_exception=TimeoutError)
-                    def resolution_oneshot() -> (
-                        Tuple[PlanGenerationResult, float, float]
-                    ):
-                        # Record time and try the solve the problem.
-                        start = time.time()
-                        upf_result = planner.solve(
-                            version,
-                            timeout=config.timeout,
-                            output_stream=log_file,
-                        )
-                        end = time.time()
-                        return upf_result, start, end
-
                     try:
                         end = start + config.timeout
                         self._last_upf_result = None
+                        # Set the timeout alarm.
+                        signal.signal(signal.SIGALRM, self._solve_timed_out)
+                        signal.alarm(config.timeout)
+                        # Get the solutions.
                         if running_mode == RunningMode.ONESHOT:
-                            self._last_upf_result, start, end = resolution_oneshot()
+                            self._last_upf_result, start, end = self._solve_oneshot(
+                                planner,
+                                version,
+                                config.timeout,
+                                log_file,
+                            )
                         else:
-                            for result, s, e in resolution_anytime():
+                            for result, s, e in self._solve_anytime(
+                                planner,
+                                version,
+                                config.timeout,
+                                log_file,
+                            ):
                                 self._last_upf_result = result
                                 start, end = s, e
+                        # Disable the timeout alarm.
+                        signal.alarm(0)
                     except TimeoutError:
                         # The planner timed out.
                         if self.last_upf_result is None:
                             return PlannerResult.timeout(
                                 problem,
                                 self,
+                                config,
                                 running_mode,
-                                config.timeout,
                             )
 
+            if self.last_upf_result is not None:
+                # Save the plan in logs
+                plan_path = self.get_log_file(problem, "plan", running_mode)
+                with open(plan_path, "w", encoding="utf-8") as log_file:
+                    log_file.write(str(self.last_upf_result.plan))
+
             # Convert the result into inner format and set computation time if not present.
-            result = PlannerResult.from_upf(problem, self.last_upf_result, running_mode)
+            result = PlannerResult.from_upf(
+                problem,
+                self.last_upf_result,
+                config,
+                running_mode,
+            )
             if (
                 self.last_upf_result is not None
                 and self.last_upf_result.plan is not None
+                and self.last_upf_result.status == PlanGenerationResultStatus.TIMEOUT
             ):
                 # On anytime mode, last result can be timeout even if an intermediate was solved.
                 result.status = PlannerResultStatus.SOLVED
@@ -242,10 +244,55 @@ class Planner:
             return PlannerResult.error(
                 problem,
                 self,
+                config,
                 running_mode,
                 computation_time,
                 traceback.format_exc(),
             )
+
+    def _solve_anytime(
+        self,
+        planner: Engine,
+        version: AbstractProblem,
+        timeout: int,
+        log_file: TextIOWrapper,
+    ) -> Generator[
+        Tuple[PlanGenerationResult, float, float],
+        None,
+        Tuple[PlanGenerationResult, float, float],
+    ]:
+        # Record time and try the solve the problem.
+        start = time.time()
+        final_result = None
+        for result in planner.get_solutions(
+            version,
+            timeout=timeout,
+            output_stream=log_file,
+        ):
+            final_result = result
+            yield result, start, time.time()
+        return final_result, start, time.time()
+
+    def _solve_oneshot(
+        self,
+        planner: Engine,
+        version: AbstractProblem,
+        timeout: int,
+        log_file: TextIOWrapper,
+    ) -> Tuple[PlanGenerationResult, float, float]:
+        # Record time and try the solve the problem.
+        start = time.time()
+        upf_result = planner.solve(
+            version,
+            timeout=timeout,
+            output_stream=log_file,
+        )
+        end = time.time()
+        return upf_result, start, end
+
+    @staticmethod
+    def _solve_timed_out(signum, frame):
+        raise TimeoutError("The planner timed out.")
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Planner):
@@ -254,6 +301,9 @@ class Planner:
 
     def __hash__(self) -> int:
         return hash(self.config)
+
+    def __str__(self) -> str:
+        return self.name
 
 
 __all__ = ["Planner"]

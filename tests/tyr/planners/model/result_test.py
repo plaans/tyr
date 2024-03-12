@@ -22,6 +22,11 @@ class TestPlannerResult:
 
     @staticmethod
     @pytest.fixture()
+    def config():
+        yield MagicMock()
+
+    @staticmethod
+    @pytest.fixture()
     def upf_result():
         yield PlanGenerationResult(
             PlanGenerationResultStatus.SOLVED_OPTIMALLY,
@@ -36,8 +41,18 @@ class TestPlannerResult:
     # ================================= From UPF ================================= #
 
     @pytest.mark.parametrize("problem", [MagicMock(), MagicMock()])
-    def test_from_upf_problem(self, problem: Mock, upf_result: PlanGenerationResult):
-        result = PlannerResult.from_upf(problem, upf_result, RunningMode.ONESHOT)
+    def test_from_upf_problem(
+        self,
+        problem: Mock,
+        config: Mock,
+        upf_result: PlanGenerationResult,
+    ):
+        result = PlannerResult.from_upf(
+            problem,
+            upf_result,
+            config,
+            RunningMode.ONESHOT,
+        )
         assert result.problem == problem
 
     @pytest.mark.parametrize("status", PlanGenerationResultStatus)
@@ -45,6 +60,7 @@ class TestPlannerResult:
         self,
         status: PlanGenerationResultStatus,
         problem: Mock,
+        config: Mock,
         upf_result: PlanGenerationResult,
     ):
         status_map = {
@@ -59,15 +75,29 @@ class TestPlannerResult:
             PlanGenerationResultStatus.INTERMEDIATE: PlannerResultStatus.SOLVED,
         }
         upf_result.status = status
-        result = PlannerResult.from_upf(problem, upf_result, RunningMode.ONESHOT)
+        result = PlannerResult.from_upf(
+            problem,
+            upf_result,
+            config,
+            RunningMode.ONESHOT,
+        )
         assert result.status == status_map[status]
 
     @pytest.mark.parametrize("name", ["mockplanner", "mockplannerbis"])
     def test_from_upf_planner_name(
-        self, name: str, problem: Mock, upf_result: PlanGenerationResult
+        self,
+        name: str,
+        problem: Mock,
+        config: Mock,
+        upf_result: PlanGenerationResult,
     ):
         upf_result.engine_name = name
-        result = PlannerResult.from_upf(problem, upf_result, RunningMode.ONESHOT)
+        result = PlannerResult.from_upf(
+            problem,
+            upf_result,
+            config,
+            RunningMode.ONESHOT,
+        )
         assert result.planner_name == name
 
     @pytest.mark.parametrize("computation_time", [None, "1.5", "0.0", "15"])
@@ -75,6 +105,7 @@ class TestPlannerResult:
         self,
         computation_time: Optional[str],
         problem: Mock,
+        config: Mock,
         upf_result: PlanGenerationResult,
     ):
         if computation_time is None:
@@ -83,7 +114,12 @@ class TestPlannerResult:
         else:
             upf_result.metrics = {"engine_internal_time": computation_time}
             expected = float(computation_time)
-        result = PlannerResult.from_upf(problem, upf_result, RunningMode.ONESHOT)
+        result = PlannerResult.from_upf(
+            problem,
+            upf_result,
+            config,
+            RunningMode.ONESHOT,
+        )
         assert result.computation_time == expected
 
     @pytest.mark.parametrize(
@@ -94,11 +130,17 @@ class TestPlannerResult:
         plan: Optional[Mock],
         quality: Optional[float],
         problem: Mock,
+        config: Mock,
         upf_result: PlanGenerationResult,
     ):
         upf_result.plan = plan
         problem.get_quality_of_plan.return_value = quality
-        result = PlannerResult.from_upf(problem, upf_result, RunningMode.ONESHOT)
+        result = PlannerResult.from_upf(
+            problem,
+            upf_result,
+            config,
+            RunningMode.ONESHOT,
+        )
 
         assert result.plan_quality == quality
         if plan is None:
@@ -116,6 +158,7 @@ class TestPlannerResult:
         self,
         name: str,
         problem: Mock,
+        config: Mock,
         computation_time: float,
         message: str,
     ):
@@ -126,13 +169,43 @@ class TestPlannerResult:
             problem,
             RunningMode.ONESHOT,
             PlannerResultStatus.ERROR,
+            config,
             computation_time,
             plan_quality=None,
             error_message=message,
         )
         result = PlannerResult.error(
-            problem, planner, RunningMode.ONESHOT, computation_time, message
+            problem,
+            planner,
+            config,
+            RunningMode.ONESHOT,
+            computation_time,
+            message,
         )
+        assert result == expected
+
+    # ================================== Not Run ================================= #
+
+    @pytest.mark.parametrize("name", ["mockplanner", "mockplannerbis"])
+    @pytest.mark.parametrize("problem", [MagicMock(), MagicMock()])
+    def test_not_run(
+        self,
+        name: str,
+        problem: Mock,
+        config: Mock,
+    ):
+        planner = MagicMock()
+        planner.name = name
+        expected = PlannerResult(
+            name,
+            problem,
+            RunningMode.ONESHOT,
+            PlannerResultStatus.NOT_RUN,
+            config,
+            computation_time=None,
+            plan_quality=None,
+        )
+        result = PlannerResult.not_run(problem, planner, config, RunningMode.ONESHOT)
         assert result == expected
 
     # ================================== Timeout ================================= #
@@ -140,25 +213,26 @@ class TestPlannerResult:
     @pytest.mark.parametrize("name", ["mockplanner", "mockplannerbis"])
     @pytest.mark.parametrize("problem", [MagicMock(), MagicMock()])
     @pytest.mark.parametrize("timeout", [1, 0, 16])
-    def test_timeout(self, name: str, problem: Mock, timeout: float):
+    def test_timeout(self, name: str, problem: Mock, config: Mock, timeout: float):
         planner = MagicMock()
         planner.name = name
+        config.timeout = timeout
         expected = PlannerResult(
-            name,
+            str(planner),
             problem,
             RunningMode.ONESHOT,
             PlannerResultStatus.TIMEOUT,
+            config,
             timeout,
-            plan_quality=None,
         )
-        result = PlannerResult.timeout(problem, planner, RunningMode.ONESHOT, timeout)
+        result = PlannerResult.timeout(problem, planner, config, RunningMode.ONESHOT)
         assert result == expected
 
     # ================================ Unsupported =============================== #
 
     @pytest.mark.parametrize("name", ["mockplanner", "mockplannerbis"])
     @pytest.mark.parametrize("problem", [MagicMock(), MagicMock()])
-    def test_unsupported(self, name: str, problem: Mock):
+    def test_unsupported(self, name: str, problem: Mock, config: Mock):
         planner = MagicMock()
         planner.name = name
         expected = PlannerResult(
@@ -166,8 +240,14 @@ class TestPlannerResult:
             problem,
             RunningMode.ONESHOT,
             PlannerResultStatus.UNSUPPORTED,
+            config,
             computation_time=None,
             plan_quality=None,
         )
-        result = PlannerResult.unsupported(problem, planner, RunningMode.ONESHOT)
+        result = PlannerResult.unsupported(
+            problem,
+            planner,
+            config,
+            RunningMode.ONESHOT,
+        )
         assert result == expected

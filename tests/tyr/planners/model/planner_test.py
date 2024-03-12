@@ -17,6 +17,7 @@ from tyr import (
     SolveConfig,
 )
 from tyr.core.constants import LOGS_DIR
+from tyr.planners.database import Database
 from tyr.planners.model.config import RunningMode
 from tyr.planners.model.result import PlannerResultStatus
 
@@ -67,11 +68,13 @@ class TestPlanner(ModelTest):
 
     @staticmethod
     @pytest.fixture()
-    def solve_config() -> SolveConfig:
+    def solve_config():
         yield SolveConfig(
             jobs=1,
             memout=4 * 1024 * 1024 * 1024,  # 4GB
             timeout=350,
+            db_only=False,
+            no_db=False,
         )
 
     # ============================================================================ #
@@ -167,6 +170,56 @@ class TestPlanner(ModelTest):
         version = planner.get_version(problem)
         assert version is None
 
+    # ================================= Database ================================= #
+
+    def test_solver_database_result(
+        self,
+        planner: Planner,
+        problem: ProblemInstance,
+        solve_config: SolveConfig,
+    ):
+        db = Database()
+        with patch.object(db, "load_planner_result") as load_mock:
+            result = planner.solve(problem, solve_config, RunningMode.ONESHOT)
+            assert result == load_mock.return_value
+
+    def test_solver_database_result_no_db(
+        self,
+        planner: Planner,
+        problem: ProblemInstance,
+        solve_config: SolveConfig,
+    ):
+        solve_config = replace(solve_config, no_db=True)
+        db = Database()
+        with patch.object(db, "load_planner_result") as load_mock:
+            planner.solve(problem, solve_config, RunningMode.ONESHOT)
+            load_mock.assert_not_called()
+
+    def test_solver_database_result_db_only(
+        self,
+        planner: Planner,
+        problem: ProblemInstance,
+        solve_config: SolveConfig,
+    ):
+        solve_config = replace(solve_config, db_only=True)
+        db = Database()
+        with patch.object(db, "load_planner_result") as load_mock:
+            result = planner.solve(problem, solve_config, RunningMode.ONESHOT)
+            assert result == load_mock.return_value
+
+    def test_solver_database_result_db_only_not_found(
+        self,
+        planner: Planner,
+        problem: ProblemInstance,
+        solve_config: SolveConfig,
+    ):
+        solve_config = replace(solve_config, db_only=True)
+        db = Database()
+        with patch.object(db, "load_planner_result") as load_mock:
+            load_mock.return_value = None
+            result = planner.solve(problem, solve_config, RunningMode.ONESHOT)
+            assert result.status == PlannerResultStatus.NOT_RUN
+
     # =================================== Solve ================================== #
 
     def test_solve_get_version(
@@ -189,7 +242,12 @@ class TestPlanner(ModelTest):
         solve_config: SolveConfig,
     ):
         planner.config.problems.clear()
-        expected = PlannerResult.unsupported(problem, planner, RunningMode.ONESHOT)
+        expected = PlannerResult.unsupported(
+            problem,
+            planner,
+            solve_config,
+            RunningMode.ONESHOT,
+        )
         result = planner.solve(problem, solve_config, RunningMode.ONESHOT)
         assert result == expected
 
@@ -272,6 +330,7 @@ class TestPlanner(ModelTest):
         mocked_result_from_upf.assert_called_once_with(
             problem,
             upf_result,
+            solve_config,
             RunningMode.ONESHOT,
         )
         assert result == mocked_result_from_upf.return_value
@@ -294,6 +353,7 @@ class TestPlanner(ModelTest):
         expected = PlannerResult.error(
             problem,
             planner,
+            solve_config,
             RunningMode.ONESHOT,
             computation_time,
             "foo toto",
@@ -331,7 +391,11 @@ class TestPlanner(ModelTest):
         solve_config: SolveConfig,
     ):
         upf_result = PlannerResult(
-            planner.name, problem, RunningMode.ONESHOT, PlannerResultStatus.SOLVED
+            planner.name,
+            problem,
+            RunningMode.ONESHOT,
+            PlannerResultStatus.SOLVED,
+            solve_config,
         )
         mocked_result_from_upf.return_value = upf_result
         expected = replace(upf_result, computation_time=computation_time)
@@ -357,8 +421,14 @@ class TestPlanner(ModelTest):
         solve_config = replace(solve_config, timeout=timeout)
         mocked_planner = mocked_oneshot_planner.return_value.__enter__.return_value
         mocked_planner.solve.side_effect = solve
+        solve_config = replace(solve_config, timeout=timeout)
 
-        expected = PlannerResult.timeout(problem, planner, RunningMode.ONESHOT, timeout)
+        expected = PlannerResult.timeout(
+            problem,
+            planner,
+            solve_config,
+            RunningMode.ONESHOT,
+        )
         result = planner.solve(problem, solve_config, RunningMode.ONESHOT)
         assert result == expected
 
@@ -381,11 +451,15 @@ class TestPlanner(ModelTest):
             problem,
             RunningMode.ONESHOT,
             PlannerResultStatus.SOLVED,
+            solve_config,
             computation_time=2 * timeout,
         )
         mocked_result_from_upf.return_value = upf_result
+        solve_config = replace(solve_config, timeout=timeout)
 
-        expected = PlannerResult.timeout(problem, planner, RunningMode.ONESHOT, timeout)
+        expected = PlannerResult.timeout(
+            problem, planner, solve_config, RunningMode.ONESHOT
+        )
         result = planner.solve(problem, solve_config, RunningMode.ONESHOT)
         assert result == expected
 

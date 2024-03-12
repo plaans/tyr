@@ -1,13 +1,13 @@
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Union
 
 from unified_planning.engines.results import (
     PlanGenerationResult,
     PlanGenerationResultStatus,
 )
 
-from tyr.planners.model.config import RunningMode
+from tyr.planners.model.config import RunningMode, SolveConfig
 from tyr.problems import ProblemInstance
 
 if TYPE_CHECKING:
@@ -23,6 +23,7 @@ class PlannerResultStatus(Enum):
     MEMOUT = auto()
     ERROR = auto()
     UNSUPPORTED = auto()
+    NOT_RUN = auto()
 
     @staticmethod
     def from_upf(status: PlanGenerationResultStatus) -> "PlannerResultStatus":
@@ -55,14 +56,17 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
     problem: ProblemInstance
     running_mode: RunningMode
     status: PlannerResultStatus
+    config: SolveConfig
     computation_time: Optional[float] = None
     plan_quality: Optional[float] = None
     error_message: str = ""
+    from_database: bool = False
 
     @staticmethod
     def from_upf(
         problem: ProblemInstance,
         result: PlanGenerationResult,
+        config: SolveConfig,
         running_mode: RunningMode,
     ) -> "PlannerResult":
         """Converts a result from the unified planning library to our inner result format.
@@ -70,6 +74,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
         Args:
             problem (ProblemInstance): The problem solved by the planner.
             result (PlanGenerationResult): The result to convert.
+            config (SolveConfig): The configuration used to solve the problem.
             running_mode (RunningMode): The mode used by the planner.
 
         Returns:
@@ -89,14 +94,16 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             problem,
             running_mode,
             PlannerResultStatus.from_upf(result.status),
+            config,
             computation_time,
             plan_quality,
         )
 
     @staticmethod
-    def error(
+    def error(  # pylint: disable = too-many-arguments
         problem: ProblemInstance,
         planner: "Planner",
+        config: SolveConfig,
         running_mode: RunningMode,
         computation_time: float,
         message: str,
@@ -106,6 +113,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
         Args:
             problem (ProblemInstance): The erroneous problem.
             planner (Planner): The planner trying the solve the problem.
+            config (SolveConfig): The configuration used to solve the problem.
             running_mode (RunningMode): The mode used by the planner.
             computation_time (float): Time to reach the error.
 
@@ -117,42 +125,72 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             problem,
             running_mode,
             PlannerResultStatus.ERROR,
+            config,
             computation_time,
             plan_quality=None,
             error_message=message,
         )
 
     @staticmethod
-    def timeout(
+    def not_run(
         problem: ProblemInstance,
         planner: "Planner",
+        config: SolveConfig,
         running_mode: RunningMode,
-        timeout: int,
     ) -> "PlannerResult":
-        """Creates a timeout result.
+        """Creates a not run result.
 
         Args:
-            problem (ProblemInstance): The timed out problem.
+            problem (ProblemInstance): The problem not run.
             planner (Planner): The planner trying the solve the problem.
+            config (SolveConfig): The configuration used to solve the problem.
             running_mode (RunningMode): The mode used by the planner.
-            timeout (int): The limit time to solve the problem.
 
         Returns:
-            PlannerResult: The timeout result.
+            PlannerResult: The not run result.
         """
         return PlannerResult(
             planner.name,
             problem,
             running_mode,
-            PlannerResultStatus.TIMEOUT,
-            timeout,
+            PlannerResultStatus.NOT_RUN,
+            config,
+            computation_time=None,
             plan_quality=None,
+        )
+
+    @staticmethod
+    def timeout(
+        problem: ProblemInstance,
+        planner: Union["Planner", str],
+        config: SolveConfig,
+        running_mode: RunningMode,
+    ) -> "PlannerResult":
+        """Creates a timeout result.
+
+        Args:
+            problem (ProblemInstance): The timed out problem.
+            planner (Planner | str): The planner trying the solve the problem or its name.
+            config (SolveConfig): The configuration used to solve the problem.
+            running_mode (RunningMode): The mode used by the planner.
+
+        Returns:
+            PlannerResult: The timeout result.
+        """
+        return PlannerResult(
+            str(planner),
+            problem,
+            running_mode,
+            PlannerResultStatus.TIMEOUT,
+            config,
+            config.timeout,
         )
 
     @staticmethod
     def unsupported(
         problem: ProblemInstance,
         planner: "Planner",
+        config: SolveConfig,
         running_mode: RunningMode,
     ) -> "PlannerResult":
         """Creates an unsupported result.
@@ -160,6 +198,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
         Args:
             problem (ProblemInstance): The unsupported problem.
             planner (Planner): The planner trying the solve the problem.
+            config (SolveConfig): The configuration used to solve the problem.
             running_mode (RunningMode): The mode used by the planner.
 
         Returns:
@@ -170,6 +209,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             problem,
             running_mode,
             PlannerResultStatus.UNSUPPORTED,
+            config,
             computation_time=None,
             plan_quality=None,
         )

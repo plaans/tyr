@@ -24,6 +24,8 @@ class SolveConfig:
     jobs: int
     memout: int
     timeout: int
+    db_only: bool
+    no_db: bool
 
 
 class RunningMode(Enum):
