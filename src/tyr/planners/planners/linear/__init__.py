@@ -24,4 +24,9 @@ class LinearInsertionPlanner(LinearPlanner):
     """The Linear planner configured to use task insertion version of some problems."""
 
 
-__all__ = ["LinearPlanner", "LinearInsertionPlanner", "LinearLinearPlanner"]
+__all__ = [
+    "LinearPlanner",
+    "LinearExponentialPlanner",
+    "LinearInsertionPlanner",
+    "LinearLinearPlanner",
+]

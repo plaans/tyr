@@ -24,4 +24,9 @@ class PandaPiInsertionPlanner(PandaPiPlanner):
     """The PandaPi planner configured to use task insertion version of some problems."""
 
 
-__all__ = ["PandaPiPlanner", "PandaPiInsertionPlanner", "PandaPiLinearPlanner"]
+__all__ = [
+    "PandaPiPlanner",
+    "PandaPiExponentialPlanner",
+    "PandaPiInsertionPlanner",
+    "PandaPiLinearPlanner",
+]
