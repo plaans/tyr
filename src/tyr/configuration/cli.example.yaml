@@ -1,0 +1,27 @@
+---
+# This is an example configuration file for the CLI.
+# Uncomment the options to override the default values.
+
+bench:
+  # memout: 4294967296
+  # out: []
+  # timeout: 50
+  # verbose: 0
+  # jobs: 1
+  # planners: ["aries", "lpg"]
+  # domains: ["rovers"]
+  # NOTE: When both `anytime` and `oneshot` are set to `False`, then both are run.
+  # anytime: False
+  # oneshot: False
+  # db_only: False
+  # no_db: False
+
+solve:
+  # memout: 4294967296
+  # out: []
+  # timeout: 0
+  # verbose: 0
+  # timeout: 10
+  # planner: "aries"
+  # problem: "rovers-hierarchical:01"
+  # fs: False

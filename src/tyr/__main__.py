@@ -11,6 +11,53 @@ from tyr import (  # type: ignore
     run_bench,
     run_solve,
 )
+from tyr.configuration.loader import load_config
+
+# ============================================================================ #
+#                                 Configuration                                #
+# ============================================================================ #
+
+DEFAULT_CONFIG = {
+    # Default
+    "memout": 4 * 1024**3,
+    "timeout": 5,
+    "verbose": 0,
+    "out": [],
+    # Bench
+    "jobs": 1,
+    "planners": [],
+    "domains": [],
+    "anytime": False,
+    "oneshot": False,
+    "db_only": False,
+    "no_db": False,
+    # Solve
+    "planner": "",
+    "problem": "",
+    "fs": False,
+}
+
+
+def merge_configs(cli_config: dict, file_config: dict, default_config: dict) -> dict:
+    config = default_config.copy()
+    config.update(file_config)
+
+    for k, v in cli_config.items():
+        if isinstance(v, (list, tuple)):
+            if list(v) != list(default_config[k]):
+                config[k] = v
+        elif v is not None and v != default_config[k]:
+            config[k] = v
+
+    return config
+
+
+def yaml_config(name: str) -> dict:
+    config = load_config("cli")
+    if name in config:
+        return config[name] or {}
+    return {}
+
 
 # ============================================================================ #
 #                                    Options                                   #
@@ -36,13 +83,11 @@ out_option = click.option(
 timeout_option = click.option(
     "-t",
     "--timeout",
-    default=5,
-    help="Timeout for planners in seconds. Default to 5s.",
+    help=f"Timeout for planners in seconds. Default to {DEFAULT_CONFIG['timeout']}s.",
 )
 memout_option = click.option(
     "-m",
     "--memout",
-    default=4 * 1024**3,
     help="Memout for planners in bytes. Default to 4GB.",
 )
 
@@ -81,9 +126,8 @@ def update_context(ctx, verbose, out):
 @click.option(
     "-j",
     "--jobs",
-    default=1,
-    help="Number of CPUs to use for parallel computation, \
-if negative (n_cpus + 1 + jobs) are used. Default to 1.",
+    help=f"Number of CPUs to use for parallel computation, \
+if negative (n_cpus + 1 + jobs) are used. Default to {DEFAULT_CONFIG['jobs']}.",
 )
 @click.option(
     "-p",
@@ -118,25 +162,47 @@ def cli_bench(
     db_only: bool,
     no_db: bool,
 ):
-    update_context(ctx, verbose, out)
+    cli_config = {
+        "verbose": verbose,
+        "out": out,
+        "timeout": timeout,
+        "memout": memout,
+        "jobs": jobs,
+        "planners": planners,
+        "domains": domains,
+        "anytime": anytime,
+        "oneshot": oneshot,
+        "db_only": db_only,
+        "no_db": no_db,
+    }
+    config = merge_configs(cli_config, yaml_config("bench"), DEFAULT_CONFIG)
 
-    if anytime and oneshot:
+    update_context(ctx, config["verbose"], config["out"])
+
+    if config["anytime"] and config["oneshot"]:
         running_modes = [RunningMode.ANYTIME, RunningMode.ONESHOT]
-    elif anytime:
+    elif config["anytime"]:
         running_modes = [RunningMode.ANYTIME]
-    elif oneshot:
+    elif config["oneshot"]:
         running_modes = [RunningMode.ONESHOT]
     else:
         running_modes = [RunningMode.ANYTIME, RunningMode.ONESHOT]
 
-    if db_only and no_db:
+    if config["db_only"] and config["no_db"]:
         raise click.BadOptionUsage(
             "--db-only --no-db",
             "Cannot use both --db-only and --no-db.",
         )
 
-    solve_config = SolveConfig(jobs, memout, timeout, db_only, no_db)
-    run_bench(ctx, solve_config, planners, domains, running_modes)
+    solve_config = SolveConfig(
+        config["jobs"],
+        config["memout"],
+        config["timeout"],
+        config["db_only"],
+        config["no_db"],
+    )
+
+    run_bench(ctx, solve_config, config["planners"], config["domains"], running_modes)
 
 
 # ============================================================================ #
@@ -150,8 +216,8 @@ def cli_bench(
 )
 @verbose_option
 @out_option
-@click.argument("planner", type=str)
-@click.argument("problem", type=str)
+@click.argument("planner", type=str, required=False)
+@click.argument("problem", type=str, required=False)
 @timeout_option
 @memout_option
 @click.option(
@@ -171,12 +237,28 @@ def cli_solve(
     memout: int,
     fs: bool,
 ):
-    update_context(ctx, verbose, out)
+    cli_config = {
+        "verbose": verbose,
+        "out": out,
+        "planner": planner,
+        "problem": problem,
+        "timeout": timeout,
+        "memout": memout,
+        "fs": fs,
+    }
+    config = merge_configs(cli_config, yaml_config("solve"), DEFAULT_CONFIG)
 
-    running_mode = RunningMode.ONESHOT if fs else RunningMode.ANYTIME
+    if config["planner"] == "":
+        raise click.BadArgumentUsage("Missing argument 'PLANNER'.")
+    if config["problem"] == "":
+        raise click.BadArgumentUsage("Missing argument 'PROBLEM'.")
 
-    solve_config = SolveConfig(1, memout, timeout, False, True)
-    run_solve(ctx, solve_config, planner, problem, running_mode)
+    update_context(ctx, config["verbose"], config["out"])
+
+    running_mode = RunningMode.ONESHOT if config["fs"] else RunningMode.ANYTIME
+
+    solve_config = SolveConfig(1, config["memout"], config["timeout"], False, True)
+    run_solve(ctx, solve_config, config["planner"], config["problem"], running_mode)
 
 
 if __name__ == "__main__":
