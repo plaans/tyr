@@ -1,9 +1,9 @@
 import os
-from pathlib import Path
 import platform
 import shutil
 import sys
 import time
+from pathlib import Path
 from typing import List, Optional, TextIO, Union
 
 from tyr.configuration.loader import get_config_file

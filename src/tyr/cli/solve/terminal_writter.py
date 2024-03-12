@@ -1,5 +1,5 @@
-from pathlib import Path
 import time
+from pathlib import Path
 from typing import List, Literal, Optional, TextIO, Tuple, Union
 
 from tyr.cli.bench.collector import CollectionResult
