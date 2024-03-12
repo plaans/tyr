@@ -101,6 +101,18 @@ class TestDatabase:
         conn_mock.commit.assert_called_once()
 
     @patch("tyr.planners.database.sqlite3.connect")
+    def test_save_planner_result_from_database(
+        self, connect_mock, database, conn_mock, cursor_mock, result_mock
+    ):
+        connect_mock.return_value = conn_mock
+        conn_mock.cursor.return_value = cursor_mock
+
+        result_mock.from_database = True
+        database.save_planner_result(result_mock)
+        cursor_mock.execute.assert_not_called()
+        conn_mock.commit.assert_not_called()
+
+    @patch("tyr.planners.database.sqlite3.connect")
     def test_load_planner_result(
         self,
         connect_mock,

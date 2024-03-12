@@ -62,6 +62,9 @@ class Database(Singleton):
         Args:
             result (PlannerResult): The result to save.
         """
+        if result.from_database is True:
+            return
+
         with self.database() as conn:
             conn.cursor().execute(
                 """
