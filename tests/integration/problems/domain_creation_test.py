@@ -1,6 +1,3 @@
-import os
-import sys
-
 import pytest
 from unified_planning.model.htn import HierarchicalProblem
 from unified_planning.model.scheduling import SchedulingProblem
@@ -30,12 +27,6 @@ class TestDomainCreation:
             assert isinstance(version.value, AbstractProblem)
 
     @pytest.mark.slow
-    @pytest.mark.skipif(
-        sys.version_info < (3, 12)
-        and os.environ.get("FORCE_REAL_DOMAIN_CREATION", "0").lower()
-        not in ["1", "true", "t"],
-        reason="Skipping test for Python version < 3.12",
-    )
     @pytest.mark.parametrize(
         ["domain", "problem_id", "version_name"],
         [
@@ -49,15 +40,16 @@ class TestDomainCreation:
                         "rovers" in d.name
                         and "temporal" in d.name
                         and v in ["base", "red"]
-                        and p != 21
+                        and p != 1000
                     )
                     else []
                 ),
             )
             for d in get_all_domains()
             for v in d.get_versions()
-            for p in range(1, d.get_num_problems() + 2)
-            # Test one more problem (+2) in order to check behaviour on non existant problem
+            # Reduce the number, CI of 2 hours otherwise
+            # Test one more problem in order to check behaviour on non existant problem
+            for p in list(range(1, min(d.get_num_problems(), 6))) + [1000]
         ],
         ids=lambda x: x if isinstance(x, str) else x.name,
     )
