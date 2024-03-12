@@ -19,7 +19,8 @@ def load_config(name: str, path: Optional[Path] = None) -> Any:
     Returns:
         Any: The content of the file.
     """
-    import tyr.configuration as config_module  # pylint: disable=import-outside-toplevel
+    # pylint: disable=import-outside-toplevel, cyclic-import
+    import tyr.configuration as config_module
 
     if path is not None:
         config_file = path

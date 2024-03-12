@@ -1,9 +1,9 @@
 from pathlib import Path
-
-import pytest
-import tests.tyr.planners.fixtures.configuration as config_module
 from unittest.mock import MagicMock, Mock, patch
 
+import pytest
+
+import tests.tyr.planners.fixtures.configuration as config_module
 from tyr.configuration.loader import load_config
 
 

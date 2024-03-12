@@ -1,4 +1,4 @@
-# pylint: disable = missing-function-docstring, too-many-arguments
+# pylint: disable = missing-function-docstring, too-many-arguments, too-many-locals
 
 from pathlib import Path
 from typing import List, Optional
@@ -9,10 +9,10 @@ from tyr import (  # type: ignore
     CliContext,
     RunningMode,
     SolveConfig,
+    load_config,
     run_bench,
     run_solve,
 )
-from tyr.configuration.loader import load_config
 
 # ============================================================================ #
 #                                 Configuration                                #
