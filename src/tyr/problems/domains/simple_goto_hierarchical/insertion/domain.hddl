@@ -10,52 +10,24 @@
         (road ?p1 ?p2 - position)
         (at ?t - truck ?p - position))
 
-    (:task freedom
+    (:task free-move
         :parameters (
             ?t - truck))
 
-    (:task goto 
-        :parameters (
-            ?t - truck
-            ?p - position))
-
-    (:method m-noop-freedom
-        :parameters (
-            ?t - truck)
-        :task (freedom ?t)
-        :subtasks ())
-
-    (:method m-freedom
-        :parameters (
-            ?t - truck
-            ?p - position)
-        :task (freedom ?t)
-        :ordered-subtasks (and
-            (goto ?t ?p)
-            (freedom ?t)))
-
     (:method m-noop
         :parameters (
-            ?t - truck
-            ?p - position)
-        :task (goto ?t ?p)
-        :subtasks (noop ?t ?p))
+            ?t - truck)
+        :task (free-move ?t)
+        :subtasks ())
 
-    (:method m-rec
+    (:method m-free-move
         :parameters (
             ?t - truck
-            ?s ?i ?d - position)
-        :task (goto ?t ?d)
+            ?s ?d - position)
+        :task (free-move ?t)
         :ordered-subtasks (and
-            (move ?t ?s ?i)
-            (goto ?t ?d)))
-
-    (:action noop
-        :parameters (
-            ?t - truck
-            ?p - position)
-        :precondition (at ?t ?p)
-        :effect ())
+            (move ?t ?s ?d)
+            (free-move ?t)))
 
     (:action move
         :parameters (
