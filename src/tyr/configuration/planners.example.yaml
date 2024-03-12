@@ -1,4 +1,8 @@
 ---
+# ============================================================================ #
+#                                     Aries                                    #
+# ============================================================================ #
+
 - name: aries
   problems:
     depots-hierarchical: base
@@ -28,20 +32,27 @@
 - name: aries-exponential
   problems:
     simple-goto-hierarchical: base
+    transport-hierarchical: exponential
   env:
     ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
 
 - name: aries-linear
   problems:
     simple-goto-hierarchical: linear
+    transport-hierarchical: linear
   env:
     ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
 
 - name: aries-insertion
   problems:
     simple-goto-hierarchical: insertion
+    transport-hierarchical: insertion
   env:
     ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
+
+# ============================================================================ #
+#                                    Linear                                    #
+# ============================================================================ #
 
 - name: linear
   problems:
@@ -54,14 +65,21 @@
 - name: linear-exponential
   problems:
     simple-goto-hierarchical: base
+    transport-hierarchical: exponential
 
 - name: linear-linear
   problems:
     simple-goto-hierarchical: linear
+    transport-hierarchical: linear
 
 - name: linear-insertion
   problems:
     simple-goto-hierarchical: insertion
+    transport-hierarchical: insertion
+
+# ============================================================================ #
+#                                      LPG                                     #
+# ============================================================================ #
 
 - name: lpg
   anytime_name: lpg-anytime
@@ -75,6 +93,10 @@
     satellite-numeric: red
     satellite-temporal-numeric: red_no_float
 
+# ============================================================================ #
+#                                     Optic                                    #
+# ============================================================================ #
+
 - name: optic
   problems:
     depots-numeric: red
@@ -85,6 +107,10 @@
     rovers-temporal-numeric: red_no_div
     satellite-numeric: red
     satellite-temporal-numeric: red_no_float
+
+# ============================================================================ #
+#                                    PandaPi                                   #
+# ============================================================================ #
 
 - name: panda-pi
   problems:
@@ -97,11 +123,14 @@
 - name: panda-pi-exponential
   problems:
     simple-goto-hierarchical: base
+    transport-hierarchical: exponential
 
 - name: panda-pi-linear
   problems:
     simple-goto-hierarchical: linear
+    transport-hierarchical: linear
 
 - name: panda-pi-insertion
   problems:
     simple-goto-hierarchical: insertion
+    transport-hierarchical: insertion

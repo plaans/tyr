@@ -127,7 +127,7 @@ class SimpleGotoHierarchicalDomain(AbstractDomain):
             else:
                 pb.task_network.add_subtask(task)
 
-        # Add the freedom task for task insertion.
+        # Add the free-move task for task insertion.
         pb.task_network.add_subtask(pb.get_task("free-move"), pb.object("T1"))
 
         return pb
