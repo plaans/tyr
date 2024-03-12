@@ -12,6 +12,10 @@ class LinearPlanner(SingularityPlanner):
         return "config-sat-1.sif"
 
 
+class LinearExponentialPlanner(LinearPlanner):
+    """The Linear planner configured to use exponential version of some problems."""
+
+
 class LinearLinearPlanner(LinearPlanner):
     """The Linear planner configured to use linear version of some problems."""
 

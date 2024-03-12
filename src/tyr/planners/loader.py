@@ -16,6 +16,9 @@ def register_all_planners():
         "aries", "libs.aries.planning.unified.plugin.up_aries", "Aries"
     )
     env.factory.add_engine(
+        "aries-exponential", "libs.aries.planning.unified.plugin.up_aries", "Aries"
+    )
+    env.factory.add_engine(
         "aries-linear", "libs.aries.planning.unified.plugin.up_aries", "Aries"
     )
     env.factory.add_engine(

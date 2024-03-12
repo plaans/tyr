@@ -12,6 +12,10 @@ class PandaPiPlanner(SingularityPlanner):
         return "ppro-po-sat-gas-ff.sif"
 
 
+class PandaPiExponentialPlanner(PandaPiPlanner):
+    """The PandaPi planner configured to use exponential version of some problems."""
+
+
 class PandaPiLinearPlanner(PandaPiPlanner):
     """The PandaPi planner configured to use linear version of some problems."""
 

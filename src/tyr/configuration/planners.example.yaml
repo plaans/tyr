@@ -25,6 +25,12 @@
   env:
     ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
 
+- name: aries-exponential
+  problems:
+    simple-goto-hierarchical: base
+  env:
+    ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
+
 - name: aries-linear
   problems:
     simple-goto-hierarchical: linear
@@ -44,6 +50,10 @@
     satellite-hierarchical: base
     simple-goto-hierarchical: base
     transport-hierarchical: base
+
+- name: linear-exponential
+  problems:
+    simple-goto-hierarchical: base
 
 - name: linear-linear
   problems:
@@ -83,6 +93,10 @@
     satellite-hierarchical: base
     simple-goto-hierarchical: base
     transport-hierarchical: base
+
+- name: panda-pi-exponential
+  problems:
+    simple-goto-hierarchical: base
 
 - name: panda-pi-linear
   problems:
