@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.1](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.10.0...v1.10.1) (2024-03-12)
+
+
+### Bug Fixes
+
+* **database:** do not save results from the database again ([58cf507](https://gitlab.laas.fr/rgodet1/tyr/commit/58cf507c9e7a78d1a2bd63a7cd8a55964bc32654))
+
 # [1.10.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.9.0...v1.10.0) (2024-03-12)
 
 
