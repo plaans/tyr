@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [1.10.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.9.0...v1.10.0) (2024-03-12)
+
+
+### Bug Fixes
+
+* **planner:** detection of timeout in anytime which is in reality a solve ([66fc609](https://gitlab.laas.fr/rgodet1/tyr/commit/66fc60917dce2178d195ccee7a6963ec22c3fee4))
+* **planners:** timeout for anytime mode ([e6b6e44](https://gitlab.laas.fr/rgodet1/tyr/commit/e6b6e44b4e46503c645fa67d6b4e1059890e8397))
+
+
+### Features
+
+* **cli:** always save results in the database ([f3dd215](https://gitlab.laas.fr/rgodet1/tyr/commit/f3dd21577cdf7f68afe686da2a8205504696f907))
+* **cli:** can force or disable the database ([a6c9db6](https://gitlab.laas.fr/rgodet1/tyr/commit/a6c9db615f87814f8e94027afcdec60f3c5be288))
+* **cli:** display error and plan logs for solve command ([e636210](https://gitlab.laas.fr/rgodet1/tyr/commit/e636210f4f2162946fc8ba8014a3d43040ced715))
+* **cli:** display if the result comes from the database ([b0182f1](https://gitlab.laas.fr/rgodet1/tyr/commit/b0182f167c09b26bbab4b9dd18cce34119f4bf4d))
+* **database:** load the last result with optional timeout if needed ([f2811da](https://gitlab.laas.fr/rgodet1/tyr/commit/f2811da1bcaa1d461c2dcdd40e78f9f8350c7fdd))
+* **db:** save solve config in database ([adb3716](https://gitlab.laas.fr/rgodet1/tyr/commit/adb3716e18c5954e7523699b43b5bcea9c20489e))
+* **planner:** add str representation ([8672e0c](https://gitlab.laas.fr/rgodet1/tyr/commit/8672e0c3c3b3b041a466bd28e75fd1787d046998))
+* **planner:** save plan in logs ([dfbec08](https://gitlab.laas.fr/rgodet1/tyr/commit/dfbec08e5fe15809e5f9774aca2843858c5c6dfc))
+
 # [1.9.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.8.1...v1.9.0) (2024-03-11)
 
 
