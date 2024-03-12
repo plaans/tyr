@@ -48,6 +48,7 @@ class TestPlannerResult:
         upf_result: PlanGenerationResult,
     ):
         result = PlannerResult.from_upf(
+            "mockplanner",
             problem,
             upf_result,
             config,
@@ -76,6 +77,7 @@ class TestPlannerResult:
         }
         upf_result.status = status
         result = PlannerResult.from_upf(
+            "mockplanner",
             problem,
             upf_result,
             config,
@@ -91,8 +93,8 @@ class TestPlannerResult:
         config: Mock,
         upf_result: PlanGenerationResult,
     ):
-        upf_result.engine_name = name
         result = PlannerResult.from_upf(
+            name,
             problem,
             upf_result,
             config,
@@ -115,6 +117,7 @@ class TestPlannerResult:
             upf_result.metrics = {"engine_internal_time": computation_time}
             expected = float(computation_time)
         result = PlannerResult.from_upf(
+            "mockplanner",
             problem,
             upf_result,
             config,
@@ -136,6 +139,7 @@ class TestPlannerResult:
         upf_result.plan = plan
         problem.get_quality_of_plan.return_value = quality
         result = PlannerResult.from_upf(
+            "mockplanner",
             problem,
             upf_result,
             config,

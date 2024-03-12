@@ -329,6 +329,7 @@ class TestPlanner(ModelTest):
 
         result = planner.solve(problem, solve_config, RunningMode.ONESHOT)
         mocked_result_from_upf.assert_called_once_with(
+            planner.name,
             problem,
             upf_result,
             solve_config,

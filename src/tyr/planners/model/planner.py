@@ -226,6 +226,7 @@ class Planner:
 
             # Convert the result into inner format and set computation time if not present.
             result = PlannerResult.from_upf(
+                planner_name,
                 problem,
                 self.last_upf_result,
                 config,
