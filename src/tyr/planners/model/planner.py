@@ -203,6 +203,13 @@ class Planner:
                         signal.alarm(0)
                     except TimeoutError:
                         # The planner timed out.
+                        # Kill the process if it is still running.
+                        if hasattr(planner, "_process"):
+                            try:
+                                planner._process.kill()  # pylint: disable=protected-access
+                            except OSError:
+                                pass  # This can happen if the process is already terminated
+                        # Return a timeout result if no result was found.
                         if self.last_upf_result is None:
                             return PlannerResult.timeout(
                                 problem,

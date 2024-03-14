@@ -432,6 +432,30 @@ class TestPlanner(ModelTest):
         result = planner.solve(problem, solve_config, RunningMode.ONESHOT)
         assert result == expected
 
+    @pytest.mark.slow
+    @pytest.mark.timeout(3)
+    @pytest.mark.parametrize("timeout", [1, 2])
+    @patch("unified_planning.shortcuts.OneshotPlanner", autospec=True)
+    def test_solve_timeout_kill_running_process(
+        self,
+        mocked_oneshot_planner: Mock,
+        timeout: int,
+        planner: Planner,
+        problem: ProblemInstance,
+        solve_config: SolveConfig,
+    ):
+        def solve(*args, **kwargs):
+            time.sleep(timeout + 10)
+
+        solve_config = replace(solve_config, timeout=timeout)
+        mocked_planner = mocked_oneshot_planner.return_value.__enter__.return_value
+        mocked_planner.solve.side_effect = solve
+        mocked_kill: Mock = mocked_planner._process.kill
+        solve_config = replace(solve_config, timeout=timeout)
+
+        planner.solve(problem, solve_config, RunningMode.ONESHOT)
+        mocked_kill.assert_called_once()
+
     @pytest.mark.skip(reason="Disabled feature")
     @pytest.mark.parametrize("timeout", [10, 200])
     @patch("unified_planning.shortcuts.OneshotPlanner", autospec=True)
