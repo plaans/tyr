@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [1.12.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.11.0...v1.12.0) (2024-03-14)
+
+
+### Bug Fixes
+
+* **cli:** convert timeout, memout and jobs into int ([b1a6271](https://gitlab.laas.fr/rgodet1/tyr/commit/b1a6271fe5f1666982ab893328339e4c0c02cf44))
+* **planners:** kill the process if still running ([c623e90](https://gitlab.laas.fr/rgodet1/tyr/commit/c623e903276b3ee0e07b24a311612cb588a52cb8))
+
+
+### Features
+
+* **planners:** add PandaPi ([873d37d](https://gitlab.laas.fr/rgodet1/tyr/commit/873d37d13d677f991358cae31c6b5fd6bc95b3df))
+
 # [1.11.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.10.1...v1.11.0) (2024-03-12)
 
 
