@@ -16,38 +16,7 @@ class SimpleGotoHierarchicalDomain(AbstractDomain):
         domain_file = Path(__file__).parent / "base" / "domain.hddl"
         pb: HierarchicalProblem = PDDLReader().parse_problem(domain_file.as_posix())
 
-        roads = [
-            (1, 2),
-            (1, 5),
-            (2, 3),
-            (2, 4),
-            (3, 4),
-            (3, 7),
-            (5, 6),
-            (2, 8),
-            (4, 8),
-            (5, 9),
-            (8, 9),
-            (1, 9),
-            (6, 10),
-            (4, 10),
-            (5, 10),
-            (7, 10),
-            (5, 11),
-            (4, 11),
-            (9, 11),
-            (10, 11),
-            (4, 12),
-            (3, 12),
-            (12, 13),
-            (7, 13),
-            (4, 13),
-            (9, 14),
-            (1, 14),
-            (2, 14),
-            (8, 14),
-            (6, 7),
-        ]
+        roads = [(1, 2), (1, 3), (1, 4), (2, 3), (2, 4), (3, 5), (4, 5)]
         positions = set().union(*roads)
 
         # Types
@@ -70,7 +39,7 @@ class SimpleGotoHierarchicalDomain(AbstractDomain):
         # Goals
         for _ in range(int(problem.uid) * 10):
             pb.task_network.add_subtask(
-                pb.get_task("goto"), pb.object("T1"), pb.object("P12")
+                pb.get_task("goto"), pb.object("T1"), pb.object("P5")
             )
 
         return pb

@@ -14,51 +14,51 @@
     (:task goto 
         :parameters (
             ?t - truck
-            ?p - position))
+            ?d - position))
 
     (:task goto-exec
         :parameters (
             ?t - truck
-            ?p - position))
+            ?d - position))
 
     (:method m-noop
         :parameters (
             ?t - truck
-            ?p - position)
-        :task (goto ?t ?p)
-        :subtasks (noop ?t ?p))
+            ?d - position)
+        :task (goto ?t ?d)
+        :subtasks (noop ?t ?d))
 
     (:method m-goto
         :parameters (
             ?t - truck
-            ?p - position)
-        :task (goto ?t ?p)
+            ?d - position)
+        :task (goto ?t ?d)
         :ordered-subtasks (and
             (set-mutex ?t)
-            (goto-exec ?t ?p)
+            (goto-exec ?t ?d)
             (release ?t)))
 
     (:method m-noop-exec
         :parameters (
             ?t - truck
-            ?p - position)
-        :task (goto-exec ?t ?p)
-        :subtasks (noop ?t ?p))
+            ?d - position)
+        :task (goto-exec ?t ?d)
+        :subtasks (noop ?t ?d))
 
     (:method m-rec
         :parameters (
             ?t - truck
-            ?s ?i ?d - position)
+            ?s ?n ?d - position)
         :task (goto-exec ?t ?d)
         :ordered-subtasks (and
-            (move ?t ?s ?i)
+            (move ?t ?s ?n)
             (goto-exec ?t ?d)))
 
     (:action noop
         :parameters (
             ?t - truck
-            ?p - position)
-        :precondition (at ?t ?p)
+            ?d - position)
+        :precondition (at ?t ?d)
         :effect ())
 
     (:action move
