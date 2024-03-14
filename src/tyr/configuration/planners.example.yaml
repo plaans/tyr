@@ -45,3 +45,9 @@
     rovers-temporal-numeric: red_no_div
     satellite-numeric: red
     satellite-temporal-numeric: red_no_float
+
+- name: panda-pi
+  problems:
+    depots-hierarchical: base
+    rovers-hierarchical: base
+    satellite-hierarchical: base

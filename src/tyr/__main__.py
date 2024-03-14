@@ -90,11 +90,13 @@ config_option = click.option(
 timeout_option = click.option(
     "-t",
     "--timeout",
+    type=int,
     help=f"Timeout for planners in seconds. Default to {DEFAULT_CONFIG['timeout']}s.",
 )
 memout_option = click.option(
     "-m",
     "--memout",
+    type=int,
     help="Memout for planners in bytes. Default to 4GB.",
 )
 
@@ -136,6 +138,7 @@ def update_context(ctx, verbose, out, config):
 @click.option(
     "-j",
     "--jobs",
+    type=int,
     help=f"Number of CPUs to use for parallel computation, \
 if negative (n_cpus + 1 + jobs) are used. Default to {DEFAULT_CONFIG['jobs']}.",
 )

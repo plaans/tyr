@@ -54,6 +54,8 @@ sudo apt install curl
 curl https://sh.rustup.rs -sSf | sh
 ```
 
+If you want to use the PandaPi planner, you also have to [install Singularity](https://docs.sylabs.io/guides/latest/admin-guide/installation.html).
+
 ### Installing the Module
 
 Once the dependencies are installed, just run the install script:
@@ -76,32 +78,32 @@ The help should be sufficiently documented to guide you.
 
 The following table lists the domains (with the number of instances) and planners available, as well as the version used by the planners to solve the domain.
 
-|                                      |   **Aries**    |    **LPG**     |   **Optic**    |
-| ------------------------------------ | :------------: | :------------: | :------------: |
-| **Depots**                           |                |                |                |
-| *Hierarchical (30)*                  |     `base`     |       ❌       |       ❌       |
-| *Hierarchical Numeric (22)*          |     `red`      |       ❌       |       ❌       |
-| *Hierarchical Temporal Numeric (22)* |  `red_no_div`  |       ❌       |       ❌       |
-| *Numeric (22)*                       |     `red`      |     `red`      |     `red`      |
-| *Temporal Numeric (22)*              |  `red_no_div`  |  `red_no_div`  |  `red_no_div`  |
-| **Rovers**                           |                |                |                |
-| *Hierarchical (20)*                  |     `base`     |       ❌       |       ❌       |
-| *Hierarchical Numeric (20)*          |     `red`      |       ❌       |       ❌       |
-| *Hierarchical Temporal Numeric (20)* |  `red_no_div`  |       ❌       |       ❌       |
-| *Numeric (20)*                       |     `red`      |     `red`      |     `red`      |
-| *Temporal Numeric (20)*              |  `red_no_div`  |  `red_no_div`  |  `red_no_div`  |
-| **Satellite**                        |                |                |                |
-| *Hierarchical (22)*                  |     `base`     |       ❌       |       ❌       |
-| *Hierarchical Numeric (16)*          |     `red`      |       ❌       |       ❌       |
-| *Hierarchical Temporal Numeric (16)* | `red_no_float` |       ❌       |       ❌       |
-| *Numeric (16)*                       |     `red`      |     `red`      |     `red`      |
-| *Temporal Numeric (16)*              | `red_no_float` | `red_no_float` | `red_no_float` |
-| **JobShop**                          |                |                |                |
-| *Sheduling (40)*                     |     `base`     |       ❌       |       ❌       |
-| *Temporal Numeric (40)*              |     `base`     |     `base`     | `no_neg_cond`  |
-| **RCPSP**                            |                |                |                |
-| *Sheduling (30)*                     |     `base`     |       ❌       |       ❌       |
-| *Temporal Numeric (30)*              |     `base`     |     `base`     | `no_neg_cond`  |
+|                                      |     **Aries**     |    **LPG**     |   **Optic**    |    **PandaPi**    |
+| ------------------------------------ | :---------------: | :------------: | :------------: | :---------------: |
+| **Depots**                           |                   |                |                |                   |
+| *Hierarchical (30)*                  |      `base`       |       ❌       |       ❌       |      `base`       |
+| *Hierarchical Numeric (22)*          |       `red`       |       ❌       |       ❌       |        ❌         |
+| *Hierarchical Temporal Numeric (22)* |   `red_no_div`    |       ❌       |       ❌       |        ❌         |
+| *Numeric (22)*                       |       `red`       |     `red`      |     `red`      |        ❌         |
+| *Temporal Numeric (22)*              |   `red_no_div`    |  `red_no_div`  |  `red_no_div`  |        ❌         |
+| **Rovers**                           |                   |                |                |                   |
+| *Hierarchical (20)*                  |      `base`       |       ❌       |       ❌       |      `base`       |
+| *Hierarchical Numeric (20)*          |       `red`       |       ❌       |       ❌       |        ❌         |
+| *Hierarchical Temporal Numeric (20)* |   `red_no_div`    |       ❌       |       ❌       |        ❌         |
+| *Numeric (20)*                       |       `red`       |     `red`      |     `red`      |        ❌         |
+| *Temporal Numeric (20)*              |   `red_no_div`    |  `red_no_div`  |  `red_no_div`  |        ❌         |
+| **Satellite**                        |                   |                |                |                   |
+| *Hierarchical (22)*                  |      `base`       |       ❌       |       ❌       |      `base`       |
+| *Hierarchical Numeric (16)*          |       `red`       |       ❌       |       ❌       |        ❌         |
+| *Hierarchical Temporal Numeric (16)* |  `red_no_float`   |       ❌       |       ❌       |        ❌         |
+| *Numeric (16)*                       |       `red`       |     `red`      |     `red`      |        ❌         |
+| *Temporal Numeric (16)*              |  `red_no_float`   | `red_no_float` | `red_no_float` |        ❌         |
+| **JobShop**                          |                   |                |                |                   |
+| *Sheduling (40)*                     |      `base`       |       ❌       |       ❌       |        ❌         |
+| *Temporal Numeric (40)*              |      `base`       |     `base`     | `no_neg_cond`  |        ❌         |
+| **RCPSP**                            |                   |                |                |                   |
+| *Sheduling (30)*                     |      `base`       |       ❌       |       ❌       |        ❌         |
+| *Temporal Numeric (30)*              |      `base`       |     `base`     | `no_neg_cond`  |        ❌         |
 
 # Configuration
 
