@@ -126,7 +126,7 @@ class Database(Singleton):
                 .fetchone()
             )
 
-        if resp is None:
+        if resp is None or resp[4] == "UNSUPPORTED":
             return None
 
         if resp[5] is not None and resp[5] > config.timeout:
