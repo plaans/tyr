@@ -10,6 +10,7 @@
     depots-hierarchical-temporal-numeric: red_no_div
     depots-numeric: red
     depots-temporal-numeric: red_no_div
+    factories-simple-hierarchical: base
     jobshop-scheduling: base
     jobshop-temporal-numeric: base
     rcpsp-scheduling: base
@@ -31,13 +32,15 @@
 
 - name: aries-exponential
   problems:
-    simple-goto-hierarchical: base
+    factories-simple-hierarchical: exponential
+    simple-goto-hierarchical: exponential
     transport-hierarchical: exponential
   env:
     ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
 
 - name: aries-linear
   problems:
+    factories-simple-hierarchical: linear
     simple-goto-hierarchical: linear
     transport-hierarchical: linear
   env:
@@ -45,6 +48,7 @@
 
 - name: aries-insertion
   problems:
+    factories-simple-hierarchical: insertion
     simple-goto-hierarchical: insertion
     transport-hierarchical: insertion
   env:
@@ -57,6 +61,7 @@
 - name: linear
   problems:
     depots-hierarchical: base
+    factories-simple-hierarchical: base
     rovers-hierarchical: base
     satellite-hierarchical: base
     simple-goto-hierarchical: base
@@ -64,16 +69,19 @@
 
 - name: linear-exponential
   problems:
-    simple-goto-hierarchical: base
+    factories-simple-hierarchical: exponential
+    simple-goto-hierarchical: exponential
     transport-hierarchical: exponential
 
 - name: linear-linear
   problems:
+    factories-simple-hierarchical: linear
     simple-goto-hierarchical: linear
     transport-hierarchical: linear
 
 - name: linear-insertion
   problems:
+    factories-simple-hierarchical: insertion
     simple-goto-hierarchical: insertion
     transport-hierarchical: insertion
 
@@ -115,6 +123,7 @@
 - name: panda-pi
   problems:
     depots-hierarchical: base
+    factories-simple-hierarchical: base
     rovers-hierarchical: base
     satellite-hierarchical: base
     simple-goto-hierarchical: base
@@ -122,15 +131,18 @@
 
 - name: panda-pi-exponential
   problems:
-    simple-goto-hierarchical: base
+    factories-simple-hierarchical: exponential
+    simple-goto-hierarchical: exponential
     transport-hierarchical: exponential
 
 - name: panda-pi-linear
   problems:
+    factories-simple-hierarchical: linear
     simple-goto-hierarchical: linear
     transport-hierarchical: linear
 
 - name: panda-pi-insertion
   problems:
+    factories-simple-hierarchical: insertion
     simple-goto-hierarchical: insertion
     transport-hierarchical: insertion
