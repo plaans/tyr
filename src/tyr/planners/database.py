@@ -129,7 +129,7 @@ class Database(Singleton):
         if resp is None:
             return None
 
-        if resp[5] > config.timeout:
+        if resp[5] is not None and resp[5] > config.timeout:
             result = PlannerResult.timeout(problem, planner_name, config, running_mode)
             return replace(result, from_database=True)
 
