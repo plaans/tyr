@@ -8,7 +8,7 @@ from unified_planning.shortcuts import AbstractProblem
 from tyr.problems.model import AbstractDomain, ProblemInstance
 
 
-class SimpleGotoHierarchicalDomain(AbstractDomain):
+class GotoSimpleHierarchicalDomain(AbstractDomain):
     def get_num_problems(self) -> int:
         return 30
 
