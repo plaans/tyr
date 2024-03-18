@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional
 
 from unified_planning.io.pddl_reader import PDDLReader
 from unified_planning.model.htn import HierarchicalProblem
@@ -94,12 +94,9 @@ class GotoSimpleHierarchicalDomain(AbstractDomain):
             pb.set_initial_value(pb.fluent(sv.fluent().name)(*sv.args), val)
 
         # Add the goals.
-        for task in base.task_network.subtasks:
-            # Convert the goto task into a at goal.
-            if task.task.name == "goto":
-                pb.add_goal(pb.fluent("at")(task.parameters[0], task.parameters[1]))
-            else:
-                pb.task_network.add_subtask(task)
+        pb.task_network.add_subtask(
+            pb.get_task("aim"), pb.object("T1"), pb.object("P5")
+        )
 
         # Add the free-move task for task insertion.
         pb.task_network.add_subtask(pb.get_task("free-move"), pb.object("T1"))

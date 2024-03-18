@@ -14,6 +14,11 @@
         :parameters (
             ?t - truck))
 
+    (:task aim
+        :parameters (
+            ?t - truck
+            ?l - position))
+
     (:method m-noop
         :parameters (
             ?t - truck)
@@ -28,6 +33,15 @@
         :ordered-subtasks (and
             (move ?t ?s ?d)
             (free-move ?t)))
+
+    (:method m-aim
+        :parameters (
+            ?t - truck
+            ?l - position)
+        :task (aim ?t ?l)
+        :precondition (and
+            (at ?t ?l))
+        :subtasks ())
 
     (:action move
         :parameters (

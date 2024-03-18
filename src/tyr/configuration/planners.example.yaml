@@ -11,6 +11,8 @@
     depots-numeric: red
     depots-temporal-numeric: red_no_div
     factories-simple-hierarchical: base
+    goto-complex-hierarchical: base
+    goto-hard-hierarchical: base
     goto-simple-hierarchical: base
     jobshop-scheduling: base
     jobshop-temporal-numeric: base
@@ -33,6 +35,8 @@
 - name: aries-exponential
   problems:
     factories-simple-hierarchical: exponential
+    goto-complex-hierarchical: exponential
+    goto-hard-hierarchical: exponential
     goto-simple-hierarchical: exponential
     transport-hierarchical: exponential
   env:
@@ -41,6 +45,8 @@
 - name: aries-linear
   problems:
     factories-simple-hierarchical: linear
+    goto-complex-hierarchical: linear
+    goto-hard-hierarchical: linear
     goto-simple-hierarchical: linear
     transport-hierarchical: linear
   env:
@@ -49,6 +55,8 @@
 - name: aries-insertion
   problems:
     factories-simple-hierarchical: insertion
+    goto-complex-hierarchical: insertion
+    goto-hard-hierarchical: insertion
     goto-simple-hierarchical: insertion
     transport-hierarchical: insertion
   env:
@@ -62,6 +70,8 @@
   problems:
     depots-hierarchical: base
     factories-simple-hierarchical: base
+    goto-complex-hierarchical: base
+    goto-hard-hierarchical: base
     goto-simple-hierarchical: base
     rovers-hierarchical: base
     satellite-hierarchical: base
@@ -70,18 +80,24 @@
 - name: linear-exponential
   problems:
     factories-simple-hierarchical: exponential
+    goto-complex-hierarchical: exponential
+    goto-hard-hierarchical: exponential
     goto-simple-hierarchical: exponential
     transport-hierarchical: exponential
 
 - name: linear-linear
   problems:
     factories-simple-hierarchical: linear
+    goto-complex-hierarchical: linear
+    goto-hard-hierarchical: linear
     goto-simple-hierarchical: linear
     transport-hierarchical: linear
 
 - name: linear-insertion
   problems:
     factories-simple-hierarchical: insertion
+    goto-complex-hierarchical: insertion
+    goto-hard-hierarchical: insertion
     goto-simple-hierarchical: insertion
     transport-hierarchical: insertion
 
@@ -124,6 +140,8 @@
   problems:
     depots-hierarchical: base
     factories-simple-hierarchical: base
+    goto-complex-hierarchical: base
+    goto-hard-hierarchical: base
     goto-simple-hierarchical: base
     rovers-hierarchical: base
     satellite-hierarchical: base
@@ -132,17 +150,23 @@
 - name: panda-pi-exponential
   problems:
     factories-simple-hierarchical: exponential
+    goto-complex-hierarchical: exponential
+    goto-hard-hierarchical: exponential
     goto-simple-hierarchical: exponential
     transport-hierarchical: exponential
 
 - name: panda-pi-linear
   problems:
     factories-simple-hierarchical: linear
+    goto-complex-hierarchical: linear
+    goto-hard-hierarchical: linear
     goto-simple-hierarchical: linear
     transport-hierarchical: linear
 
 - name: panda-pi-insertion
   problems:
     factories-simple-hierarchical: insertion
+    goto-complex-hierarchical: insertion
+    goto-hard-hierarchical: insertion
     goto-simple-hierarchical: insertion
     transport-hierarchical: insertion
