@@ -222,12 +222,13 @@ class TestPlanner(ModelTest):
 
     # =================================== Solve ================================== #
 
-    def test_solve_get_version(
+    def test_solve_get_version_if_db_has_nothing(
         self,
         mocked_planner: Planner,
         problem: ProblemInstance,
         solve_config: SolveConfig,
     ):
+        solve_config = replace(solve_config, no_db=True)
         mocked_planner.solve = lambda x, y, z: Planner.solve(mocked_planner, x, y, z)
         try:
             mocked_planner.solve(problem, solve_config, True)
