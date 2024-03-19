@@ -12,6 +12,7 @@
         "requirements/aries.txt": "python-misc"
     },
     "material-icon-theme.folders.associations": {
+        "metrics": "benchmark",
         "planners": "resolver",
         "problems": "context",
         "tyr": "project"
