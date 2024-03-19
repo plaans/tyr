@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [1.13.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.12.0...v1.13.0) (2024-03-19)
+
+
+### Bug Fixes
+
+* **database:** null computation time compared with timeout ([79d2bb5](https://gitlab.laas.fr/rgodet1/tyr/commit/79d2bb5ef5e17b1b4c91755f942c51d8e82f282c))
+
+
+### Features
+
+* **cli:** add quiet option ([93e92fc](https://gitlab.laas.fr/rgodet1/tyr/commit/93e92fca04b7a10ac73fd4b23e01de7e5ac8beaa))
+* **database:** return none if last result was unsupported ([3cff95f](https://gitlab.laas.fr/rgodet1/tyr/commit/3cff95f4d438f95d62cd4c40366f978523a542f1))
+
+
+### Performance Improvements
+
+* **planner:** check database before getting the version ([dc39bb2](https://gitlab.laas.fr/rgodet1/tyr/commit/dc39bb27ab45afc544a0c67053695ffdae9ddb17))
+
 # [1.12.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.11.0...v1.12.0) (2024-03-14)
 
 
