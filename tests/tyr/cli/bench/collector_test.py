@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 
 from tyr import AbstractDomain, Planner, collect_planners
-from tyr.cli.collector import collect_problems
+from tyr.cli.collector import collect_metrics, collect_problems
 from tyr.patterns.singleton import Singleton
 
 
@@ -25,6 +25,14 @@ class TestCollectors:
     # ============================================================================ #
     #                                    Getters                                   #
     # ============================================================================ #
+
+    @staticmethod
+    @pytest.fixture()
+    def all_metrics():
+        metrics = [MagicMock() for _ in range(10)]
+        for i, metric in enumerate(metrics):
+            metric.name = f"metric-{i}"
+        yield metrics
 
     @staticmethod
     @pytest.fixture()
@@ -51,6 +59,55 @@ class TestCollectors:
     # ============================================================================ #
     #                                     Tests                                    #
     # ============================================================================ #
+
+    # ================================== Metrics ================================= #
+
+    @patch("tyr.metrics.scanner.get_all_metrics")
+    def test_collect_metrics_all(
+        self,
+        mocked_get_all_metrics: Mock,
+        all_metrics: List[Planner],
+    ):
+        mocked_get_all_metrics.return_value = all_metrics
+        result = collect_metrics()
+        assert set(result.selected) == set(all_metrics)
+        assert len(set(result.deselected)) == 0
+        assert len(set(result.skipped)) == 0
+
+    @patch("tyr.metrics.scanner.get_all_metrics")
+    def test_collect_metrics_one_filter(
+        self,
+        mocked_get_all_metrics: Mock,
+        all_metrics: List[Planner],
+    ):
+        mocked_get_all_metrics.return_value = all_metrics
+        filter1 = ".*[4-8]"
+
+        selected = [p for p in all_metrics if int(p.name[-1]) in range(4, 9)]
+        deselected = [p for p in all_metrics if int(p.name[-1]) not in range(4, 9)]
+
+        result = collect_metrics(filter1)
+        assert set(result.selected) == set(selected)
+        assert set(result.deselected) == set(deselected)
+        assert len(set(result.skipped)) == 0
+
+    @patch("tyr.metrics.scanner.get_all_metrics")
+    def test_collect_metrics_two_filters(
+        self,
+        mocked_get_all_metrics: Mock,
+        all_metrics: List[Planner],
+    ):
+        mocked_get_all_metrics.return_value = all_metrics
+        filter1 = ".*[4-8]"
+        filter2 = ".*[1-5]"
+
+        selected = [p for p in all_metrics if int(p.name[-1]) in range(1, 9)]
+        deselected = [p for p in all_metrics if int(p.name[-1]) not in range(1, 9)]
+
+        result = collect_metrics(filter1, filter2)
+        assert set(result.selected) == set(selected)
+        assert set(result.deselected) == set(deselected)
+        assert len(set(result.skipped)) == 0
 
     # ================================= Planners ================================= #
 
