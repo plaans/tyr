@@ -23,6 +23,7 @@ DEFAULT_CONFIG = {
     "memout": 4 * 1024**3,
     "timeout": 5,
     "verbose": 0,
+    "quiet": 0,
     "out": [],
     # Bench
     "jobs": 1,
@@ -73,6 +74,12 @@ verbose_option = click.option(
     count=True,
     help="Increase verbosity.",
 )
+quiet_option = click.option(
+    "-q",
+    "--quiet",
+    count=True,
+    help="Decrease verbosity.",
+)
 out_option = click.option(
     "-o",
     "--out",
@@ -108,15 +115,16 @@ memout_option = click.option(
 
 @click.group()
 @verbose_option
+@quiet_option
 @out_option
 @config_option
 @pass_context
-def cli(ctx: CliContext, verbose, out, config):
-    update_context(ctx, verbose, out, config)
+def cli(ctx: CliContext, verbose, quiet, out, config):
+    update_context(ctx, verbose, quiet, out, config)
 
 
-def update_context(ctx, verbose, out, config):
-    ctx.verbosity += verbose
+def update_context(ctx, verbose, quiet, out, config):
+    ctx.verbosity += verbose - quiet
     ctx.out.extend(out)
     ctx.config = config
 
@@ -131,6 +139,7 @@ def update_context(ctx, verbose, out, config):
     help="Run several planners on different domains.",
 )
 @verbose_option
+@quiet_option
 @out_option
 @config_option
 @timeout_option
@@ -164,6 +173,7 @@ if negative (n_cpus + 1 + jobs) are used. Default to {DEFAULT_CONFIG['jobs']}.",
 def cli_bench(
     ctx: CliContext,
     verbose,
+    quiet,
     out,
     config,
     timeout: int,
@@ -179,6 +189,7 @@ def cli_bench(
     config = config or ctx.config
     cli_config = {
         "verbose": verbose,
+        "quiet": quiet,
         "out": out,
         "timeout": timeout,
         "memout": memout,
@@ -192,7 +203,7 @@ def cli_bench(
     }
     conf = merge_configs(cli_config, yaml_config(config, "bench"), DEFAULT_CONFIG)
 
-    update_context(ctx, conf["verbose"], conf["out"], config)
+    update_context(ctx, conf["verbose"], conf["quiet"], conf["out"], config)
 
     if conf["anytime"] and conf["oneshot"]:
         running_modes = [RunningMode.ANYTIME, RunningMode.ONESHOT]
@@ -230,6 +241,7 @@ def cli_bench(
     help="Solve a specific problem with a planner.",
 )
 @verbose_option
+@quiet_option
 @out_option
 @config_option
 @click.argument("planner", type=str, required=False)
@@ -246,6 +258,7 @@ def cli_bench(
 def cli_solve(
     ctx: CliContext,
     verbose,
+    quiet,
     out,
     config,
     planner: str,
@@ -257,6 +270,7 @@ def cli_solve(
     config = config or ctx.config
     cli_config = {
         "verbose": verbose,
+        "quiet": quiet,
         "out": out,
         "planner": planner,
         "problem": problem,
@@ -271,7 +285,7 @@ def cli_solve(
     if conf["problem"] == "":
         raise click.BadArgumentUsage("Missing argument 'PROBLEM'.")
 
-    update_context(ctx, conf["verbose"], conf["out"], config)
+    update_context(ctx, conf["verbose"], conf["quiet"], conf["out"], config)
 
     running_mode = RunningMode.ONESHOT if conf["fs"] else RunningMode.ANYTIME
 
