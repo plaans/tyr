@@ -6,6 +6,7 @@ from typing import Dict, Generator, List, Optional, TextIO, Union
 
 from tyr.cli.collector import CollectionResult
 from tyr.cli.writter import Writter
+from tyr.configuration.loader import load_config
 from tyr.metrics.metric import Metric
 from tyr.planners.model.config import SolveConfig
 from tyr.planners.model.planner import Planner
@@ -191,53 +192,86 @@ class AnalyzeTerminalWritter(Writter):
 
     # ================================== Analyse ================================= #
 
-    # pylint: disable = too-many-branches, too-many-locals
+    # pylint: disable = too-many-branches, too-many-locals, too-many-statements
     def analyse(self) -> None:
         """Prints a table of metrics based on results."""
 
-        # Get all domains
+        # Get the table configuration from the configuration file.
+        # pylint: disable = eval-used
+        conf = load_config("", self._config).get("analyse", {}).get("table", {})
+        identical, null = "lambda x: x", "lambda x: None"
+        domain_mapping = eval(conf.get("domain_mapping", identical))  # nosec: B307
+        planner_mapping = eval(conf.get("planner_mapping", identical))  # nosec: B307
+        metric_mapping = eval(conf.get("metric_mapping", identical))  # nosec: B307
+        category_mapping = eval(conf.get("category_mapping", null))  # nosec: B307
+
+        # Get all domains.
         domains = sorted({p.domain for p in self._problems}, key=lambda d: d.name)
+
+        # Get all categories.
+        categories = defaultdict(list)
+        for planner in self._planners:
+            planner_name = planner.name.title().replace("-", " ")
+            categories[category_mapping(planner_name)].append(planner)
 
         # Create the table.
         table = CellTable([Sep.DOUBLE])
 
-        # Create the headers of the table.
-        header = CellRow([Sep.DOUBLE, Cell("Domains", Adjust.CENTER), Sep.DOUBLE])
-        for planner in self._planners:
-            header.append(Cell(planner.name.title(), Adjust.CENTER, len(self._metrics)))
-            header.append(Sep.DOUBLE)
-        table.append(header)
+        # Create the categories headers.
+        if None not in categories:
+            table.append(CellRow([Sep.DOUBLE, Cell("", Adjust.CENTER), Sep.DOUBLE]))
+            for category, planners in categories.items():
+                span = len(planners) * len(self._metrics)
+                table[-1].append(Cell(category, Adjust.CENTER, span))
+                table[-1].append(Sep.DOUBLE)
+            table.append(Sep.DOUBLE)
+
+        # Create the planners headers.
+        table.append(CellRow([Sep.DOUBLE, Cell("Domains", Adjust.CENTER), Sep.DOUBLE]))
+        for _, planners in categories.items():
+            for planner in planners:
+                pl_name = planner_mapping(
+                    planner.name.title().replace("-", " ")
+                ).strip()
+                table[-1].append(Cell(pl_name, Adjust.CENTER, len(self._metrics)))
+                table[-1].append(Sep.DOUBLE)
         table.append(Sep.DOUBLE)
+
+        # Create the metrics headers.
         table.append(CellRow([Sep.DOUBLE, Cell("", Adjust.LEFT), Sep.DOUBLE]))
-        for _ in self._planners:
-            for metric in self._metrics:
-                name = metric.abbrev()[0].upper() + metric.abbrev()[1:]
-                table[-1].append(Cell(name, Adjust.CENTER))
-                table[-1].append(Sep.SIMPLE)
-            table[-1].pop()
-            table[-1].append(Sep.DOUBLE)
+        for _, planners in categories.items():
+            for __ in planners:
+                for metric in self._metrics:
+                    metric_abbrev = metric.abbrev()[0].upper() + metric.abbrev()[1:]
+                    metric_name = metric_mapping(
+                        metric_abbrev.replace("-", " ")
+                    ).strip()
+                    table[-1].append(Cell(metric_name, Adjust.CENTER))
+                    table[-1].append(Sep.SIMPLE)
+                table[-1].pop()
+                table[-1].append(Sep.DOUBLE)
         table.append(Sep.DOUBLE)
 
         # Create the cells.
         for domain in domains:
+            domain_name = domain_mapping(domain.name.title().replace("-", " ")).strip()
             table.append(
-                CellRow(
-                    [Sep.DOUBLE, Cell(domain.name.title(), Adjust.LEFT), Sep.DOUBLE]
-                )
+                CellRow([Sep.DOUBLE, Cell(domain_name, Adjust.LEFT), Sep.DOUBLE])
             )
-            for planner in self._planners:
-                for metric in self._metrics:
-                    results = [
-                        result
-                        for result in self._results
-                        if result.problem.domain == domain
-                        and result.planner_name == planner.name
-                    ]
-                    value = f"{metric.evaluate(results):.2f}"
-                    table[-1].append(Cell(value, Adjust.CENTER))
-                    table[-1].append(Sep.SIMPLE)
-                table[-1].pop()
-                table[-1].append(Sep.DOUBLE)
+            for _, planners in categories.items():
+                for planner in planners:
+                    for metric in self._metrics:
+                        results = [
+                            result
+                            for result in self._results
+                            if result.problem.domain == domain
+                            and result.planner_name == planner.name
+                        ]
+                        value = f"{metric.evaluate(results):.2f}"
+                        table[-1].append(Cell(value, Adjust.CENTER))
+                        table[-1].append(Sep.SIMPLE)
+                    table[-1].pop()
+                    table[-1].append(Sep.DOUBLE)
             table.append(Sep.SIMPLE)
         table.pop()
         table.append(Sep.DOUBLE)
@@ -419,7 +453,7 @@ class AnalyzeTerminalWritter(Writter):
                 next_cell_idx += 2
                 next_cell, next_sep = next_line[next_cell_idx : next_cell_idx + 2]
             else:
-                self.write("─")
+                self.write(("─" if line_sep is Sep.SIMPLE else "═"))
 
 
 __all__ = ["AnalyzeTerminalWritter"]
