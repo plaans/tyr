@@ -1,5 +1,6 @@
 import re
 from typing import List
+
 from tyr.patterns import AbstractSingletonMeta
 from tyr.patterns.abstract import Abstract
 from tyr.patterns.singleton import Singleton
@@ -20,7 +21,11 @@ class Metric(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         """The name of the metric."""
         return self._name
 
-    def evaluate(self, results: List[PlannerResult]):
+    def abbrev(self) -> str:
+        """The abbreviation of the name of the metric."""
+        return self.name[:3]
+
+    def evaluate(self, results: List[PlannerResult]) -> float:
         """Evaluate the performance of a planner."""
         raise NotImplementedError
 

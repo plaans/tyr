@@ -1,21 +1,29 @@
 from math import log10
+from typing import List
+
 from tyr.metrics.metric import Metric
-from tyr.planners.model.result import PlannerResultStatus
+from tyr.planners.model.result import PlannerResult, PlannerResultStatus
 
 
 class AgileScoreMetric(Metric):
     """A metric to evaluate the agile score of a planner."""
 
-    def evaluate(self, results):
+    def abbrev(self) -> str:
+        return "AS"
+
+    def evaluate(self, results: List[PlannerResult]) -> float:
         """Evaluate the performance of a planner."""
         if len(results) == 0:
             return 0
 
-        total = 0
+        total = 0.0
         for result in results:
             computation_time = result.computation_time
             timeout = result.config.timeout
             if result.status != PlannerResultStatus.SOLVED:
+                total += 0
+            elif computation_time is None:
+                # Redundant with SOLVED but needed for typing and security
                 total += 0
             elif computation_time < 1:
                 total += 1

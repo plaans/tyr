@@ -10,6 +10,7 @@ from tyr import (  # type: ignore
     RunningMode,
     SolveConfig,
     load_config,
+    run_analyse,
     run_bench,
     run_solve,
 )
@@ -25,6 +26,8 @@ DEFAULT_CONFIG = {
     "verbose": 0,
     "quiet": 0,
     "out": [],
+    # Analyse
+    "metrics": [],
     # Bench
     "jobs": 1,
     "planners": [],
@@ -107,6 +110,28 @@ memout_option = click.option(
     help="Memout for planners in bytes. Default to 4GB.",
 )
 
+planners_filter = click.option(
+    "-p",
+    "--planners",
+    type=str,
+    multiple=True,
+    help="A list of regex filters on planner names.",
+)
+domains_filter = click.option(
+    "-d",
+    "--domains",
+    type=str,
+    multiple=True,
+    help="A list of regex filters on domain names. A domain name is of the form DOMAIN:UID.",
+)
+metrics_filter = click.option(
+    "-M",
+    "--metrics",
+    type=str,
+    multiple=True,
+    help="A list of regex filters on metric names.",
+)
+
 
 # ============================================================================ #
 #                                     Main                                     #
@@ -134,9 +159,69 @@ def update_context(ctx, verbose, quiet, out, config):
 # ============================================================================ #
 
 
+# ============================================================================ #
+#                                    Analyse                                   #
+# ============================================================================ #
+
+
+@cli.command(
+    "analyse",
+    help="Analyse the results stored in the database.",
+)
+@verbose_option
+@quiet_option
+@out_option
+@config_option
+@timeout_option
+@memout_option
+@planners_filter
+@domains_filter
+@metrics_filter
+@pass_context
+def cli_analyse(
+    ctx: CliContext,
+    verbose: int,
+    quiet: int,
+    out,
+    config,
+    timeout: int,
+    memout: int,
+    planners: List[str],
+    domains: List[str],
+    metrics: List[str],
+):
+    config = config or ctx.config
+    cli_config = {
+        "verbose": verbose,
+        "quiet": quiet,
+        "out": out,
+        "timeout": timeout,
+        "memout": memout,
+        "planners": planners,
+        "domains": domains,
+        "metrics": metrics,
+    }
+    conf = merge_configs(cli_config, yaml_config(config, "analyse"), DEFAULT_CONFIG)
+
+    update_context(ctx, conf["verbose"], conf["quiet"], conf["out"], config)
+    run_analyse(
+        ctx,
+        conf["timeout"],
+        conf["memout"],
+        conf["planners"],
+        conf["domains"],
+        conf["metrics"],
+    )
+
+
+# ============================================================================ #
+#                                     Bench                                    #
+# ============================================================================ #
+
+
 @cli.command(
     "bench",
-    help="Run several planners on different domains.",
+    help="Run several planners on different domains and save results in the database.",
 )
 @verbose_option
 @quiet_option
@@ -151,20 +236,8 @@ def update_context(ctx, verbose, quiet, out, config):
     help=f"Number of CPUs to use for parallel computation, \
 if negative (n_cpus + 1 + jobs) are used. Default to {DEFAULT_CONFIG['jobs']}.",
 )
-@click.option(
-    "-p",
-    "--planners",
-    type=str,
-    multiple=True,
-    help="A list of regex filters on planner names.",
-)
-@click.option(
-    "-d",
-    "--domains",
-    type=str,
-    multiple=True,
-    help="A list of regex filters on problem names. A problem name is of the form DOMAIN:UID.",
-)
+@planners_filter
+@domains_filter
 @click.option("--anytime", is_flag=True, help="Perform anytime solving method only.")
 @click.option("--oneshot", is_flag=True, help="Perform oneshot solving method only.")
 @click.option("--db-only", is_flag=True, help="Only use the database for results.")
@@ -172,8 +245,8 @@ if negative (n_cpus + 1 + jobs) are used. Default to {DEFAULT_CONFIG['jobs']}.",
 @pass_context
 def cli_bench(
     ctx: CliContext,
-    verbose,
-    quiet,
+    verbose: int,
+    quiet: int,
     out,
     config,
     timeout: int,
@@ -258,7 +331,7 @@ def cli_bench(
 def cli_solve(
     ctx: CliContext,
     verbose,
-    quiet,
+    quiet: int,
     out,
     config,
     planner: str,
