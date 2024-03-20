@@ -61,8 +61,7 @@ class BenchTerminalWritter(Writter):
         verbosity: int = 0,
         config: Optional[Path] = None,
     ) -> None:
-        super().__init__(out, verbosity, config)
-        self._solve_config = solve_config
+        super().__init__(solve_config, out, verbosity, config)
         self._num_to_run = 0
         self._main_color = "green"
         self._results: List[BenchResult] = []
@@ -82,15 +81,6 @@ class BenchTerminalWritter(Writter):
 
     def session_name(self) -> str:
         return "bench"
-
-    def session_starts(self):
-        super().session_starts()
-        self.report_solve_config(self._solve_config)
-        self.line(
-            f"parallel: {self._solve_config.jobs} job"
-            + ("" if self._solve_config.jobs == 1 else "s")
-        )
-        self.report_collecting()
 
     def session_finished(self):
         """Prints summary of the finished benchmark session."""

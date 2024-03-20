@@ -52,6 +52,7 @@ class Writter:
 
     def __init__(
         self,
+        solve_config: SolveConfig,
         out: Union[Optional[TextIO], List[TextIO]] = None,
         verbosity: int = 0,
         config: Optional[Path] = None,
@@ -70,6 +71,7 @@ class Writter:
         self._out = list(out)
         self._verbosity = verbosity
         self._config = get_config_file("cli", config)
+        self._solve_config = solve_config
         self._crt_line = ""
         self._fullwidth = shutil.get_terminal_size(fallback=(80, 24))[0]
         self._starttime = 0
@@ -196,21 +198,31 @@ class Writter:
         """Reports the beginning of a collection process."""
         self.write("collecting...", flush=True, bold=True)
 
-    def report_solve_config(self, solve_config: SolveConfig):
-        """Prints a report about the configuration being used for the resolution.
-
-        Args:
-            solve_config (SolveConfig): The configuration being used.
-        """
-        msg = f"timeout: {self.format_seconds(solve_config.timeout)}"
-
-        num_bytes = solve_config.memout * 1.0
+    def report_solve_config(self):
+        """Prints a report about the configuration being used for the resolution."""
+        # Timeout & Memout
+        msg = f"timeout: {self.format_seconds(self._solve_config.timeout)}"
+        num_bytes = self._solve_config.memout * 1.0
         msg += f" -- memout: {int(num_bytes)} Bytes"
         for unit in ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB"]:
             if num_bytes < 1024:
                 msg += f" ({num_bytes:.2f} {unit})"
                 break
             num_bytes /= 1024
+        self.line(msg)
+
+        # Parallel & Database
+        msg = f"parallel: {self._solve_config.jobs} job" + (
+            "" if self._solve_config.jobs == 1 else "s"
+        )
+        db_status = (
+            "disabled"
+            if self._solve_config.no_db
+            else "unique source"
+            if self._solve_config.db_only
+            else "enabled"
+        )
+        msg += f" -- database: {db_status}"
         self.line(msg)
 
     # ============================================================================ #
@@ -230,6 +242,8 @@ class Writter:
         self.line(msg)
         self.line(f"rootdir: {os.getcwd()}")
         self.line(f"config: {self._config}")
+        self.report_solve_config()
+        self.report_collecting()
 
     # ============================================================================ #
     #                                  Formatting                                  #
