@@ -223,25 +223,9 @@ class BenchTerminalWritter(Writter):
             len(planners.selected) * len(problems.selected) * len(running_modes)
         )
 
-        def report(result: CollectionResult, name: str):
-            total = result.total
-            selected = len(result.selected)
-            deselected = len(result.deselected)
-            skipped = len(result.skipped)
-
-            line = f"collected {total} {name}" + ("" if total <= 1 else "s")
-            if deselected:
-                line += f" / {deselected} deselected"
-            if skipped:
-                line += f" / {skipped} skipped"
-            if total > selected:
-                line += f" / {selected} selected"
-
-            self.line(line, bold=True)
-
         self.rewrite("")
-        report(planners, "planner")
-        report(problems, "problem")
+        self.report_collected(planners, "planner")
+        self.report_collected(problems, "problem")
 
     def report_running_mode(self, running_mode: RunningMode):
         """Prints a report about a new running mode.

@@ -2,6 +2,7 @@ from math import log10
 from unittest.mock import MagicMock
 
 import pytest
+
 from tyr.metrics.metrics.agile_score import AgileScoreMetric
 from tyr.planners.model.config import SolveConfig
 from tyr.planners.model.result import PlannerResult, PlannerResultStatus

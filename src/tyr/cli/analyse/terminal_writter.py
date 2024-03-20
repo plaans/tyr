@@ -175,27 +175,10 @@ class AnalyzeTerminalWritter(Writter):
             problems (CollectionResult[ProblemInstance]): The collection result on problems.
             metrics (CollectionResult[Metric]): The collection result on metrics.
         """
-
-        def report(result: CollectionResult, name: str):
-            total = result.total
-            selected = len(result.selected)
-            deselected = len(result.deselected)
-            skipped = len(result.skipped)
-
-            line = f"collected {total} {name}" + ("" if total <= 1 else "s")
-            if deselected:
-                line += f" / {deselected} deselected"
-            if skipped:
-                line += f" / {skipped} skipped"
-            if total > selected:
-                line += f" / {selected} selected"
-
-            self.line(line, bold=True)
-
         self.rewrite("")
-        report(planners, "planner")
-        report(problems, "problem")
-        report(metrics, "metric")
+        self.report_collected(planners, "planner")
+        self.report_collected(problems, "problem")
+        self.report_collected(metrics, "metric")
 
         self._planners = sorted(planners.selected, key=lambda p: p.name)
         self._problems = sorted(problems.selected, key=lambda p: p.name)

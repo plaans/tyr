@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock
+
 from tyr.metrics.metrics.coverage import CoverageMetric
 from tyr.planners.model.result import PlannerResult, PlannerResultStatus
 
@@ -17,7 +18,6 @@ def planner_result(status_name: str):
 
 
 class TestCoverageMetric:
-
     def test_coverage_metric(self):
         results = [
             planner_result("solved"),

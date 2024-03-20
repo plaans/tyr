@@ -1,4 +1,5 @@
 import pytest
+
 from tyr.metrics.metric import Metric
 
 

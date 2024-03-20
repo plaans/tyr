@@ -6,6 +6,7 @@ import time
 from pathlib import Path
 from typing import List, Optional, TextIO, Union
 
+from tyr.cli.collector import CollectionResult
 from tyr.configuration.loader import get_config_file
 from tyr.planners.model.config import SolveConfig
 
@@ -197,6 +198,23 @@ class Writter:
     def report_collecting(self):
         """Reports the beginning of a collection process."""
         self.write("collecting...", flush=True, bold=True)
+
+    def report_collected(self, result: CollectionResult, name: str):
+        """Reports the result of a collection process."""
+        total = result.total
+        selected = len(result.selected)
+        deselected = len(result.deselected)
+        skipped = len(result.skipped)
+
+        line = f"collected {total} {name}" + ("" if total <= 1 else "s")
+        if deselected:
+            line += f" / {deselected} deselected"
+        if skipped:
+            line += f" / {skipped} skipped"
+        if total > selected:
+            line += f" / {selected} selected"
+
+        self.line(line, bold=True)
 
     def report_solve_config(self):
         """Prints a report about the configuration being used for the resolution."""
