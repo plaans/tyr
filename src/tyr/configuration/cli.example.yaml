@@ -2,6 +2,32 @@
 # This is an example configuration file for the CLI.
 # Uncomment the options to override the default values.
 
+analyse:
+  # memout: 17179869184 # 16GB
+  # timeout: 30
+  # verbose: 1
+  # oneshot: True
+  # planners:
+  #   - aries
+  #   - linear
+  #   - panda-pi
+  # domains:
+  #   - factories
+  #   # - minecraft
+  #   - goto
+  #   - transport
+  # table:
+  #   domain_mapping: |
+  #     lambda x: x.replace('Hierarchical', '')
+  #   planner_mapping: |
+  #     lambda x: (
+  #         x.replace("Panda Pi", "PandaPi").split(" ")[1]
+  #         if " " in x.replace("Panda Pi", "PandaPi")
+  #         else "Base"
+  #     )
+  #   category_mapping: |
+  #     lambda x: x.replace("Panda Pi", "PandaPi").split(" ")[0]
+
 bench:
   # memout: 4294967296
   # out: []
