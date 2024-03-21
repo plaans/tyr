@@ -270,7 +270,9 @@ class AnalyzeTerminalWritter(Writter):
 
         # Create the cells.
         for domain in sorted(domains, key=ordering["domain"]):
-            domain_name = mapping["domain"](domain)
+            num_inst = len({id(r) for r in self._results if r.problem.domain == domain})
+            num_inst = int(num_inst / len(self._planners))
+            domain_name = mapping["domain"](domain) + f" ({num_inst})"
             table.append(
                 CellRow([Sep.DOUBLE, Cell(domain_name, Adjust.LEFT), Sep.DOUBLE])
             )
