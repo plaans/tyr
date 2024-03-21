@@ -9,16 +9,7 @@ class CoverageMetric(Metric):
 
     def evaluate(self, results: List[PlannerResult]) -> str:
         """Evaluate the performance of a planner."""
-        results = [
-            r
-            for r in results
-            if r.status
-            not in [
-                PlannerResultStatus.NOT_RUN,
-                PlannerResultStatus.UNSUPPORTED,
-                PlannerResultStatus.ERROR,
-            ]
-        ]
+        results = self._filter_results(results)
 
         if len(results) == 0:
             return "-"

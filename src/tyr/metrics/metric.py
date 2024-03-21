@@ -4,7 +4,7 @@ from typing import List
 from tyr.patterns import AbstractSingletonMeta
 from tyr.patterns.abstract import Abstract
 from tyr.patterns.singleton import Singleton
-from tyr.planners.model.result import PlannerResult
+from tyr.planners.model.result import PlannerResult, PlannerResultStatus
 
 
 # pylint: disable = too-few-public-methods
@@ -33,6 +33,18 @@ class Metric(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         """The maximum value of the metric."""
         return 100
 
+    def _filter_results(self, results: List[PlannerResult]) -> List[PlannerResult]:
+        return [
+            r
+            for r in results
+            if r.status
+            not in [
+                PlannerResultStatus.NOT_RUN,
+                PlannerResultStatus.UNSUPPORTED,
+                PlannerResultStatus.ERROR,
+            ]
+        ]
+
     def evaluate(self, results: List[PlannerResult]) -> str:
         """Evaluate the performance of a planner."""
         raise NotImplementedError
@@ -50,7 +62,9 @@ class Metric(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         return (
             "-"
             if best == self.min_value()
-            else f"{best:.2f}" if best != self.max_value() else str(int(best))
+            else f"{best:.2f}"
+            if best != self.max_value()
+            else str(int(best))
         )
 
     def best_across_planners(self, results: List[PlannerResult]) -> str:
@@ -66,7 +80,9 @@ class Metric(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         return (
             "-"
             if best == self.min_value()
-            else f"{best:.2f}" if best != self.max_value() else str(int(best))
+            else f"{best:.2f}"
+            if best != self.max_value()
+            else str(int(best))
         )
 
 
