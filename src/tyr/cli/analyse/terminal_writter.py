@@ -227,6 +227,8 @@ class AnalyzeTerminalWritter(Writter):
         ordering = {
             k: lambda x, k=k, v=v: v(mapping[k](x)) for k, v in ordering_confg.items()
         }
+        best_column = conf.get("best_column", False)
+        best_row = conf.get("best_row", False)
 
         # Get all domains.
         domains = {p.domain for p in self._problems}
@@ -235,7 +237,8 @@ class AnalyzeTerminalWritter(Writter):
         categories: DefaultDict[str, List[Optional[Planner]]] = defaultdict(list)
         for pl in self._planners:
             categories[mapping["category"](mapping_item["planner"](pl))].append(pl)
-        categories[""].append(None)
+        if best_column:
+            categories[""].append(None)
 
         # Create the table.
         table = CellTable([Sep.DOUBLE])
@@ -306,25 +309,26 @@ class AnalyzeTerminalWritter(Writter):
         table.append(Sep.DOUBLE)
 
         # Create the best footer.
-        table.append(CellRow([Sep.DOUBLE, Cell("Best", Adjust.CENTER), Sep.DOUBLE]))
-        for category in sorted(categories, key=ordering["category"]):
-            for p in sorted(categories[category], key=ordering["planner"]):
-                if p is None:
-                    table[-1].append(Cell("", Adjust.CENTER, len(self._metrics)))
+        if best_row:
+            table.append(CellRow([Sep.DOUBLE, Cell("Best", Adjust.CENTER), Sep.DOUBLE]))
+            for category in sorted(categories, key=ordering["category"]):
+                for p in sorted(categories[category], key=ordering["planner"]):
+                    if p is None:
+                        table[-1].append(Cell("", Adjust.CENTER, len(self._metrics)))
+                        table[-1].append(Sep.DOUBLE)
+                        continue
+                    for metric in sorted(self._metrics, key=ordering["metric"]):
+                        results = [
+                            result
+                            for result in self._results
+                            if result.planner_name == p.name
+                        ]
+                        value = metric.best_across_domains(results)
+                        table[-1].append(Cell(value, Adjust.CENTER))
+                        table[-1].append(Sep.SIMPLE)
+                    table[-1].pop()
                     table[-1].append(Sep.DOUBLE)
-                    continue
-                for metric in sorted(self._metrics, key=ordering["metric"]):
-                    results = [
-                        result
-                        for result in self._results
-                        if result.planner_name == p.name
-                    ]
-                    value = metric.best_across_domains(results)
-                    table[-1].append(Cell(value, Adjust.CENTER))
-                    table[-1].append(Sep.SIMPLE)
-                table[-1].pop()
-                table[-1].append(Sep.DOUBLE)
-        table.append(Sep.DOUBLE)
+            table.append(Sep.DOUBLE)
 
         # Add the padding to the cells.
         for line in table.lines:
