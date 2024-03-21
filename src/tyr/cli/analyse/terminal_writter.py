@@ -199,20 +199,41 @@ class AnalyzeTerminalWritter(Writter):
         # Get the table configuration from the configuration file.
         # pylint: disable = eval-used
         conf = load_config("", self._config).get("analyse", {}).get("table", {})
-        identical, null = "lambda x: x", "lambda x: None"
-        domain_mapping = eval(conf.get("domain_mapping", identical))  # nosec: B307
-        planner_mapping = eval(conf.get("planner_mapping", identical))  # nosec: B307
-        metric_mapping = eval(conf.get("metric_mapping", identical))  # nosec: B307
-        category_mapping = eval(conf.get("category_mapping", null))  # nosec: B307
+        identical, null, str_order = "lambda x: x", "lambda x: None", "str"
+        mapping_conf = {
+            "domain": eval(conf.get("domain_mapping", identical)),  # nosec: B307
+            "planner": eval(conf.get("planner_mapping", identical)),  # nosec: B307
+            "metric": eval(conf.get("metric_mapping", identical)),  # nosec: B307
+            "category": eval(conf.get("category_mapping", null)),  # nosec: B307
+        }
+        mapping_item = {
+            "domain": lambda x: x.name.title().replace("-", " "),
+            "planner": lambda x: x.name.title().replace("-", " "),
+            "metric": lambda x: x.abbrev()[0].upper() + x.abbrev()[1:],
+            "category": lambda x: x,
+        }
+        mapping = {
+            k: lambda x, k=k, v=v: v(mapping_item[k](x)).strip()
+            for k, v in mapping_conf.items()
+        }
+
+        ordering_confg = {
+            "domain": eval(conf.get("domain_ordering", str_order)),  # nosec: B307
+            "planner": eval(conf.get("planner_ordering", str_order)),  # nosec: B307
+            "metric": eval(conf.get("metric_ordering", str_order)),  # nosec: B307
+            "category": eval(conf.get("category_ordering", str_order)),  # nosec: B307
+        }
+        ordering = {
+            k: lambda x, k=k, v=v: v(mapping[k](x)) for k, v in ordering_confg.items()
+        }
 
         # Get all domains.
-        domains = sorted({p.domain for p in self._problems}, key=lambda d: d.name)
+        domains = {p.domain for p in self._problems}
 
         # Get all categories.
         categories = defaultdict(list)
-        for planner in self._planners:
-            planner_name = planner.name.title().replace("-", " ")
-            categories[category_mapping(planner_name)].append(planner)
+        for p in self._planners:
+            categories[mapping["category"](mapping_item["planner"](p))].append(p)
 
         # Create the table.
         table = CellTable([Sep.DOUBLE])
@@ -220,32 +241,27 @@ class AnalyzeTerminalWritter(Writter):
         # Create the categories headers.
         if None not in categories:
             table.append(CellRow([Sep.DOUBLE, Cell("", Adjust.CENTER), Sep.DOUBLE]))
-            for category, planners in categories.items():
-                span = len(planners) * len(self._metrics)
+            for category in sorted(categories, key=ordering["category"]):
+                span = len(categories[category]) * len(self._metrics)
                 table[-1].append(Cell(category, Adjust.CENTER, span))
                 table[-1].append(Sep.DOUBLE)
             table.append(Sep.DOUBLE)
 
         # Create the planners headers.
         table.append(CellRow([Sep.DOUBLE, Cell("Domains", Adjust.CENTER), Sep.DOUBLE]))
-        for _, planners in categories.items():
-            for planner in planners:
-                pl_name = planner_mapping(
-                    planner.name.title().replace("-", " ")
-                ).strip()
-                table[-1].append(Cell(pl_name, Adjust.CENTER, len(self._metrics)))
+        for category in sorted(categories, key=ordering["category"]):
+            for p in sorted(categories[category], key=ordering["planner"]):
+                planner_name = mapping["planner"](p)
+                table[-1].append(Cell(planner_name, Adjust.CENTER, len(self._metrics)))
                 table[-1].append(Sep.DOUBLE)
         table.append(Sep.DOUBLE)
 
         # Create the metrics headers.
         table.append(CellRow([Sep.DOUBLE, Cell("", Adjust.LEFT), Sep.DOUBLE]))
-        for _, planners in categories.items():
-            for __ in planners:
-                for metric in self._metrics:
-                    metric_abbrev = metric.abbrev()[0].upper() + metric.abbrev()[1:]
-                    metric_name = metric_mapping(
-                        metric_abbrev.replace("-", " ")
-                    ).strip()
+        for category in sorted(categories, key=ordering["category"]):
+            for _ in sorted(categories[category], key=ordering["planner"]):
+                for metric in sorted(self._metrics, key=ordering["metric"]):
+                    metric_name = mapping["metric"](metric)
                     table[-1].append(Cell(metric_name, Adjust.CENTER))
                     table[-1].append(Sep.SIMPLE)
                 table[-1].pop()
@@ -253,19 +269,19 @@ class AnalyzeTerminalWritter(Writter):
         table.append(Sep.DOUBLE)
 
         # Create the cells.
-        for domain in domains:
-            domain_name = domain_mapping(domain.name.title().replace("-", " ")).strip()
+        for domain in sorted(domains, key=ordering["domain"]):
+            domain_name = mapping["domain"](domain)
             table.append(
                 CellRow([Sep.DOUBLE, Cell(domain_name, Adjust.LEFT), Sep.DOUBLE])
             )
-            for _, planners in categories.items():
-                for planner in planners:
-                    for metric in self._metrics:
+            for category in sorted(categories, key=ordering["category"]):
+                for p in sorted(categories[category], key=ordering["planner"]):
+                    for metric in sorted(self._metrics, key=ordering["metric"]):
                         results = [
                             result
                             for result in self._results
                             if result.problem.domain == domain
-                            and result.planner_name == planner.name
+                            and result.planner_name == p.name
                         ]
                         value = f"{metric.evaluate(results):.2f}"
                         table[-1].append(Cell(value, Adjust.CENTER))
