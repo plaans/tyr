@@ -40,6 +40,10 @@
         :parameters (?r - resource ?l - location)
     )
 
+    (:task goto
+        :parameters (?l - location)
+    )
+
     (:task free-move :parameters ())
 
     (:method m_free-move
@@ -145,10 +149,20 @@
             (resource-at ?r ?ls)
         )
         :ordered-subtasks (and
+            (goto ?ls)
             (pickup ?r ?ls)
+            (goto ?le)
             (drop ?r ?le)
         )
     )
+
+    (:method m_already_there
+        :parameters (?l - location)
+        :task (goto ?l)
+        :precondition (truck-at ?l)
+        :subtasks ()
+    )
+
 
 
     (:action construct
