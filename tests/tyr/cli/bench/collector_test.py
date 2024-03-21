@@ -1,11 +1,18 @@
-from typing import Dict, List, Tuple
+from typing import Callable, Dict, List, Tuple
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from tyr import AbstractDomain, Planner, collect_planners
-from tyr.cli.collector import collect_metrics, collect_problems
-from tyr.patterns.singleton import Singleton
+from tyr import (
+    AbstractDomain,
+    Planner,
+    collect_planners,
+    collect_metrics,
+    collect_problems,
+    collect_plotters,
+    Metric,
+    Singleton,
+)
 
 
 class ProblemCache(Singleton):
@@ -44,6 +51,14 @@ class TestCollectors:
 
     @staticmethod
     @pytest.fixture()
+    def all_plotters():
+        plotters = [MagicMock() for _ in range(10)]
+        for i, plotter in enumerate(plotters):
+            plotter.__name__ = f"plotter-{i}"
+        yield plotters
+
+    @staticmethod
+    @pytest.fixture()
     def all_domains():
         domains = [MagicMock() for _ in range(10)]
         for i, domain in enumerate(domains):
@@ -66,7 +81,7 @@ class TestCollectors:
     def test_collect_metrics_all(
         self,
         mocked_get_all_metrics: Mock,
-        all_metrics: List[Planner],
+        all_metrics: List[Metric],
     ):
         mocked_get_all_metrics.return_value = all_metrics
         result = collect_metrics()
@@ -78,7 +93,7 @@ class TestCollectors:
     def test_collect_metrics_one_filter(
         self,
         mocked_get_all_metrics: Mock,
-        all_metrics: List[Planner],
+        all_metrics: List[Metric],
     ):
         mocked_get_all_metrics.return_value = all_metrics
         filter1 = ".*[4-8]"
@@ -95,7 +110,7 @@ class TestCollectors:
     def test_collect_metrics_two_filters(
         self,
         mocked_get_all_metrics: Mock,
-        all_metrics: List[Planner],
+        all_metrics: List[Metric],
     ):
         mocked_get_all_metrics.return_value = all_metrics
         filter1 = ".*[4-8]"
@@ -154,6 +169,55 @@ class TestCollectors:
         deselected = [p for p in all_planners if int(p.name[-1]) not in range(1, 9)]
 
         result = collect_planners(filter1, filter2)
+        assert set(result.selected) == set(selected)
+        assert set(result.deselected) == set(deselected)
+        assert len(set(result.skipped)) == 0
+
+    # ================================= Plotters ================================= #
+
+    @patch("tyr.plotters.get_all_plotters")
+    def test_collect_plotters_all(
+        self,
+        mocked_get_all_plotters: Mock,
+        all_plotters: List[Callable],
+    ):
+        mocked_get_all_plotters.return_value = all_plotters
+        result = collect_plotters()
+        assert set(result.selected) == set(all_plotters)
+        assert len(set(result.deselected)) == 0
+        assert len(set(result.skipped)) == 0
+
+    @patch("tyr.plotters.get_all_plotters")
+    def test_collect_plotters_one_filter(
+        self,
+        mocked_get_all_plotters: Mock,
+        all_plotters: List[Callable],
+    ):
+        mocked_get_all_plotters.return_value = all_plotters
+        filter1 = ".*[4-8]"
+
+        selected = [p for p in all_plotters if int(p.__name__[-1]) in range(4, 9)]
+        deselected = [p for p in all_plotters if int(p.__name__[-1]) not in range(4, 9)]
+
+        result = collect_plotters(filter1)
+        assert set(result.selected) == set(selected)
+        assert set(result.deselected) == set(deselected)
+        assert len(set(result.skipped)) == 0
+
+    @patch("tyr.plotters.get_all_plotters")
+    def test_collect_plotters_two_filters(
+        self,
+        mocked_get_all_plotters: Mock,
+        all_plotters: List[Callable],
+    ):
+        mocked_get_all_plotters.return_value = all_plotters
+        filter1 = ".*[4-8]"
+        filter2 = ".*[1-5]"
+
+        selected = [p for p in all_plotters if int(p.__name__[-1]) in range(1, 9)]
+        deselected = [p for p in all_plotters if int(p.__name__[-1]) not in range(1, 9)]
+
+        result = collect_plotters(filter1, filter2)
         assert set(result.selected) == set(selected)
         assert set(result.deselected) == set(deselected)
         assert len(set(result.skipped)) == 0

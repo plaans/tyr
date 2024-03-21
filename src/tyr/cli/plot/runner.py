@@ -1,7 +1,7 @@
 from typing import List
 
 from tyr.cli import collector
-from tyr.cli.table.terminal_writter import TableTerminalWritter
+from tyr.cli.plot.terminal_writter import PlotTerminalWritter
 from tyr.cli.config import CliContext
 from tyr.planners.database import Database
 from tyr.planners.model.config import RunningMode, SolveConfig
@@ -9,15 +9,13 @@ from tyr.planners.model.result import PlannerResult, PlannerResultStatus
 
 
 # pylint: disable=too-many-arguments, too-many-locals
-def run_table(
+def run_plot(
     ctx: CliContext,
     timeout: int,
     memout: int,
     planner_filters: List[str],
     domain_filters: List[str],
-    metric_filters: List[str],
-    best_column: bool,
-    best_row: bool,
+    plot_filters: List[str],
 ):
     """Analyse the planners over the domains based on the database content.
 
@@ -27,28 +25,19 @@ def run_table(
         memout (int): The memory out limit to use for planner results.
         planner_filters (List[str]): A list of regex filters on planner names.
         domains_filters (List[str]): A list of regex filters on problems names.
-        metric_filters (List[str]): A list of regex filters on metric names.
-        best_column (bool): Whether to print the best metrics on the right.
-        best_row (bool): Whether to print the best metrics on the bottom.
+        plot_filters (List[str]): A list of regex filters on plot names.
     """
 
     # Create the writter and start the session.
     solve_config = SolveConfig(1, memout, timeout, True, False)
-    tw = TableTerminalWritter(
-        solve_config,
-        ctx.out,
-        ctx.verbosity,
-        ctx.config,
-        best_column,
-        best_row,
-    )
+    tw = PlotTerminalWritter(solve_config, ctx.out, ctx.verbosity, ctx.config)
     tw.session_starts()
 
-    # Collect the planners, the problems, and the metrics to use for the analysis.
+    # Collect the planners, the problems and the plots functions.
     planners = collector.collect_planners(*planner_filters)
     problems = collector.collect_problems(*domain_filters)
-    metrics = collector.collect_metrics(*metric_filters)
-    tw.report_collect(planners, problems, metrics)
+    plotters = collector.collect_plotters(*plot_filters)
+    tw.report_collect(planners, problems, plotters)
 
     # Get the results from the database.
     results: List[PlannerResult] = []
@@ -92,11 +81,11 @@ are not consistent for planner {r.planner_name}."
             tw.write("[ERROR]", bold=True, red=True)
             tw.line(f" {msg}", red=True)
             return
-    tw.set_results(results)
+    tw.report_results(results)
 
-    # Perform the analysis.
-    tw.line()
-    tw.analyse()
+    # Perform the plots.
+    for plotter in plotters.selected:
+        plotter(results)
 
 
-__all__ = ["run_table"]
+__all__ = ["run_plot"]

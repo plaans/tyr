@@ -1,11 +1,13 @@
 import re
 from dataclasses import dataclass, field
-from typing import Generic, List, TypeVar
+from typing import Callable, Generic, List, TypeVar
 
+from tyr import plotters
 from tyr.metrics import scanner as metric_scanner
 from tyr.metrics.metric import Metric
 from tyr.planners import scanner as planner_scanner
 from tyr.planners.model.planner import Planner
+from tyr.planners.model.result import PlannerResult
 from tyr.problems import scanner as domain_scanner
 from tyr.problems.model.instance import ProblemInstance
 
@@ -83,9 +85,37 @@ def collect_planners(*filters: str) -> CollectionResult[Planner]:
     return CollectionResult(selected, deselected)
 
 
+def collect_plotters(
+    *filters: str,
+) -> CollectionResult[Callable[[List[PlannerResult]], None]]:
+    """
+    Args:
+        filters (List[str]): A list of regex filters on plot names.
+
+    Returns:
+        CollectionResult[Callable[[List[PlannerResult]], None]]: The collected plots.
+    """
+    all_plots = plotters.get_all_plotters()
+    selected: List[Callable[[List[PlannerResult]], None]] = []
+
+    if len(filters) == 0:
+        return CollectionResult(all_plots)
+
+    for flt in filters:
+        re_filter = re.compile(flt)
+
+        for plot in all_plots:
+            if re_filter.match(plot.__name__) is not None:
+                selected.append(plot)
+
+    selected = list(set(selected))  # Remove duplicates
+    deselected = [p for p in all_plots if p not in selected]
+
+    return CollectionResult(selected, deselected)
+
+
 def collect_problems(*filters: str) -> CollectionResult[ProblemInstance]:
     """
-
     Args:
         filters (List[str]): A list of regex filters on problem names.
 
@@ -119,6 +149,7 @@ def collect_problems(*filters: str) -> CollectionResult[ProblemInstance]:
 __all__ = [
     "collect_metrics",
     "collect_planners",
+    "collect_plotters",
     "collect_problems",
     "CollectionResult",
 ]

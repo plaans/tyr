@@ -14,6 +14,7 @@ from tyr import (  # type: ignore
     run_bench,
     run_solve,
 )
+from tyr.cli.plot.runner import run_plot
 
 # ============================================================================ #
 #                                 Configuration                                #
@@ -34,6 +35,8 @@ DEFAULT_CONFIG = {
     "oneshot": False,
     "db_only": False,
     "no_db": False,
+    # Plot
+    "plotters": [],
     # Solve
     "planner": "",
     "problem": "",
@@ -133,6 +136,13 @@ metrics_filter = click.option(
     multiple=True,
     help="A list of regex filters on metric names.",
 )
+plotters_filter = click.option(
+    "-P",
+    "--plotters",
+    type=str,
+    multiple=True,
+    help="A list of regex filters on plotter names.",
+)
 
 
 # ============================================================================ #
@@ -154,74 +164,6 @@ def update_context(ctx, verbose, quiet, out, config):
     ctx.verbosity += verbose - quiet
     ctx.out.extend(out)
     ctx.config = config
-
-
-# ============================================================================ #
-#                                     Bench                                    #
-# ============================================================================ #
-
-
-# ============================================================================ #
-#                                     Table                                    #
-# ============================================================================ #
-
-
-@cli.command(
-    "table",
-    help="Analyse the results stored in the database.",
-)
-@verbose_option
-@quiet_option
-@out_option
-@config_option
-@timeout_option
-@memout_option
-@planners_filter
-@domains_filter
-@metrics_filter
-@click.option("--best-col", is_flag=True, help="Print the best metrics on the right.")
-@click.option("--best-row", is_flag=True, help="Print the best metrics on the bottom.")
-@pass_context
-def cli_table(
-    ctx: CliContext,
-    verbose: int,
-    quiet: int,
-    out,
-    config,
-    timeout: int,
-    memout: int,
-    planners: List[str],
-    domains: List[str],
-    metrics: List[str],
-    best_col: bool,
-    best_row: bool,
-):
-    config = config or ctx.config
-    cli_config = {
-        "verbose": verbose,
-        "quiet": quiet,
-        "out": out,
-        "timeout": timeout,
-        "memout": memout,
-        "planners": planners,
-        "domains": domains,
-        "metrics": metrics,
-        "best_column": best_col,
-        "best_row": best_row,
-    }
-    conf = merge_configs(cli_config, yaml_config(config, "table"), DEFAULT_CONFIG)
-
-    update_context(ctx, conf["verbose"], conf["quiet"], conf["out"], config)
-    run_table(
-        ctx,
-        conf["timeout"],
-        conf["memout"],
-        conf["planners"],
-        conf["domains"],
-        conf["metrics"],
-        conf["best_column"],
-        conf["best_row"],
-    )
 
 
 # ============================================================================ #
@@ -315,6 +257,61 @@ def cli_bench(
 
 
 # ============================================================================ #
+#                                     Plot                                     #
+# ============================================================================ #
+
+
+@cli.command(
+    "plot",
+    help="Plot the results stored in the database.",
+)
+@verbose_option
+@quiet_option
+@out_option
+@config_option
+@timeout_option
+@memout_option
+@planners_filter
+@domains_filter
+@plotters_filter
+@pass_context
+def cli_plot(
+    ctx: CliContext,
+    verbose: int,
+    quiet: int,
+    out,
+    config,
+    timeout: int,
+    memout: int,
+    planners: List[str],
+    domains: List[str],
+    plotters: List[str],
+):
+    config = config or ctx.config
+    cli_config = {
+        "verbose": verbose,
+        "quiet": quiet,
+        "out": out,
+        "timeout": timeout,
+        "memout": memout,
+        "planners": planners,
+        "domains": domains,
+        "plotters": plotters,
+    }
+    conf = merge_configs(cli_config, yaml_config(config, "plot"), DEFAULT_CONFIG)
+
+    update_context(ctx, conf["verbose"], conf["quiet"], conf["out"], config)
+    run_plot(
+        ctx,
+        conf["timeout"],
+        conf["memout"],
+        conf["planners"],
+        conf["domains"],
+        conf["plotters"],
+    )
+
+
+# ============================================================================ #
 #                                     Solve                                    #
 # ============================================================================ #
 
@@ -374,6 +371,69 @@ def cli_solve(
 
     solve_config = SolveConfig(1, conf["memout"], conf["timeout"], False, True)
     run_solve(ctx, solve_config, conf["planner"], conf["problem"], running_mode)
+
+
+# ============================================================================ #
+#                                     Table                                    #
+# ============================================================================ #
+
+
+@cli.command(
+    "table",
+    help="Analyse the results stored in the database.",
+)
+@verbose_option
+@quiet_option
+@out_option
+@config_option
+@timeout_option
+@memout_option
+@planners_filter
+@domains_filter
+@metrics_filter
+@click.option("--best-col", is_flag=True, help="Print the best metrics on the right.")
+@click.option("--best-row", is_flag=True, help="Print the best metrics on the bottom.")
+@pass_context
+def cli_table(
+    ctx: CliContext,
+    verbose: int,
+    quiet: int,
+    out,
+    config,
+    timeout: int,
+    memout: int,
+    planners: List[str],
+    domains: List[str],
+    metrics: List[str],
+    best_col: bool,
+    best_row: bool,
+):
+    config = config or ctx.config
+    cli_config = {
+        "verbose": verbose,
+        "quiet": quiet,
+        "out": out,
+        "timeout": timeout,
+        "memout": memout,
+        "planners": planners,
+        "domains": domains,
+        "metrics": metrics,
+        "best_column": best_col,
+        "best_row": best_row,
+    }
+    conf = merge_configs(cli_config, yaml_config(config, "table"), DEFAULT_CONFIG)
+
+    update_context(ctx, conf["verbose"], conf["quiet"], conf["out"], config)
+    run_table(
+        ctx,
+        conf["timeout"],
+        conf["memout"],
+        conf["planners"],
+        conf["domains"],
+        conf["metrics"],
+        conf["best_column"],
+        conf["best_row"],
+    )
 
 
 if __name__ == "__main__":

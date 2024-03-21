@@ -97,6 +97,9 @@ tyr *args:
 # Run the bench command.
 bench *args: (tyr "bench" args)
 
+# Run the plot command.
+plot *args: (tyr "plot" args)
+
 # Run the solve command.
 solve *args: (tyr "solve" args)
 
