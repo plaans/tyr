@@ -193,7 +193,7 @@ class TableTerminalWritter(Writter):
     # ================================== Session ================================= #
 
     def session_name(self) -> str:
-        return "analysis"
+        return "table"
 
     # ================================== Analyse ================================= #
 
