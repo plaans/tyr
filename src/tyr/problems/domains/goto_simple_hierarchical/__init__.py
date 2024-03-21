@@ -12,6 +12,31 @@ class GotoSimpleHierarchicalDomain(AbstractDomain):
     def get_num_problems(self) -> int:
         return 30
 
+    def _from_base(
+        self, problem: ProblemInstance, version: str
+    ) -> Optional[AbstractProblem]:
+        # Get the base version of the problem.
+        base: HierarchicalProblem = problem.versions["base"].value
+        if base is None:
+            return None
+
+        # Create the new domain.
+        domain_file = Path(__file__).parent / version / "domain.hddl"
+        pb: HierarchicalProblem = PDDLReader().parse_problem(domain_file.as_posix())
+
+        # Add all objects.
+        pb.add_objects(base.all_objects)
+
+        # Initialize all state variables.
+        for sv, val in base.explicit_initial_values.items():
+            pb.set_initial_value(pb.fluent(sv.fluent().name)(*sv.args), val)
+
+        # Add the goals.
+        for task in base.task_network.subtasks:
+            pb.task_network.add_subtask(task)
+
+        return pb
+
     def build_problem_base(self, problem: ProblemInstance) -> Optional[AbstractProblem]:
         domain_file = Path(__file__).parent / "base" / "domain.hddl"
         pb: HierarchicalProblem = PDDLReader().parse_problem(domain_file.as_posix())
@@ -52,53 +77,15 @@ class GotoSimpleHierarchicalDomain(AbstractDomain):
     def build_problem_linear(
         self, problem: ProblemInstance
     ) -> Optional[AbstractProblem]:
-        # Get the base version of the problem.
-        base: HierarchicalProblem = problem.versions["base"].value
-        if base is None:
-            return None
-
-        # Create the new domain.
-        domain_file = Path(__file__).parent / "linear" / "domain.hddl"
-        pb: HierarchicalProblem = PDDLReader().parse_problem(domain_file.as_posix())
-
-        # Add all objects.
-        pb.add_objects(base.all_objects)
-
-        # Initialize all state variables.
-        for sv, val in base.explicit_initial_values.items():
-            pb.set_initial_value(pb.fluent(sv.fluent().name)(*sv.args), val)
-
-        # Add the goals.
-        for task in base.task_network.subtasks:
-            pb.task_network.add_subtask(task)
-
-        return pb
+        return self._from_base(problem, "linear")
 
     def build_problem_insertion(
         self, problem: ProblemInstance
     ) -> Optional[AbstractProblem]:
-        # Get the base version of the problem.
-        base: HierarchicalProblem = problem.versions["base"].value
-        if base is None:
-            return None
-
-        # Create the new domain.
-        domain_file = Path(__file__).parent / "insertion" / "domain.hddl"
-        pb: HierarchicalProblem = PDDLReader().parse_problem(domain_file.as_posix())
-
-        # Add all objects.
-        pb.add_objects(base.all_objects)
-
-        # Initialize all state variables.
-        for sv, val in base.explicit_initial_values.items():
-            pb.set_initial_value(pb.fluent(sv.fluent().name)(*sv.args), val)
-
-        # Add the goals.
-        pb.task_network.add_subtask(
-            pb.get_task("aim"), pb.object("T1"), pb.object("P5")
-        )
+        pb = self._from_base(problem, "insertion")
+        if pb is None:
+            return pb
 
         # Add the free-move task for task insertion.
         pb.task_network.add_subtask(pb.get_task("free-move"), pb.object("T1"))
-
         return pb

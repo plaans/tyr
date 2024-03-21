@@ -14,10 +14,10 @@
         :parameters (
             ?t - truck))
 
-    (:task aim
+    (:task goto
         :parameters (
             ?t - truck
-            ?l - position))
+            ?d - position))
 
     (:method m-noop
         :parameters (
@@ -34,14 +34,19 @@
             (move ?t ?s ?d)
             (free-move ?t)))
 
-    (:method m-aim
+    (:method m-goto
         :parameters (
             ?t - truck
-            ?l - position)
-        :task (aim ?t ?l)
-        :precondition (and
-            (at ?t ?l))
-        :subtasks ())
+            ?d - position)
+        :task (goto ?t ?d)
+        :subtasks (noop ?t ?d))
+
+    (:action noop
+        :parameters (
+            ?t - truck
+            ?d - position)
+        :precondition (at ?t ?d)
+        :effect ())
 
     (:action move
         :parameters (
