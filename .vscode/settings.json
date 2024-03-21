@@ -14,6 +14,7 @@
     "material-icon-theme.folders.associations": {
         "metrics": "benchmark",
         "planners": "resolver",
+        "plotters": "theme",
         "problems": "context",
         "tyr": "project"
     },
