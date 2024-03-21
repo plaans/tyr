@@ -16,6 +16,7 @@
 
   (:task deliver :parameters (?p - package ?l - location))
   (:task free-drive :parameters (?v - vehicle))
+  (:task get-to :parameters (?v - vehicle ?l - location))
   (:task load :parameters (?v - vehicle ?l - location ?p - package))
   (:task unload :parameters (?v - vehicle ?l - location ?p - package))
 
@@ -23,7 +24,9 @@
     :parameters (?p - package ?l1 ?l2 - location ?v - vehicle)
     :task (deliver ?p ?l2)
      :ordered-subtasks (and
+      (get-to ?v ?l1)
       (load ?v ?l1 ?p)
+      (get-to ?v ?l2)
       (unload ?v ?l2 ?p))
   )
 
@@ -53,6 +56,13 @@
     :subtasks ()
   )
   
+  (:method m-i-am-there
+    :parameters (?v - vehicle ?l - location)
+    :task (get-to  ?v ?l)
+    :subtasks (and
+        (noop ?v ?l))
+  )
+  
   (:action drive
     :parameters (?v - vehicle ?l1 ?l2 - location)
     :precondition (and
@@ -61,6 +71,12 @@
     :effect (and
         (not (at ?v ?l1))
         (at ?v ?l2))
+  )
+
+  (:action noop
+    :parameters (?v - vehicle ?l2 - location)
+    :precondition (at ?v ?l2)
+    :effect ()
   )
 
  (:action pick-up
