@@ -138,7 +138,7 @@ metrics_filter = click.option(
 # ============================================================================ #
 
 
-@click.group()
+@click.group(chain=True)
 @verbose_option
 @quiet_option
 @out_option
