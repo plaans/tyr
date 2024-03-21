@@ -89,12 +89,14 @@ class Database(Singleton):
             )
             conn.commit()
 
+    # pylint: disable = too-many-arguments
     def load_planner_result(
         self,
         planner_name: str,
         problem: ProblemInstance,
         config: "SolveConfig",
         running_mode: "RunningMode",
+        keep_unsupported: bool = False,
     ) -> Optional["PlannerResult"]:
         """Loads the planner result matching the given attributes if any.
 
@@ -103,6 +105,7 @@ class Database(Singleton):
             problem (ProblemInstance): The problem instance.
             config (SolveConfig): The configuration used to solve the problem.
             running_mode (RunningMode): The running mode for the planner resolution.
+            keep_unsupported (bool): Whether to keep unsupported results.
 
         Returns:
             Optional[PlannerResult]: The planner result if present, otherwise None.
@@ -126,7 +129,7 @@ class Database(Singleton):
                 .fetchone()
             )
 
-        if resp is None or resp[4] == "UNSUPPORTED":
+        if resp is None or resp[4] == "UNSUPPORTED" and not keep_unsupported:
             return None
 
         if resp[4] == "TIMEOUT" and resp[5] is not None and resp[5] < config.timeout:
