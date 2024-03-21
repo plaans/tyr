@@ -23,11 +23,12 @@ class TestCoverageMetric:
             planner_result("solved"),
             planner_result("unsolvable"),
             planner_result("timeout"),
+            planner_result("memout"),
             planner_result("error"),
             planner_result("unsupported"),
             planner_result("not_run"),
         ]
-        expected = 1 / len(results) * 100
+        expected = 1 / (len(results) - 2) * 100
         result = CoverageMetric().evaluate(results)
         assert result == expected
 
@@ -35,3 +36,14 @@ class TestCoverageMetric:
         results = []
         result = CoverageMetric().evaluate(results)
         assert result == 0
+
+    def test_coverage_skip_not_run_unsupported_error(self):
+        results = [
+            planner_result("solved"),
+            planner_result("unsupported"),
+            planner_result("not_run"),
+            planner_result("error"),
+        ]
+        expected = 100
+        result = CoverageMetric().evaluate(results)
+        assert result == expected

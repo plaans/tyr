@@ -66,3 +66,14 @@ class TestAgileScoreMetric:
         results = []
         result = AgileScoreMetric().evaluate(results)
         assert result == 0
+
+    def test_agile_score_skip_not_run_unsupported_error(self):
+        results = [
+            planner_result("solved", 0.5),
+            planner_result("unsupported"),
+            planner_result("not_run"),
+            planner_result("error"),
+        ]
+        expected = 1
+        result = AgileScoreMetric().evaluate(results)
+        assert result == expected
