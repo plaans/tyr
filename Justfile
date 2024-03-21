@@ -94,11 +94,11 @@ _ci-local:
 tyr *args:
     {{ python }} -m tyr {{ args }}
 
-# Run the analyse command.
-analyse *args: (tyr "analyse" args)
-
 # Run the bench command.
 bench *args: (tyr "bench" args)
 
 # Run the solve command.
 solve *args: (tyr "solve" args)
+
+# Run the table command.
+table *args: (tyr "table" args)

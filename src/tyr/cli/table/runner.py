@@ -1,7 +1,7 @@
 from typing import List
 
 from tyr.cli import collector
-from tyr.cli.analyse.terminal_writter import AnalyzeTerminalWritter
+from tyr.cli.table.terminal_writter import TableTerminalWritter
 from tyr.cli.config import CliContext
 from tyr.planners.database import Database
 from tyr.planners.model.config import RunningMode, SolveConfig
@@ -9,13 +9,15 @@ from tyr.planners.model.result import PlannerResult, PlannerResultStatus
 
 
 # pylint: disable=too-many-arguments, too-many-locals
-def run_analyse(
+def run_table(
     ctx: CliContext,
     timeout: int,
     memout: int,
     planner_filters: List[str],
     domain_filters: List[str],
     metric_filters: List[str],
+    best_column: bool,
+    best_row: bool,
 ):
     """Analyse the planners over the domains based on the database content.
 
@@ -26,11 +28,20 @@ def run_analyse(
         planner_filters (List[str]): A list of regex filters on planner names.
         domains_filters (List[str]): A list of regex filters on problems names.
         metric_filters (List[str]): A list of regex filters on metric names.
+        best_column (bool): Whether to print the best metrics on the right.
+        best_row (bool): Whether to print the best metrics on the bottom.
     """
 
     # Create the writter and start the session.
     solve_config = SolveConfig(1, memout, timeout, True, False)
-    tw = AnalyzeTerminalWritter(solve_config, ctx.out, ctx.verbosity, ctx.config)
+    tw = TableTerminalWritter(
+        solve_config,
+        ctx.out,
+        ctx.verbosity,
+        ctx.config,
+        best_column,
+        best_row,
+    )
     tw.session_starts()
 
     # Collect the planners and the problems to use for the analysis.
@@ -88,4 +99,4 @@ are not consistent for planner {r.planner_name}."
     tw.analyse()
 
 
-__all__ = ["run_analyse"]
+__all__ = ["run_table"]

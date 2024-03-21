@@ -10,7 +10,7 @@ from tyr import (  # type: ignore
     RunningMode,
     SolveConfig,
     load_config,
-    run_analyse,
+    run_table,
     run_bench,
     run_solve,
 )
@@ -26,8 +26,6 @@ DEFAULT_CONFIG = {
     "verbose": 0,
     "quiet": 0,
     "out": [],
-    # Analyse
-    "metrics": [],
     # Bench
     "jobs": 1,
     "planners": [],
@@ -40,6 +38,10 @@ DEFAULT_CONFIG = {
     "planner": "",
     "problem": "",
     "fs": False,
+    # Table
+    "metrics": [],
+    "best_column": False,
+    "best_row": False,
 }
 
 
@@ -160,12 +162,12 @@ def update_context(ctx, verbose, quiet, out, config):
 
 
 # ============================================================================ #
-#                                    Analyse                                   #
+#                                     Table                                    #
 # ============================================================================ #
 
 
 @cli.command(
-    "analyse",
+    "table",
     help="Analyse the results stored in the database.",
 )
 @verbose_option
@@ -177,8 +179,10 @@ def update_context(ctx, verbose, quiet, out, config):
 @planners_filter
 @domains_filter
 @metrics_filter
+@click.option("--best-col", is_flag=True, help="Print the best metrics on the right.")
+@click.option("--best-row", is_flag=True, help="Print the best metrics on the bottom.")
 @pass_context
-def cli_analyse(
+def cli_table(
     ctx: CliContext,
     verbose: int,
     quiet: int,
@@ -189,6 +193,8 @@ def cli_analyse(
     planners: List[str],
     domains: List[str],
     metrics: List[str],
+    best_col: bool,
+    best_row: bool,
 ):
     config = config or ctx.config
     cli_config = {
@@ -200,17 +206,21 @@ def cli_analyse(
         "planners": planners,
         "domains": domains,
         "metrics": metrics,
+        "best_column": best_col,
+        "best_row": best_row,
     }
-    conf = merge_configs(cli_config, yaml_config(config, "analyse"), DEFAULT_CONFIG)
+    conf = merge_configs(cli_config, yaml_config(config, "table"), DEFAULT_CONFIG)
 
     update_context(ctx, conf["verbose"], conf["quiet"], conf["out"], config)
-    run_analyse(
+    run_table(
         ctx,
         conf["timeout"],
         conf["memout"],
         conf["planners"],
         conf["domains"],
         conf["metrics"],
+        conf["best_column"],
+        conf["best_row"],
     )
 
 

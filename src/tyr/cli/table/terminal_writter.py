@@ -131,21 +131,26 @@ class CellTable:
         return len(self.rows)
 
 
-class AnalyzeTerminalWritter(Writter):
+class TableTerminalWritter(Writter):
     """Terminal writter for the analysis command."""
 
+    # pylint: disable = too-many-arguments
     def __init__(
         self,
         solve_config: SolveConfig,
         out: Union[Optional[TextIO], List[TextIO]] = None,
         verbosity: int = 0,
         config: Optional[Path] = None,
+        best_column: bool = False,
+        best_row: bool = False,
     ) -> None:
         super().__init__(solve_config, out, verbosity, config)
         self._results: List[PlannerResult] = []
         self._planners: List[Planner] = []
         self._problems: List[ProblemInstance] = []
         self._metrics: List[Metric] = []
+        self._best_column = best_column
+        self._best_row = best_row
 
     # =============================== Manipulation =============================== #
 
@@ -198,7 +203,7 @@ class AnalyzeTerminalWritter(Writter):
 
         # Get the table configuration from the configuration file.
         # pylint: disable = eval-used
-        conf = load_config("", self._config).get("analyse", {}).get("table", {})
+        conf = load_config("", self._config).get("table", {})
         identical = "lambda x: x"
         null = "lambda x: None"
         str_order = "lambda x: (x == '', str(x))"
@@ -227,8 +232,6 @@ class AnalyzeTerminalWritter(Writter):
         ordering = {
             k: lambda x, k=k, v=v: v(mapping[k](x)) for k, v in ordering_confg.items()
         }
-        best_column = conf.get("best_column", False)
-        best_row = conf.get("best_row", False)
 
         # Get all domains.
         domains = {p.domain for p in self._problems}
@@ -237,7 +240,7 @@ class AnalyzeTerminalWritter(Writter):
         categories: DefaultDict[str, List[Optional[Planner]]] = defaultdict(list)
         for pl in self._planners:
             categories[mapping["category"](mapping_item["planner"](pl))].append(pl)
-        if best_column:
+        if self._best_column:
             categories[""].append(None)
 
         # Create the table.
@@ -309,7 +312,7 @@ class AnalyzeTerminalWritter(Writter):
         table.append(Sep.DOUBLE)
 
         # Create the best footer.
-        if best_row:
+        if self._best_row:
             table.append(CellRow([Sep.DOUBLE, Cell("Best", Adjust.CENTER), Sep.DOUBLE]))
             for category in sorted(categories, key=ordering["category"]):
                 for p in sorted(categories[category], key=ordering["planner"]):
@@ -510,4 +513,4 @@ class AnalyzeTerminalWritter(Writter):
                 self.write(("─" if line_sep is Sep.SIMPLE else "═"))
 
 
-__all__ = ["AnalyzeTerminalWritter"]
+__all__ = ["TableTerminalWritter"]
