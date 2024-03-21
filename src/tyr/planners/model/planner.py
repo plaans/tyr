@@ -4,6 +4,7 @@ import shutil
 import signal
 import time
 import traceback
+from dataclasses import replace
 from io import TextIOWrapper
 from pathlib import Path
 from typing import Generator, Optional, Tuple
@@ -245,11 +246,21 @@ class Planner:
 
         except Exception:  # pylint: disable=broad-exception-caught
             # An error occured...
+            # Try to detect a memory allocation failure.
+            memout = False
+            if "log_path" in locals():
+                with open(log_path, "r", encoding="utf-8") as log_file:
+                    for line in log_file:
+                        if line.startswith("memory") and line.endswith("failed\n"):
+                            memout = True
+                            break
+            # Save the error in logs.
             log_path = self.get_log_file(problem, "error", running_mode)
             with open(log_path, "w", encoding="utf-8") as log_file:
                 log_file.write(traceback.format_exc())
+            # Return an error or memout result.
             computation_time = time.time() - start
-            return PlannerResult.error(
+            result = PlannerResult.error(
                 problem,
                 self,
                 config,
@@ -257,6 +268,9 @@ class Planner:
                 computation_time,
                 traceback.format_exc(),
             )
+            if memout:
+                result = replace(result, status=PlannerResultStatus.MEMOUT)
+            return result
 
     def _solve_anytime(
         self,
