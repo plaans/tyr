@@ -11,7 +11,7 @@ class AgileScoreMetric(Metric):
     def abbrev(self) -> str:
         return "AS"
 
-    def evaluate(self, results: List[PlannerResult]) -> float:
+    def evaluate(self, results: List[PlannerResult]) -> str:
         """Evaluate the performance of a planner."""
         results = [
             r
@@ -25,7 +25,7 @@ class AgileScoreMetric(Metric):
         ]
 
         if len(results) == 0:
-            return 0
+            return "-"
 
         total = 0.0
         for result in results:
@@ -42,7 +42,10 @@ class AgileScoreMetric(Metric):
                 total += 0
             else:
                 total += 1 - log10(computation_time) / log10(timeout)
-        return total / len(results)
+        score = total / len(results)
+        if score == 1:
+            return "1"
+        return f"{score:.2f}"
 
 
 __all__ = ["AgileScoreMetric"]

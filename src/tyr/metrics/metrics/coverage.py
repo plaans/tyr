@@ -7,7 +7,7 @@ from tyr.planners.model.result import PlannerResult, PlannerResultStatus
 class CoverageMetric(Metric):
     """A metric to evaluate the coverage of a planner."""
 
-    def evaluate(self, results: List[PlannerResult]) -> float:
+    def evaluate(self, results: List[PlannerResult]) -> str:
         """Evaluate the performance of a planner."""
         results = [
             r
@@ -21,13 +21,16 @@ class CoverageMetric(Metric):
         ]
 
         if len(results) == 0:
-            return 0
+            return "-"
 
-        return (
+        cov = (
             len([r for r in results if r.status == PlannerResultStatus.SOLVED])
             / len(results)
             * 100
         )
+        if cov == 100:
+            return "100"
+        return f"{cov:.2f}"
 
 
 __all__ = ["CoverageMetric"]

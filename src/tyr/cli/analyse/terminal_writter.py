@@ -285,7 +285,7 @@ class AnalyzeTerminalWritter(Writter):
                             if result.problem.domain == domain
                             and result.planner_name == p.name
                         ]
-                        value = f"{metric.evaluate(results):.2f}"
+                        value = metric.evaluate(results)
                         table[-1].append(Cell(value, Adjust.CENTER))
                         table[-1].append(Sep.SIMPLE)
                     table[-1].pop()

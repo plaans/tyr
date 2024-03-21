@@ -25,7 +25,7 @@ class Metric(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         """The abbreviation of the name of the metric."""
         return self.name[:3]
 
-    def evaluate(self, results: List[PlannerResult]) -> float:
+    def evaluate(self, results: List[PlannerResult]) -> str:
         """Evaluate the performance of a planner."""
         raise NotImplementedError
 

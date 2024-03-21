@@ -38,7 +38,18 @@ class TestAgileScoreMetric:
     @pytest.mark.parametrize("status", PlannerResultStatus)
     def test_agile_score_single_result(self, computation_time, expected, status):
         if status != PlannerResultStatus.SOLVED:
-            expected = 0
+            expected = (
+                "-"
+                if status
+                in [
+                    PlannerResultStatus.NOT_RUN,
+                    PlannerResultStatus.UNSUPPORTED,
+                    PlannerResultStatus.ERROR,
+                ]
+                else "0.00"
+            )
+        else:
+            expected = f"{expected:.2f}" if expected != 1 else "1"
         results = [planner_result(status.name, computation_time)]
         result = AgileScoreMetric().evaluate(results)
         assert result == expected
@@ -60,20 +71,20 @@ class TestAgileScoreMetric:
             )
             / 7
         )
-        assert result == expected
+        assert result == f"{expected:.2f}"
 
     def test_agile_score_empty_results(self):
         results = []
         result = AgileScoreMetric().evaluate(results)
-        assert result == 0
+        assert result == "-"
 
     def test_agile_score_skip_not_run_unsupported_error(self):
         results = [
             planner_result("solved", 0.5),
-            planner_result("unsupported"),
-            planner_result("not_run"),
-            planner_result("error"),
+            planner_result("unsupported", 0.5),
+            planner_result("not_run", 0.5),
+            planner_result("error", 0.5),
         ]
-        expected = 1
+        expected = "1"
         result = AgileScoreMetric().evaluate(results)
         assert result == expected
