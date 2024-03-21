@@ -5,7 +5,7 @@ from tyr.cli.analyse.terminal_writter import AnalyzeTerminalWritter
 from tyr.cli.config import CliContext
 from tyr.planners.database import Database
 from tyr.planners.model.config import RunningMode, SolveConfig
-from tyr.planners.model.result import PlannerResult
+from tyr.planners.model.result import PlannerResult, PlannerResultStatus
 
 
 # pylint: disable=too-many-arguments, too-many-locals
@@ -40,14 +40,47 @@ def run_analyse(
     tw.report_collect(planners, problems, metrics)
 
     # Get the results from the database.
-    results = []
-    for pl in planners.selected:
-        for pr in problems.selected:
-            for rm in RunningMode:
-                result = Database().load_planner_result(pl.name, pr, solve_config, rm)
+    results: List[PlannerResult] = []
+    for planner in planners.selected:
+        for problem in problems.selected:
+            for running_mode in RunningMode:
+                result = Database().load_planner_result(
+                    planner.name,
+                    problem,
+                    solve_config,
+                    running_mode,
+                    keep_unsupported=True,
+                )
                 if result is None:
-                    result = PlannerResult.not_run(pr, pl, solve_config, rm)
+                    result = PlannerResult.not_run(
+                        problem, planner, solve_config, running_mode
+                    )
                 results.append(result)
+
+    # Filter the results.
+    results = [
+        r
+        for r in results
+        if not any(
+            r1.status == PlannerResultStatus.NOT_RUN
+            for r1 in results
+            if r1.problem.name == r.problem.name and r1.running_mode == r.running_mode
+        )
+    ]
+    for r in results:
+        if r.status == PlannerResultStatus.UNSUPPORTED and not all(
+            r1.status == PlannerResultStatus.UNSUPPORTED
+            for r1 in results
+            if r1.problem.domain == r.problem.domain
+            and r1.planner_name == r.planner_name
+            and r1.running_mode == r.running_mode
+        ):
+            msg = f"Unsupported results on domain {r.problem.domain.name} \
+are not consistent for planner {r.planner_name}."
+            tw.line()
+            tw.write("[ERROR]", bold=True, red=True)
+            tw.line(f" {msg}", red=True)
+            return
     tw.set_results(results)
 
     # Perform the analysis.
