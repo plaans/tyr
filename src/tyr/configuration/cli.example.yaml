@@ -2,37 +2,12 @@
 # This is an example configuration file for the CLI.
 # Uncomment the options to override the default values.
 
-analyse:
-  # memout: 17179869184 # 16GB
-  # timeout: 30
-  # verbose: 1
-  # oneshot: True
-  # planners:
-  #   - aries
-  #   - linear
-  #   - panda-pi
-  # domains:
-  #   - factories
-  #   # - minecraft
-  #   - goto
-  #   - transport
-  # table:
-  #   domain_mapping: |
-  #     lambda x: x.replace('Hierarchical', '')
-  #   planner_mapping: |
-  #     lambda x: (
-  #         x.replace("Panda Pi", "PandaPi").split(" ")[1]
-  #         if " " in x.replace("Panda Pi", "PandaPi")
-  #         else "Base"
-  #     )
-  #   category_mapping: |
-  #     lambda x: x.replace("Panda Pi", "PandaPi").split(" ")[0]
-
 bench:
   # memout: 4294967296
   # out: []
   # timeout: 50
   # verbose: 0
+  # quiet: 0
   # jobs: 1
   # planners: ["aries", "lpg"]
   # domains: ["rovers"]
@@ -42,12 +17,83 @@ bench:
   # db_only: False
   # no_db: False
 
+plot:
+  # memout: 17179869184 # 16GB
+  # out: []
+  # timeout: 60
+  # verbose: 0
+  # quiet: 0
+  # planners:
+  #   - panda-pi
+  # domains:
+  #   - goto-complex
+  # plotters:
+  #   - cactus
+
 solve:
   # memout: 4294967296
   # out: []
   # timeout: 0
   # verbose: 0
+  # quiet: 0
   # timeout: 10
   # planner: "aries"
   # problem: "rovers-hierarchical:01"
   # fs: False
+
+table:
+  # memout: 17179869184 # 16GB
+  # out: []
+  # verbose: 0
+  # quiet: 0
+  # timeout: 1
+  # planners:
+  #   - aries
+  #   - linear
+  #   - panda-pi
+  # domains:
+  #   - factories
+  #   - goto
+  #   - rovers-hierarchical:.*
+  #   - transport
+  # best_column: True
+  # best_row: True
+  # domain_mapping: |
+  #   lambda x: x.replace("Hierarchical", "")
+  # domain_ordering: |
+  #   lambda x: (
+  #     {
+  #       "Goto Simple": 0,
+  #       "Goto Complex": 1,
+  #       "Goto Hard": 2,
+  #     }.get(x, 3),
+  #     x,
+  #   )
+  # planner_mapping: |
+  #   lambda x: (
+  #       x.replace("Panda Pi", "PandaPi").split(" ")[1]
+  #       if " " in x.replace("Panda Pi", "PandaPi")
+  #       else "Base"
+  #   )
+  # planner_ordering: |
+  #   lambda x: (
+  #     {
+  #       "Base": 0,
+  #       "Exponential": 1,
+  #       "Linear": 2,
+  #       "Insertion": 3,
+  #     }.get(x, 4),
+  #     x,
+  #   )
+  # metric_mapping: lambda x: x
+  # metric_ordering: |
+  #   lambda x: (
+  #     {
+  #       "Cov": 0,
+  #       "AS": 1,
+  #     }.get(x, 2),
+  #     x,
+  #   )
+  # category_mapping: |
+  #   lambda x: x.replace("Panda Pi", "PandaPi").split(" ")[0]
+  # category_ordering: lambda x: x
