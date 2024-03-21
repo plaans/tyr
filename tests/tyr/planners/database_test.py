@@ -240,3 +240,39 @@ class TestDatabase:
             "",
             True,
         )
+
+    @patch("tyr.planners.database.sqlite3.connect")
+    def test_load_planner_result_bigger_timeout(
+        self,
+        connect_mock,
+        database,
+        conn_mock,
+        cursor_mock,
+        result_mock,
+    ):
+        connect_mock.return_value = conn_mock
+        conn_mock.cursor.return_value = cursor_mock
+        now = "2021-01-01T00:00:00"
+        cursor_mock.execute.return_value.fetchone.return_value = (
+            1,
+            result_mock.planner_name,
+            result_mock.problem.name,
+            result_mock.running_mode.name,
+            "TIMEOUT",
+            5,
+            result_mock.plan_quality,
+            result_mock.error_message,
+            result_mock.config.jobs,
+            result_mock.config.memout,
+            5,
+            now,
+        )
+
+        result = database.load_planner_result(
+            result_mock.planner_name,
+            result_mock.problem,
+            result_mock.config,
+            result_mock.running_mode,
+        )
+
+        assert result is None

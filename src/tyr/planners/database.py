@@ -129,6 +129,9 @@ class Database(Singleton):
         if resp is None or resp[4] == "UNSUPPORTED":
             return None
 
+        if resp[4] == "TIMEOUT" and resp[5] is not None and resp[5] <= config.timeout:
+            return None
+
         if resp[5] is not None and resp[5] > config.timeout:
             result = PlannerResult.timeout(problem, planner_name, config, running_mode)
             return replace(result, from_database=True)
