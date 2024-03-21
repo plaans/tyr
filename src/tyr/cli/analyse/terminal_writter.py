@@ -2,7 +2,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum, auto
 from pathlib import Path
-from typing import Dict, Generator, List, Optional, TextIO, Union
+from typing import DefaultDict, Dict, Generator, List, Optional, TextIO, Union
 
 from tyr.cli.collector import CollectionResult
 from tyr.cli.writter import Writter
@@ -199,7 +199,9 @@ class AnalyzeTerminalWritter(Writter):
         # Get the table configuration from the configuration file.
         # pylint: disable = eval-used
         conf = load_config("", self._config).get("analyse", {}).get("table", {})
-        identical, null, str_order = "lambda x: x", "lambda x: None", "str"
+        identical = "lambda x: x"
+        null = "lambda x: None"
+        str_order = "lambda x: (x == '', str(x))"
         mapping_conf = {
             "domain": eval(conf.get("domain_mapping", identical)),  # nosec: B307
             "planner": eval(conf.get("planner_mapping", identical)),  # nosec: B307
@@ -213,10 +215,9 @@ class AnalyzeTerminalWritter(Writter):
             "category": lambda x: x,
         }
         mapping = {
-            k: lambda x, k=k, v=v: v(mapping_item[k](x)).strip()
+            k: lambda x, k=k, v=v: ("" if x is None else v(mapping_item[k](x)).strip())
             for k, v in mapping_conf.items()
         }
-
         ordering_confg = {
             "domain": eval(conf.get("domain_ordering", str_order)),  # nosec: B307
             "planner": eval(conf.get("planner_ordering", str_order)),  # nosec: B307
@@ -231,9 +232,10 @@ class AnalyzeTerminalWritter(Writter):
         domains = {p.domain for p in self._problems}
 
         # Get all categories.
-        categories = defaultdict(list)
-        for p in self._planners:
-            categories[mapping["category"](mapping_item["planner"](p))].append(p)
+        categories: DefaultDict[str, List[Optional[Planner]]] = defaultdict(list)
+        for pl in self._planners:
+            categories[mapping["category"](mapping_item["planner"](pl))].append(pl)
+        categories[""].append(None)
 
         # Create the table.
         table = CellTable([Sep.DOUBLE])
@@ -242,7 +244,8 @@ class AnalyzeTerminalWritter(Writter):
         if None not in categories:
             table.append(CellRow([Sep.DOUBLE, Cell("", Adjust.CENTER), Sep.DOUBLE]))
             for category in sorted(categories, key=ordering["category"]):
-                span = len(categories[category]) * len(self._metrics)
+                category_planners = len(categories[category])
+                span = category_planners * len(self._metrics)
                 table[-1].append(Cell(category, Adjust.CENTER, span))
                 table[-1].append(Sep.DOUBLE)
             table.append(Sep.DOUBLE)
@@ -251,7 +254,7 @@ class AnalyzeTerminalWritter(Writter):
         table.append(CellRow([Sep.DOUBLE, Cell("Domains", Adjust.CENTER), Sep.DOUBLE]))
         for category in sorted(categories, key=ordering["category"]):
             for p in sorted(categories[category], key=ordering["planner"]):
-                planner_name = mapping["planner"](p)
+                planner_name = mapping["planner"](p) if p is not None else "Best"
                 table[-1].append(Cell(planner_name, Adjust.CENTER, len(self._metrics)))
                 table[-1].append(Sep.DOUBLE)
         table.append(Sep.DOUBLE)
@@ -279,19 +282,48 @@ class AnalyzeTerminalWritter(Writter):
             for category in sorted(categories, key=ordering["category"]):
                 for p in sorted(categories[category], key=ordering["planner"]):
                     for metric in sorted(self._metrics, key=ordering["metric"]):
-                        results = [
-                            result
-                            for result in self._results
-                            if result.problem.domain == domain
-                            and result.planner_name == p.name
-                        ]
-                        value = metric.evaluate(results)
+                        if p is not None:
+                            results = [
+                                result
+                                for result in self._results
+                                if result.problem.domain == domain
+                                and result.planner_name == p.name
+                            ]
+                            value = metric.evaluate(results)
+                        else:
+                            results = [
+                                result
+                                for result in self._results
+                                if result.problem.domain == domain
+                            ]
+                            value = metric.best_across_planners(results)
                         table[-1].append(Cell(value, Adjust.CENTER))
                         table[-1].append(Sep.SIMPLE)
                     table[-1].pop()
                     table[-1].append(Sep.DOUBLE)
             table.append(Sep.SIMPLE)
         table.pop()
+        table.append(Sep.DOUBLE)
+
+        # Create the best footer.
+        table.append(CellRow([Sep.DOUBLE, Cell("Best", Adjust.CENTER), Sep.DOUBLE]))
+        for category in sorted(categories, key=ordering["category"]):
+            for p in sorted(categories[category], key=ordering["planner"]):
+                if p is None:
+                    table[-1].append(Cell("", Adjust.CENTER, len(self._metrics)))
+                    table[-1].append(Sep.DOUBLE)
+                    continue
+                for metric in sorted(self._metrics, key=ordering["metric"]):
+                    results = [
+                        result
+                        for result in self._results
+                        if result.planner_name == p.name
+                    ]
+                    value = metric.best_across_domains(results)
+                    table[-1].append(Cell(value, Adjust.CENTER))
+                    table[-1].append(Sep.SIMPLE)
+                table[-1].pop()
+                table[-1].append(Sep.DOUBLE)
         table.append(Sep.DOUBLE)
 
         # Add the padding to the cells.

@@ -11,6 +11,9 @@ class AgileScoreMetric(Metric):
     def abbrev(self) -> str:
         return "AS"
 
+    def max_value(self) -> float:
+        return 1
+
     def evaluate(self, results: List[PlannerResult]) -> str:
         """Evaluate the performance of a planner."""
         results = [
