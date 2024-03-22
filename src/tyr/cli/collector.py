@@ -51,6 +51,8 @@ def collect_metrics(*filters: str) -> CollectionResult[Metric]:
         for metric in all_metrics:
             if re_filter.match(metric.name) is not None:
                 selected.append(metric)
+            elif re_filter.match(metric.abbrev()) is not None:
+                selected.append(metric)
 
     selected = list(set(selected))  # Remove duplicates
     deselected = [m for m in all_metrics if m not in selected]
