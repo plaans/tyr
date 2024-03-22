@@ -21,7 +21,7 @@ class AgileScoreMetric(Metric):
         if len(results) == 0:
             return "-"
 
-        total = 0.0
+        total = self.min_value()
         for result in results:
             computation_time = result.computation_time
             timeout = result.config.timeout
@@ -37,7 +37,7 @@ class AgileScoreMetric(Metric):
             else:
                 total += 1 - log10(computation_time) / log10(timeout)
         score = total / len(results)
-        if score == 1:
+        if score == self.max_value():
             return "1"
         return f"{score:.2f}"
 

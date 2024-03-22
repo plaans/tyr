@@ -46,7 +46,14 @@ class TestMetric:
 
         assert FakeComplexMetric().name == "fake-complex"
 
-    def test_coverage_best_across_domains(self):
+    def test_abbrev(self):
+        class FakeComplexMetric(Metric):
+            def evaluate(self, results):
+                pass
+
+        assert FakeComplexMetric().abbrev() == "fak"
+
+    def test_best_across_domains(self):
         results = [
             planner_result("solved", domain_name="bar"),
             planner_result("solved", domain_name="bar"),
@@ -61,7 +68,18 @@ class TestMetric:
         result = FakeMetric().best_across_domains(results)
         assert result == expected
 
-    def test_coverage_best_across_planners(self):
+    def test_best_across_domains_max_value(self):
+        results = [
+            planner_result("solved", domain_name="bar"),
+            planner_result("solved", domain_name="bar"),
+            planner_result("solved", domain_name="foo"),
+            planner_result("unsolvable", domain_name="foo"),
+        ]
+        expected = "100"
+        result = FakeMetric().best_across_domains(results)
+        assert result == expected
+
+    def test_best_across_planners(self):
         results = [
             planner_result("solved", planner_name="bar"),
             planner_result("solved", planner_name="bar"),
@@ -73,5 +91,16 @@ class TestMetric:
             planner_result("unsolvable", planner_name="foo"),
         ]
         expected = "50.00"
+        result = FakeMetric().best_across_planners(results)
+        assert result == expected
+
+    def test_best_across_planners_max_value(self):
+        results = [
+            planner_result("solved", planner_name="bar"),
+            planner_result("solved", planner_name="bar"),
+            planner_result("solved", planner_name="foo"),
+            planner_result("unsolvable", planner_name="foo"),
+        ]
+        expected = "100"
         result = FakeMetric().best_across_planners(results)
         assert result == expected

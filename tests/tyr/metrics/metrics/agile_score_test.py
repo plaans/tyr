@@ -22,6 +22,9 @@ def planner_result(status_name: str, computation_time: float):
 
 
 class TestAgileScoreMetric:
+    def test_abbrev(self):
+        assert AgileScoreMetric().abbrev() == "AS"
+
     @pytest.mark.parametrize(
         "computation_time, expected",
         [
