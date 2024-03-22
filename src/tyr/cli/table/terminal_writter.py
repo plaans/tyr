@@ -473,7 +473,8 @@ class TableTerminalWritter(Writter):
 
         prev_cell, prev_sep, prev_cell_idx = prev_line[1], prev_line[2], 1
         next_cell, next_sep, next_cell_idx = next_line[1], next_line[2], 1
-        for c, length in col_length.items():
+        for c in sorted(col_length.keys()):
+            length = col_length[c]
             end_prev_cell = prev_line.column_of(prev_cell) + prev_cell.span - 1 == c
             end_next_cell = next_line.column_of(next_cell) + next_cell.span - 1 == c
             self.write(("─" if line_sep is Sep.SIMPLE else "═") * length)
