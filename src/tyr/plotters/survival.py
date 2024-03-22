@@ -29,7 +29,7 @@ def survival_plot(results: List[PlannerResult]):
             )
             fig.add_trace(
                 go.Scatter(
-                    x=times,
+                    x=[sum(times[: i + 1]) for i in range(len(times))],
                     y=list(range(1, len(times) + 1)),
                     mode="lines+markers",
                     line=dict(color=color, width=2),

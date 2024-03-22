@@ -30,7 +30,7 @@ def cactus_plot(results: List[PlannerResult]):
             fig.add_trace(
                 go.Scatter(
                     x=list(range(1, len(times) + 1)),
-                    y=times,
+                    y=[sum(times[: i + 1]) for i in range(len(times))],
                     mode="lines+markers",
                     line=dict(color=color, width=2),
                     marker=dict(color=color, size=8, symbol=symbol),
