@@ -1,5 +1,5 @@
 import re
-from typing import List
+from typing import List, Tuple
 
 import plotly.graph_objects as go
 from plotly.colors import DEFAULT_PLOTLY_COLORS
@@ -24,17 +24,8 @@ class Plotter(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         """The name of the plotter."""
         return self._name
 
-    # pylint: disable = too-many-arguments
-    def _plot(
-        self,
-        fig: go.Figure,
-        data: List[PlannerResult],
-        color: str,
-        symbol: str,
-        planner: str,
-        domain: str,
-    ) -> None:
-        """Plot the performance of a planner."""
+    def _data(self, data: List[PlannerResult]) -> Tuple[List[float], List[float]]:
+        """Extract the data to plot."""
         raise NotImplementedError
 
     def plot(self, results: List[PlannerResult]) -> None:
@@ -48,12 +39,23 @@ class Plotter(Abstract, Singleton, metaclass=AbstractSingletonMeta):
             color = DEFAULT_PLOTLY_COLORS[i % len(DEFAULT_PLOTLY_COLORS)]
             for j, domain in enumerate(domains):
                 symbol = symbols[(j * 12) % len(symbols) + 2]
-                data = [
-                    r
-                    for r in results
-                    if r.planner_name == planner and r.problem.domain.name == domain
-                ]
-                self._plot(fig, data, color, symbol, planner, domain)
+                x, y = self._data(
+                    [
+                        r
+                        for r in results
+                        if r.planner_name == planner and r.problem.domain.name == domain
+                    ]
+                )
+                fig.add_trace(
+                    go.Scatter(
+                        x=x,
+                        y=y,
+                        mode="lines+markers",
+                        line=dict(color=color, width=2),
+                        marker=dict(color=color, size=8, symbol=symbol),
+                        name=f"{planner} - {domain}",
+                    )
+                )
 
         self.update_layout(fig)
         fig.show()

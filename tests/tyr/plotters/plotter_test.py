@@ -4,7 +4,7 @@ from tyr.plotters.plotter import Plotter
 
 
 class FakePlotter(Plotter):
-    def _plot(self, fig, data, color, symbol, planner, domain):
+    def _data(self, data):
         pass
 
 

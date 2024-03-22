@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 import plotly.graph_objects as go
 
@@ -10,17 +10,8 @@ from tyr.plotters.plotter import Plotter
 class SurvivalPlotter(Plotter):
     """A plotter to visualize the performance of a planner using a survival plot."""
 
-    # pylint: disable = too-many-arguments
-    def _plot(
-        self,
-        fig: go.Figure,
-        data: List[PlannerResult],
-        color: str,
-        symbol: str,
-        planner: str,
-        domain: str,
-    ) -> None:
-        """Plot the performance of a planner."""
+    def _data(self, data: List[PlannerResult]) -> Tuple[List[float], List[float]]:
+        """Extract the data to plot."""
         times = sorted(
             [
                 float(r.computation_time or r.config.timeout)
@@ -28,15 +19,9 @@ class SurvivalPlotter(Plotter):
                 if r.status == PlannerResultStatus.SOLVED
             ]
         )
-        fig.add_trace(
-            go.Scatter(
-                x=[sum(times[: i + 1]) for i in range(len(times))],
-                y=list(range(1, len(times) + 1)),
-                mode="lines+markers",
-                line=dict(color=color, width=2),
-                marker=dict(color=color, size=8, symbol=symbol),
-                name=f"{planner} - {domain}",
-            )
+        return (
+            [sum(times[: i + 1]) for i in range(len(times))],
+            list(range(1, len(times) + 1)),
         )
 
     def update_layout(self, fig: go.Figure) -> None:
