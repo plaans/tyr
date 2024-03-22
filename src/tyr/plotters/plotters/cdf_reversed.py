@@ -1,7 +1,5 @@
 from typing import List, Tuple
 
-import plotly.graph_objects as go
-
 from tyr.planners.model.config import RunningMode
 from tyr.planners.model.result import PlannerResult
 from tyr.plotters.plotter import Plotter
@@ -13,6 +11,15 @@ class CdfReversedPlotter(Plotter):
     A plotter to visualize the performance of a planner using
     a reversed Cumulative Distribution Function (CDF) plot.
     """
+
+    def _title(self) -> str:
+        return "Reversed Cumulative Distribution Function (CDF) Plot"
+
+    def _xaxis(self) -> dict:
+        return {"title": "Instance Solved (%)"}
+
+    def _yaxis(self) -> dict:
+        return {"title": "Computation Time (seconds)"}
 
     def _data(self, data: List[PlannerResult]) -> Tuple[List[float], List[float]]:
         """Extract the data to plot."""
@@ -28,14 +35,6 @@ class CdfReversedPlotter(Plotter):
         return (
             list(i / len(times) for i in range(1, len(times) + 1)),
             times,
-        )
-
-    def update_layout(self, fig: go.Figure) -> None:
-        """Update the layout of the figure."""
-        fig.update_layout(
-            title="Reversed Cumulative Distribution Function (CDF) Plot",
-            xaxis=dict(title="Instance Solved (%)"),
-            yaxis=dict(title="Computation Time (seconds)"),
         )
 
 

@@ -1,5 +1,5 @@
 import re
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 import plotly.graph_objects as go
 from plotly.colors import DEFAULT_PLOTLY_COLORS
@@ -23,6 +23,18 @@ class Plotter(Abstract, Singleton, metaclass=AbstractSingletonMeta):
     def name(self) -> str:
         """The name of the plotter."""
         return self._name
+
+    def _title(self) -> str:
+        """The title of the plot."""
+        return ""
+
+    def _xaxis(self) -> Dict[str, str]:
+        """The x-axis properties."""
+        return {"title": ""}
+
+    def _yaxis(self) -> Dict[str, str]:
+        """The y-axis properties."""
+        return {"title": ""}
 
     def _data(self, data: List[PlannerResult]) -> Tuple[List[float], List[float]]:
         """Extract the data to plot."""
@@ -64,6 +76,11 @@ class Plotter(Abstract, Singleton, metaclass=AbstractSingletonMeta):
 
     def update_layout(self, fig: go.Figure) -> None:
         """Update the layout of the figure."""
+        fig.update_layout(
+            title=self._title(),
+            xaxis=self._xaxis(),
+            yaxis=self._yaxis(),
+        )
 
 
 __all__ = ["Plotter"]
