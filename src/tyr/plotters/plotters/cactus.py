@@ -2,6 +2,7 @@ from typing import List, Tuple
 
 import plotly.graph_objects as go
 
+from tyr.planners.model.config import RunningMode
 from tyr.planners.model.result import PlannerResult, PlannerResultStatus
 from tyr.plotters.plotter import Plotter
 
@@ -17,6 +18,7 @@ class CactusPlotter(Plotter):
                 float(r.computation_time or r.config.timeout)
                 for r in data
                 if r.status == PlannerResultStatus.SOLVED
+                and r.running_mode == RunningMode.ONESHOT
             ]
         )
         return (
