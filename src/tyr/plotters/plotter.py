@@ -82,5 +82,100 @@ class Plotter(Abstract, Singleton, metaclass=AbstractSingletonMeta):
             yaxis=self._yaxis(),
         )
 
+    # pylint: disable = too-many-locals
+    def latex(self, results: List[PlannerResult]) -> str:
+        """Return the LaTeX code of the plot."""
+
+        planners = sorted(set(r.planner_name for r in results))
+        domains = sorted(set(r.problem.domain.name for r in results))
+
+        colors = [
+            "red",
+            "green",
+            "blue",
+            "cyan",
+            "magenta",
+            "yellow",
+            "black",
+            "gray",
+            "white",
+            "darkgray",
+            "lightgray",
+            "brown",
+            "lime",
+            "olive",
+            "orange",
+            "pink",
+            "purple",
+            "teal",
+            "violet",
+        ]
+        symbols = [
+            "*",
+            "x ",
+            "+",
+            "|",
+            "o",
+            "asterisk",
+            "star",
+            "10-pointed star",
+            "oplus",
+            "oplus*",
+            "otimes",
+            "otimes*",
+            "square",
+            "square*",
+            "triangle",
+            "triangle*",
+            "diamond",
+            "halfdiamond*",
+            "halfsquare*",
+            "right*",
+            "left*",
+            "Mercedes star",
+            "Mercedes star flipped",
+            "halfcircle",
+            "halfcircle*",
+            "pentagon",
+            "pentagon*",
+        ]
+
+        result = "\\begin{tikzpicture}\n\\begin{axis}[\n"
+        result += f"title={{{self._title()}}},\n"
+        result += f"xlabel={{{self._xaxis()['title']}}},\n"
+        result += f"ylabel={{{self._yaxis()['title']}}},\n"
+        result += "xmajorgrids=true,\n"
+        result += "ymajorgrids=true,\n"
+        result += "grid style=dashed,\n"
+        result += "]\n"
+
+        for i, planner in enumerate(planners):
+            color = colors[i % len(colors)]
+            for j, domain in enumerate(domains):
+                symbol = symbols[j % len(symbols)]
+                data = self._data(
+                    [
+                        r
+                        for r in results
+                        if r.planner_name == planner and r.problem.domain.name == domain
+                    ]
+                )
+
+                result += "\\addplot[\n"
+                result += f"color={color},\n"
+                result += f"mark={symbol},\n"
+                result += "mark size=2,\n"
+                result += f"mark options={{fill={color}}},\n"
+                result += "smooth,\n"
+                result += "]\n"
+                result += "coordinates {\n"
+                for x, y in zip(data[0], data[1]):
+                    result += f"({x}, {y})\n"
+                result += "};\n"
+                result += f"\\addlegendentry{{{planner} - {domain}}}\n"
+
+        result += "\\end{axis}\n\\end{tikzpicture}\n"
+        return result
+
 
 __all__ = ["Plotter"]

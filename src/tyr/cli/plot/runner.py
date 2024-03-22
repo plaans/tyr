@@ -16,6 +16,7 @@ def run_plot(
     planner_filters: List[str],
     domain_filters: List[str],
     plot_filters: List[str],
+    latex: bool,
 ):
     """Analyse the planners over the domains based on the database content.
 
@@ -26,6 +27,7 @@ def run_plot(
         planner_filters (List[str]): A list of regex filters on planner names.
         domains_filters (List[str]): A list of regex filters on problems names.
         plot_filters (List[str]): A list of regex filters on plot names.
+        latex (bool): If True, the plots will be generated in latex format.
     """
     # pylint: disable = duplicate-code
 
@@ -86,7 +88,11 @@ are not consistent for planner {r.planner_name}."
 
     # Perform the plots.
     for plotter in plotters.selected:
-        plotter.plot(results)
+        if latex:
+            tw.line()
+            tw.line(plotter.latex(results))
+        else:
+            plotter.plot(results)
 
 
 __all__ = ["run_plot"]

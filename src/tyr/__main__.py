@@ -37,6 +37,7 @@ DEFAULT_CONFIG = {
     "no_db": False,
     # Plot
     "plotters": [],
+    "latex": False,
     # Solve
     "planner": "",
     "problem": "",
@@ -274,6 +275,7 @@ def cli_bench(
 @planners_filter
 @domains_filter
 @plotters_filter
+@click.option("--latex", is_flag=True, help="Generate LaTeX code for the plot.")
 @pass_context
 def cli_plot(
     ctx: CliContext,
@@ -286,6 +288,7 @@ def cli_plot(
     planners: List[str],
     domains: List[str],
     plotters: List[str],
+    latex: bool,
 ):
     config = config or ctx.config
     cli_config = {
@@ -297,6 +300,7 @@ def cli_plot(
         "planners": planners,
         "domains": domains,
         "plotters": plotters,
+        "latex": latex,
     }
     conf = merge_configs(cli_config, yaml_config(config, "plot"), DEFAULT_CONFIG)
 
@@ -308,6 +312,7 @@ def cli_plot(
         conf["planners"],
         conf["domains"],
         conf["plotters"],
+        conf["latex"],
     )
 
 
