@@ -13,6 +13,8 @@ class SurvivalPlotter(Plotter):
 
     def _data(self, data: List[PlannerResult]) -> Tuple[List[float], List[float]]:
         """Extract the data to plot."""
+        # pylint: disable = duplicate-code
+
         times = sorted(
             [
                 float(r.computation_time or r.config.timeout)

@@ -5,14 +5,14 @@ import pytest
 
 from tyr import (
     AbstractDomain,
-    Planner,
-    collect_planners,
-    collect_metrics,
-    collect_problems,
-    collect_plotters,
     Metric,
+    Planner,
     Plotter,
     Singleton,
+    collect_metrics,
+    collect_planners,
+    collect_plotters,
+    collect_problems,
 )
 
 

@@ -1,8 +1,8 @@
 from typing import List
 
 from tyr.cli import collector
-from tyr.cli.plot.terminal_writter import PlotTerminalWritter
 from tyr.cli.config import CliContext
+from tyr.cli.plot.terminal_writter import PlotTerminalWritter
 from tyr.planners.database import Database
 from tyr.planners.model.config import RunningMode, SolveConfig
 from tyr.planners.model.result import PlannerResult, PlannerResultStatus
@@ -27,6 +27,7 @@ def run_plot(
         domains_filters (List[str]): A list of regex filters on problems names.
         plot_filters (List[str]): A list of regex filters on plot names.
     """
+    # pylint: disable = duplicate-code
 
     # Create the writter and start the session.
     solve_config = SolveConfig(1, memout, timeout, True, False)

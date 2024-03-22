@@ -1,8 +1,8 @@
 from typing import List
 
 from tyr.cli import collector
-from tyr.cli.table.terminal_writter import TableTerminalWritter
 from tyr.cli.config import CliContext
+from tyr.cli.table.terminal_writter import TableTerminalWritter
 from tyr.planners.database import Database
 from tyr.planners.model.config import RunningMode, SolveConfig
 from tyr.planners.model.result import PlannerResult, PlannerResultStatus
@@ -31,6 +31,7 @@ def run_table(
         best_column (bool): Whether to print the best metrics on the right.
         best_row (bool): Whether to print the best metrics on the bottom.
     """
+    # pylint: disable = duplicate-code
 
     # Create the writter and start the session.
     solve_config = SolveConfig(1, memout, timeout, True, False)

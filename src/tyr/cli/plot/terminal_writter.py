@@ -1,4 +1,5 @@
 from typing import List
+
 from tyr.cli.collector import CollectionResult
 from tyr.cli.writter import Writter
 from tyr.planners.model.planner import Planner

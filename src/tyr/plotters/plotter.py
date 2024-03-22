@@ -30,6 +30,8 @@ class Plotter(Abstract, Singleton, metaclass=AbstractSingletonMeta):
 
     def plot(self, results: List[PlannerResult]) -> None:
         """Plot the performance of a planner."""
+        # pylint: disable = use-dict-literal
+
         planners = sorted(set(r.planner_name for r in results))
         domains = sorted(set(r.problem.domain.name for r in results))
         symbols = SymbolValidator().values

@@ -10,9 +10,9 @@ from tyr import (  # type: ignore
     RunningMode,
     SolveConfig,
     load_config,
-    run_table,
     run_bench,
     run_solve,
+    run_table,
 )
 from tyr.cli.plot.runner import run_plot
 

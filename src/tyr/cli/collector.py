@@ -6,8 +6,8 @@ from tyr.metrics import scanner as metric_scanner
 from tyr.metrics.metric import Metric
 from tyr.planners import scanner as planner_scanner
 from tyr.planners.model.planner import Planner
-from tyr.plotters.plotter import Plotter
 from tyr.plotters import scanner as plotter_scanner
+from tyr.plotters.plotter import Plotter
 from tyr.problems import scanner as domain_scanner
 from tyr.problems.model.instance import ProblemInstance
 
