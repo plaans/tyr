@@ -85,7 +85,7 @@ are not consistent for planner {r.planner_name}."
 
     # Perform the plots.
     for plotter in plotters.selected:
-        plotter(results)
+        plotter.plot(results)
 
 
 __all__ = ["run_plot"]

@@ -1,8 +1,9 @@
-from typing import Callable, List
+from typing import List
 from tyr.cli.collector import CollectionResult
 from tyr.cli.writter import Writter
 from tyr.planners.model.planner import Planner
 from tyr.planners.model.result import PlannerResult
+from tyr.plotters.plotter import Plotter
 from tyr.problems.model.instance import ProblemInstance
 
 
@@ -13,14 +14,14 @@ class PlotTerminalWritter(Writter):
         self,
         planners: CollectionResult[Planner],
         problems: CollectionResult[ProblemInstance],
-        plotters: CollectionResult[Callable],
+        plotters: CollectionResult[Plotter],
     ) -> None:
         """Prints a report about the collection of planners, problems and plotters.
 
         Args:
             planners (CollectionResult[Planner]): The collection result on planners.
             problems (CollectionResult[ProblemInstance]): The collection result on problems.
-            plotters (CollectionResult[Callable]): The collection result on plotters.
+            plotters (CollectionResult[Plotter]): The collection result on plotters.
         """
         self.rewrite("")
         self.report_collected(planners, "planner")

@@ -1,13 +1,13 @@
 import re
 from dataclasses import dataclass, field
-from typing import Callable, Generic, List, TypeVar
+from typing import Generic, List, TypeVar
 
-from tyr import plotters
 from tyr.metrics import scanner as metric_scanner
 from tyr.metrics.metric import Metric
 from tyr.planners import scanner as planner_scanner
 from tyr.planners.model.planner import Planner
-from tyr.planners.model.result import PlannerResult
+from tyr.plotters.plotter import Plotter
+from tyr.plotters import scanner as plotter_scanner
 from tyr.problems import scanner as domain_scanner
 from tyr.problems.model.instance import ProblemInstance
 
@@ -87,16 +87,16 @@ def collect_planners(*filters: str) -> CollectionResult[Planner]:
 
 def collect_plotters(
     *filters: str,
-) -> CollectionResult[Callable[[List[PlannerResult]], None]]:
+) -> CollectionResult[Plotter]:
     """
     Args:
         filters (List[str]): A list of regex filters on plot names.
 
     Returns:
-        CollectionResult[Callable[[List[PlannerResult]], None]]: The collected plots.
+        CollectionResult[Plotter]: The collected plots.
     """
-    all_plots = plotters.get_all_plotters()
-    selected: List[Callable[[List[PlannerResult]], None]] = []
+    all_plots = plotter_scanner.get_all_plotters()
+    selected: List[Plotter] = []
 
     if len(filters) == 0:
         return CollectionResult(all_plots)
@@ -105,7 +105,7 @@ def collect_plotters(
         re_filter = re.compile(flt)
 
         for plot in all_plots:
-            if re_filter.match(plot.__name__) is not None:
+            if re_filter.match(plot.name) is not None:
                 selected.append(plot)
 
     selected = list(set(selected))  # Remove duplicates

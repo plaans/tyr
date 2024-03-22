@@ -1,4 +1,4 @@
-from typing import Callable, Dict, List, Tuple
+from typing import Dict, List, Tuple
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -11,6 +11,7 @@ from tyr import (
     collect_problems,
     collect_plotters,
     Metric,
+    Plotter,
     Singleton,
 )
 
@@ -54,7 +55,7 @@ class TestCollectors:
     def all_plotters():
         plotters = [MagicMock() for _ in range(10)]
         for i, plotter in enumerate(plotters):
-            plotter.__name__ = f"plotter-{i}"
+            plotter.name = f"plotter-{i}"
         yield plotters
 
     @staticmethod
@@ -175,11 +176,11 @@ class TestCollectors:
 
     # ================================= Plotters ================================= #
 
-    @patch("tyr.plotters.get_all_plotters")
+    @patch("tyr.plotters.scanner.get_all_plotters")
     def test_collect_plotters_all(
         self,
         mocked_get_all_plotters: Mock,
-        all_plotters: List[Callable],
+        all_plotters: List[Plotter],
     ):
         mocked_get_all_plotters.return_value = all_plotters
         result = collect_plotters()
@@ -187,35 +188,35 @@ class TestCollectors:
         assert len(set(result.deselected)) == 0
         assert len(set(result.skipped)) == 0
 
-    @patch("tyr.plotters.get_all_plotters")
+    @patch("tyr.plotters.scanner.get_all_plotters")
     def test_collect_plotters_one_filter(
         self,
         mocked_get_all_plotters: Mock,
-        all_plotters: List[Callable],
+        all_plotters: List[Plotter],
     ):
         mocked_get_all_plotters.return_value = all_plotters
         filter1 = ".*[4-8]"
 
-        selected = [p for p in all_plotters if int(p.__name__[-1]) in range(4, 9)]
-        deselected = [p for p in all_plotters if int(p.__name__[-1]) not in range(4, 9)]
+        selected = [p for p in all_plotters if int(p.name[-1]) in range(4, 9)]
+        deselected = [p for p in all_plotters if int(p.name[-1]) not in range(4, 9)]
 
         result = collect_plotters(filter1)
         assert set(result.selected) == set(selected)
         assert set(result.deselected) == set(deselected)
         assert len(set(result.skipped)) == 0
 
-    @patch("tyr.plotters.get_all_plotters")
+    @patch("tyr.plotters.scanner.get_all_plotters")
     def test_collect_plotters_two_filters(
         self,
         mocked_get_all_plotters: Mock,
-        all_plotters: List[Callable],
+        all_plotters: List[Plotter],
     ):
         mocked_get_all_plotters.return_value = all_plotters
         filter1 = ".*[4-8]"
         filter2 = ".*[1-5]"
 
-        selected = [p for p in all_plotters if int(p.__name__[-1]) in range(1, 9)]
-        deselected = [p for p in all_plotters if int(p.__name__[-1]) not in range(1, 9)]
+        selected = [p for p in all_plotters if int(p.name[-1]) in range(1, 9)]
+        deselected = [p for p in all_plotters if int(p.name[-1]) not in range(1, 9)]
 
         result = collect_plotters(filter1, filter2)
         assert set(result.selected) == set(selected)
