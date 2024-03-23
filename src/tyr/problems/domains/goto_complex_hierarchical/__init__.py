@@ -22,7 +22,9 @@ class GotoComplexHierarchicalDomain(AbstractDomain):
         pb.name = "complex_goto"
 
         # Add the goals.
-        for _ in range(int(problem.uid) * 10):
+        multiplier = 1 if int(problem.uid) > 30 else 10
+        offset = -30 if int(problem.uid) > 30 else 0
+        for _ in range(int(problem.uid) * multiplier + offset):
             pb.task_network.add_subtask(
                 pb.get_task("goto"), pb.object("T1"), pb.object("P3")
             )
