@@ -10,7 +10,7 @@ from tyr.problems.model import AbstractDomain, ProblemInstance
 
 class GotoSimpleHierarchicalDomain(AbstractDomain):
     def get_num_problems(self) -> int:
-        return 30
+        return 40
 
     def _from_base(
         self, problem: ProblemInstance, version: str
@@ -62,7 +62,9 @@ class GotoSimpleHierarchicalDomain(AbstractDomain):
         pb.set_initial_value(pb.fluent("at")(pb.object("T1"), pb.object("P1")), True)
 
         # Goals
-        for _ in range(int(problem.uid) * 10):
+        multiplier = 1 if int(problem.uid) > 30 else 10
+        offset = -30 if int(problem.uid) > 30 else 0
+        for _ in range(int(problem.uid) * multiplier + offset):
             pb.task_network.add_subtask(
                 pb.get_task("goto"), pb.object("T1"), pb.object("P5")
             )
