@@ -40,6 +40,7 @@ class TestCollectors:
         metrics = [MagicMock() for _ in range(10)]
         for i, metric in enumerate(metrics):
             metric.name = f"metric-{i}"
+            metric.abbrev.return_value = f"m{i}"
         yield metrics
 
     @staticmethod
