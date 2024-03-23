@@ -88,7 +88,7 @@ class ProblemInstance:
         version = self.versions["base"].value
 
         if (num_metrics := len(version.quality_metrics)) == 0:
-            return None
+            return self._get_makespan_of_plan(plan)
         if num_metrics > 1:
             raise ValueError("Multiple quality metrics is not supported")
 

@@ -92,8 +92,9 @@ class TestProblemInstance(ModelTest):
             return orig_version
 
         problem._versions = {"base": Lazy(build_version)}
-        result = problem.get_quality_of_plan(plan)
-        assert result is None
+        with patch.object(problem, "_get_makespan_of_plan") as mock_get_makespan:
+            problem.get_quality_of_plan(plan)
+            mock_get_makespan.assert_called_once_with(plan)
 
     def test_get_quality_of_plan_multiple_metrics(
         self, problem: ProblemInstance, plan: str
