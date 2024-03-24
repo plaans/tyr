@@ -11,9 +11,6 @@ class AgileScoreMetric(Metric):
     def abbrev(self) -> str:
         return "AS"
 
-    def max_value(self) -> float:
-        return 1
-
     def evaluate(self, results: List[PlannerResult]) -> str:
         """Evaluate the performance of a planner."""
         results = self._filter_results(results)
@@ -36,9 +33,9 @@ class AgileScoreMetric(Metric):
                 total += 0
             else:
                 total += 1 - log10(computation_time) / log10(timeout)
-        score = total / len(results)
+        score = total / len(results) * 100
         if score == self.max_value():
-            return "1"
+            return "100"
         return f"{score:.2f}"
 
 

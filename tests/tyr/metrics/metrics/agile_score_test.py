@@ -52,7 +52,7 @@ class TestAgileScoreMetric:
                 else "0.00"
             )
         else:
-            expected = f"{expected:.2f}" if expected != 1 else "1"
+            expected = f"{expected*100:.2f}" if expected != 1 else "100"
         results = [planner_result(status.name, computation_time)]
         result = AgileScoreMetric().evaluate(results)
         assert result == expected
@@ -74,7 +74,7 @@ class TestAgileScoreMetric:
             )
             / 7
         )
-        assert result == f"{expected:.2f}"
+        assert result == f"{expected*100:.2f}"
 
     def test_agile_score_empty_results(self):
         results = []
@@ -88,6 +88,6 @@ class TestAgileScoreMetric:
             planner_result("not_run", 0.5),
             planner_result("error", 0.5),
         ]
-        expected = "1"
+        expected = "100"
         result = AgileScoreMetric().evaluate(results)
         assert result == expected
