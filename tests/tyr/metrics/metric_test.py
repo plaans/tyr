@@ -7,7 +7,7 @@ from tyr.planners.model.result import PlannerResult, PlannerResultStatus
 
 
 class FakeMetric(Metric):
-    def evaluate(self, results):
+    def evaluate(self, results, all_results):
         solved = len([r for r in results if r.status == PlannerResultStatus.SOLVED])
         total = len(results)
         return f"{solved / total * 100:.2f}"
@@ -41,14 +41,14 @@ class TestMetric:
 
     def test_name(self):
         class FakeComplexMetric(Metric):
-            def evaluate(self, results):
+            def evaluate(self, results, all_results):
                 pass
 
         assert FakeComplexMetric().name == "fake-complex"
 
     def test_abbrev(self):
         class FakeComplexMetric(Metric):
-            def evaluate(self, results):
+            def evaluate(self, results, all_results):
                 pass
 
         assert FakeComplexMetric().abbrev() == "fak"
@@ -65,7 +65,7 @@ class TestMetric:
             planner_result("unsolvable", domain_name="foo"),
         ]
         expected = "50.00"
-        result = FakeMetric().best_across_domains(results)
+        result = FakeMetric().best_across_domains(results, results)
         assert result == expected
 
     def test_best_across_domains_max_value(self):
@@ -76,7 +76,7 @@ class TestMetric:
             planner_result("unsolvable", domain_name="foo"),
         ]
         expected = "100"
-        result = FakeMetric().best_across_domains(results)
+        result = FakeMetric().best_across_domains(results, results)
         assert result == expected
 
     def test_best_across_planners(self):
@@ -91,7 +91,7 @@ class TestMetric:
             planner_result("unsolvable", planner_name="foo"),
         ]
         expected = "50.00"
-        result = FakeMetric().best_across_planners(results)
+        result = FakeMetric().best_across_planners(results, results)
         assert result == expected
 
     def test_best_across_planners_max_value(self):
@@ -102,5 +102,5 @@ class TestMetric:
             planner_result("unsolvable", planner_name="foo"),
         ]
         expected = "100"
-        result = FakeMetric().best_across_planners(results)
+        result = FakeMetric().best_across_planners(results, results)
         assert result == expected

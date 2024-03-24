@@ -295,14 +295,14 @@ class TableTerminalWritter(Writter):
                                 if result.problem.domain == domain
                                 and result.planner_name == p.name
                             ]
-                            value = metric.evaluate(results)
+                            value = metric.evaluate(results, self._results)
                         else:
                             results = [
                                 result
                                 for result in self._results
                                 if result.problem.domain == domain
                             ]
-                            value = metric.best_across_planners(results)
+                            value = metric.best_across_planners(results, self._results)
                         table[-1].append(Cell(value, Adjust.CENTER))
                         table[-1].append(Sep.SIMPLE)
                     table[-1].pop()
@@ -326,7 +326,7 @@ class TableTerminalWritter(Writter):
                             for result in self._results
                             if result.planner_name == p.name
                         ]
-                        value = metric.best_across_domains(results)
+                        value = metric.best_across_domains(results, self._results)
                         table[-1].append(Cell(value, Adjust.CENTER))
                         table[-1].append(Sep.SIMPLE)
                     table[-1].pop()

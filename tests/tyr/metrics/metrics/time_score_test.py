@@ -54,12 +54,12 @@ class TestAgileScoreMetric:
         else:
             expected = f"{expected*100:.2f}" if expected != 1 else "100"
         results = [planner_result(status.name, computation_time)]
-        result = TimeScoreMetric().evaluate(results)
+        result = TimeScoreMetric().evaluate(results, results)
         assert result == expected
 
     def test_agile_score_multiple_results(self):
         results = [planner_result("solved", i) for i in range(7)]
-        result = TimeScoreMetric().evaluate(results)
+        result = TimeScoreMetric().evaluate(results, results)
         expected = (
             sum(
                 [
@@ -78,7 +78,7 @@ class TestAgileScoreMetric:
 
     def test_agile_score_empty_results(self):
         results = []
-        result = TimeScoreMetric().evaluate(results)
+        result = TimeScoreMetric().evaluate(results, results)
         assert result == "-"
 
     def test_agile_score_skip_not_run_unsupported_error(self):
@@ -89,5 +89,5 @@ class TestAgileScoreMetric:
             planner_result("error", 0.5),
         ]
         expected = "100"
-        result = TimeScoreMetric().evaluate(results)
+        result = TimeScoreMetric().evaluate(results, results)
         assert result == expected

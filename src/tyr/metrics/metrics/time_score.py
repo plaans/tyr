@@ -11,7 +11,11 @@ class TimeScoreMetric(Metric):
     def abbrev(self) -> str:
         return "TS"
 
-    def _evaluate(self, results: List[PlannerResult]) -> float:
+    def _evaluate(
+        self,
+        results: List[PlannerResult],
+        all_results: List[PlannerResult],
+    ) -> float:
         """Evaluate the performance of a planner."""
         if len(results) == 0:
             return 0
