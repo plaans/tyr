@@ -45,9 +45,19 @@ class Metric(Abstract, Singleton, metaclass=AbstractSingletonMeta):
             ]
         ]
 
-    def evaluate(self, results: List[PlannerResult]) -> str:
+    def _evaluate(self, results: List[PlannerResult]) -> float:
         """Evaluate the performance of a planner."""
         raise NotImplementedError
+
+    def evaluate(self, results: List[PlannerResult]) -> str:
+        """Evaluate the performance of a planner."""
+        results = self._filter_results(results)
+        if len(results) == 0:
+            return "-"
+        value = self._evaluate(results)
+        if value == self.max_value():
+            return str(int(value))
+        return f"{value:.2f}"
 
     def best_across_domains(self, results: List[PlannerResult]) -> str:
         """Return the best performance across the domains for a planner."""
@@ -62,9 +72,7 @@ class Metric(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         return (
             "-"
             if best == self.min_value()
-            else f"{best:.2f}"
-            if best != self.max_value()
-            else str(int(best))
+            else f"{best:.2f}" if best != self.max_value() else str(int(best))
         )
 
     def best_across_planners(self, results: List[PlannerResult]) -> str:
@@ -80,9 +88,7 @@ class Metric(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         return (
             "-"
             if best == self.min_value()
-            else f"{best:.2f}"
-            if best != self.max_value()
-            else str(int(best))
+            else f"{best:.2f}" if best != self.max_value() else str(int(best))
         )
 
 

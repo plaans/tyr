@@ -11,13 +11,10 @@ class TimeScoreMetric(Metric):
     def abbrev(self) -> str:
         return "TS"
 
-    def evaluate(self, results: List[PlannerResult]) -> str:
+    def _evaluate(self, results: List[PlannerResult]) -> float:
         """Evaluate the performance of a planner."""
-        results = self._filter_results(results)
-
         if len(results) == 0:
-            return "-"
-
+            return 0
         total = self.min_value()
         for result in results:
             computation_time = result.computation_time
@@ -33,10 +30,7 @@ class TimeScoreMetric(Metric):
                 total += 0
             else:
                 total += 1 - log10(computation_time) / log10(timeout)
-        score = total / len(results) * 100
-        if score == self.max_value():
-            return "100"
-        return f"{score:.2f}"
+        return total / len(results) * 100
 
 
 __all__ = ["TimeScoreMetric"]
