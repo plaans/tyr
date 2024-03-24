@@ -90,7 +90,9 @@ class Metric(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         return (
             "-"
             if best == self.min_value()
-            else f"{best:.2f}" if best != self.max_value() else str(int(best))
+            else f"{best:.2f}"
+            if best != self.max_value()
+            else str(int(best))
         )
 
     def best_across_planners(
@@ -110,7 +112,9 @@ class Metric(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         return (
             "-"
             if best == self.min_value()
-            else f"{best:.2f}" if best != self.max_value() else str(int(best))
+            else f"{best:.2f}"
+            if best != self.max_value()
+            else str(int(best))
         )
 
 

@@ -5,5 +5,5 @@ from tyr.metrics.metric import Metric
 class FakeMetric(Metric):
     """A fake metric to test the Metric class."""
 
-    def evaluate(self, results):
+    def _evaluate(self, results, all_results):
         """Fake evaluate method."""
