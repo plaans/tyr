@@ -129,7 +129,11 @@ class Database(Singleton):
                 .fetchone()
             )
 
-        if resp is None or resp[4] == "UNSUPPORTED" and not keep_unsupported:
+        if (
+            resp is None
+            or resp[4] == "NOT_RUN"
+            or (resp[4] == "UNSUPPORTED" and not keep_unsupported)
+        ):
             return None
 
         if resp[4] == "TIMEOUT" and resp[5] is not None and resp[5] < config.timeout:
