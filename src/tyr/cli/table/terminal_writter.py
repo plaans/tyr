@@ -2,7 +2,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum, auto
 from pathlib import Path
-from typing import DefaultDict, Dict, Generator, List, Optional, TextIO, Union
+from typing import Dict, Generator, List, Optional, Set, TextIO, Tuple, Union
 
 from tyr.cli.collector import CollectionResult
 from tyr.cli.writter import Writter
@@ -11,6 +11,7 @@ from tyr.metrics.metric import Metric
 from tyr.planners.model.config import SolveConfig
 from tyr.planners.model.planner import Planner
 from tyr.planners.model.result import PlannerResult
+from tyr.problems.model.domain import AbstractDomain
 from tyr.problems.model.instance import ProblemInstance
 
 
@@ -197,141 +198,175 @@ class TableTerminalWritter(Writter):
 
     # ================================== Analyse ================================= #
 
-    # pylint: disable = too-many-branches, too-many-locals, too-many-statements
+    # pylint: disable = too-many-branches, too-many-locals, eval-used
+    # pylint: disable = too-many-statements, too-many-nested-blocks, fixme
     def analyse(self) -> None:
         """Prints a table of metrics based on results."""
 
         # Get the table configuration from the configuration file.
-        # pylint: disable = eval-used
         conf = load_config("", self._config).get("table", {})
-        identical = "lambda x: x"
-        null = "lambda x: None"
-        str_order = "lambda x: (x == '', str(x))"
-        mapping_conf = {
-            "domain": eval(conf.get("domain_mapping", identical)),  # nosec: B307
-            "planner": eval(conf.get("planner_mapping", identical)),  # nosec: B307
-            "metric": eval(conf.get("metric_mapping", identical)),  # nosec: B307
-            "category": eval(conf.get("category_mapping", null)),  # nosec: B307
-        }
-        mapping_item = {
-            "domain": lambda x: x.name.title().replace("-", " "),
-            "planner": lambda x: x.name.title().replace("-", " "),
-            "metric": lambda x: x.abbrev()[0].upper() + x.abbrev()[1:],
-            "category": lambda x: x,
-        }
-        mapping = {
-            k: lambda x, k=k, v=v: ("" if x is None else v(mapping_item[k](x)).strip())
-            for k, v in mapping_conf.items()
-        }
-        ordering_confg = {
-            "domain": eval(conf.get("domain_ordering", str_order)),  # nosec: B307
-            "planner": eval(conf.get("planner_ordering", str_order)),  # nosec: B307
-            "metric": eval(conf.get("metric_ordering", str_order)),  # nosec: B307
-            "category": eval(conf.get("category_ordering", str_order)),  # nosec: B307
-        }
-        ordering = {
-            k: lambda x, k=k, v=v: v(mapping[k](x)) for k, v in ordering_confg.items()
-        }
+        default_ordering = "lambda x: (x == ' ', str(x))"
+        conf_col_headers = conf.get("column_headers", [])
+        if not conf_col_headers:
+            conf_col_headers = [
+                {"mapping": "lambda d, p, m: p.name"},
+                {"mapping": "lambda d, p, m: m.abbrev()"},
+            ]
+        conf_row_headers = conf.get("row_headers", [])
+        if not conf_row_headers:
+            conf_row_headers = [
+                {"mapping": "lambda d, p, m: d.name"},
+            ]
 
         # Get all domains.
         domains = {p.domain for p in self._problems}
 
-        # Get all categories.
-        categories: DefaultDict[str, List[Optional[Planner]]] = defaultdict(list)
-        for pl in self._planners:
-            categories[mapping["category"](mapping_item["planner"](pl))].append(pl)
-        if self._best_column:
-            categories[""].append(None)
+        # Add the best row entry in the domains.
+        if self._best_row:
+            domains.add(None)  # type: ignore
+
+        # Get all headers.
+        raw_col_headers: Dict[
+            str, Union[Dict, Set[Tuple[AbstractDomain, Planner, Metric]]]
+        ] = {}
+        raw_row_headers: Dict[
+            str, Union[Dict, Set[Tuple[AbstractDomain, Planner, Metric]]]
+        ] = {}
+        for d in domains:
+            if d is None:
+                continue
+            for p in self._planners:
+                for m in self._metrics:
+                    crt_col_header = raw_col_headers
+                    for i, conf_header in enumerate(conf_col_headers):
+                        col_header = eval(conf_header["mapping"])(  # nosec: B307
+                            d, p, m
+                        )
+                        if col_header not in crt_col_header:
+                            if i == len(conf_col_headers) - 1:
+                                crt_col_header[col_header] = {(d, p, m)}
+                            else:
+                                crt_col_header[col_header] = {}
+                        elif i == len(conf_col_headers) - 1:
+                            crt_col_header[col_header].add((d, p, m))  # type: ignore
+                        crt_col_header = crt_col_header[col_header]  # type: ignore
+
+                    crt_row_header = raw_row_headers
+                    for i, conf_header in enumerate(conf_row_headers):
+                        col_header = eval(conf_header["mapping"])(  # nosec: B307
+                            d, p, m
+                        )
+                        if col_header not in crt_row_header:
+                            if i == len(conf_row_headers) - 1:
+                                crt_row_header[col_header] = {(d, p, m)}
+                            else:
+                                crt_row_header[col_header] = {}
+                        elif i == len(conf_row_headers) - 1:
+                            crt_row_header[col_header].add((d, p, m))  # type: ignore
+                        crt_row_header = crt_row_header[col_header]  # type: ignore
+
+        # Order the headers.
+        def get_lvl(
+            d: Union[Dict, Set],
+            lvl: int,
+            conf: List,
+            crt_lvl: int = 0,
+        ) -> Generator[Tuple[str, ...], None, None]:
+            if isinstance(d, set):
+                return
+            ordering = conf[crt_lvl].get("ordering", default_ordering)
+            for key in sorted(d.keys(), key=eval(ordering)):  # nosec: B307
+                if lvl == 0:
+                    yield (key,)
+                else:
+                    for val in get_lvl(d[key], lvl - 1, conf, crt_lvl + 1):
+                        yield (key, *val)
+
+        flat_col_headers = [
+            list(get_lvl(raw_col_headers, i, conf_col_headers))
+            for i in range(len(conf_col_headers))
+        ]
+        flat_row_headers = [
+            list(get_lvl(raw_row_headers, i, conf_row_headers))
+            for i in range(len(conf_row_headers))
+        ]
 
         # Create the table.
         table = CellTable([Sep.DOUBLE])
 
-        # Create the categories headers.
-        if None not in categories:
-            table.append(CellRow([Sep.DOUBLE, Cell("", Adjust.CENTER), Sep.DOUBLE]))
-            for category in sorted(categories, key=ordering["category"]):
-                category_planners = len(categories[category])
-                span = category_planners * len(self._metrics)
-                table[-1].append(Cell(category, Adjust.CENTER, span))
-                table[-1].append(Sep.DOUBLE)
-            table.append(Sep.DOUBLE)
-
-        # Create the planners headers.
-        table.append(CellRow([Sep.DOUBLE, Cell("Domains", Adjust.CENTER), Sep.DOUBLE]))
-        for category in sorted(categories, key=ordering["category"]):
-            for p in sorted(categories[category], key=ordering["planner"]):
-                planner_name = mapping["planner"](p) if p is not None else "Best"
-                table[-1].append(Cell(planner_name, Adjust.CENTER, len(self._metrics)))
-                table[-1].append(Sep.DOUBLE)
-        table.append(Sep.DOUBLE)
-
-        # Create the metrics headers.
-        table.append(CellRow([Sep.DOUBLE, Cell("", Adjust.LEFT), Sep.DOUBLE]))
-        for category in sorted(categories, key=ordering["category"]):
-            for _ in sorted(categories[category], key=ordering["planner"]):
-                for metric in sorted(self._metrics, key=ordering["metric"]):
-                    metric_name = mapping["metric"](metric)
-                    table[-1].append(Cell(metric_name, Adjust.CENTER))
+        # Create the column headers.
+        for col_headers in flat_col_headers:
+            table.append(
+                CellRow(
+                    [
+                        Sep.DOUBLE,
+                        Cell("", Adjust.CENTER, len(flat_row_headers)),
+                        Sep.DOUBLE,
+                    ]
+                )
+            )
+            col_modulo = int(len(col_headers) / len(flat_col_headers[-2]))
+            for i, col_header in enumerate(col_headers):
+                # XXX: This assums that each header has the same number of subheaders.
+                span = int(len(flat_col_headers[-1]) / len(col_headers))
+                table[-1].append(Cell(col_header[-1], Adjust.CENTER, span))
+                if span == 1 and i % col_modulo < col_modulo - 1:
                     table[-1].append(Sep.SIMPLE)
-                table[-1].pop()
-                table[-1].append(Sep.DOUBLE)
-        table.append(Sep.DOUBLE)
+                else:
+                    table[-1].append(Sep.DOUBLE)
+            table.append(Sep.DOUBLE)
 
         # Create the cells.
-        for domain in sorted(domains, key=ordering["domain"]):
-            num_inst = len({id(r) for r in self._results if r.problem.domain == domain})
-            num_inst = int(num_inst / len(self._planners))
-            domain_name = mapping["domain"](domain) + f" ({num_inst})"
-            table.append(
-                CellRow([Sep.DOUBLE, Cell(domain_name, Adjust.LEFT), Sep.DOUBLE])
-            )
-            for category in sorted(categories, key=ordering["category"]):
-                for p in sorted(categories[category], key=ordering["planner"]):
-                    for metric in sorted(self._metrics, key=ordering["metric"]):
-                        if p is not None:
-                            results = [
-                                result
-                                for result in self._results
-                                if result.problem.domain == domain
-                                and result.planner_name == p.name
-                            ]
-                            value = metric.evaluate(results, self._results)
-                        else:
-                            results = [
-                                result
-                                for result in self._results
-                                if result.problem.domain == domain
-                            ]
-                            value = metric.best_across_planners(results, self._results)
-                        table[-1].append(Cell(value, Adjust.CENTER))
-                        table[-1].append(Sep.SIMPLE)
-                    table[-1].pop()
+        row_modulo = (
+            int(len(flat_row_headers[-1]) / len(flat_row_headers[-2]))
+            if len(flat_row_headers) > 1
+            else 1
+        )
+        for i, row_header in enumerate(flat_row_headers[-1]):
+            table.append(CellRow([Sep.DOUBLE]))
+            for k, v in enumerate(row_header):
+                to_print = v if k == len(row_header) - 1 or i % row_modulo == 0 else ""
+                table[-1].append(Cell(to_print, Adjust.CENTER))
+                table[-1].append(Sep.DOUBLE)
+
+            for j, col_header in enumerate(flat_col_headers[-1]):
+                crt_col_header: Set[Tuple] = raw_col_headers  # type: ignore
+                for v in col_header:
+                    crt_col_header = crt_col_header[v]  # type: ignore
+
+                crt_row_header: Set[Tuple] = raw_row_headers  # type: ignore
+                for v in row_header:
+                    crt_row_header = crt_row_header[v]  # type: ignore
+
+                candidates = crt_col_header.intersection(crt_row_header)  # type: ignore
+                if len(candidates) > 1:
+                    raise ValueError(
+                        f"Multiple candidates for {col_header} in {row_header}: {candidates}"
+                    )
+
+                if len(candidates) == 0:
+                    value = "x"
+                else:
+                    d, p, m = candidates.pop()  # type: ignore
+                    results = [
+                        result
+                        for result in self._results
+                        if result.problem.domain == d and result.planner_name == p.name
+                    ]
+                    value = m.evaluate(results, self._results)
+
+                table[-1].append(Cell(value, Adjust.CENTER))
+                # XXX: This assums that each header has the same number of subheaders.
+                if j % col_modulo < col_modulo - 1:
+                    table[-1].append(Sep.SIMPLE)
+                else:
                     table[-1].append(Sep.DOUBLE)
-            table.append(Sep.SIMPLE)
+            if i % row_modulo < row_modulo - 1 or row_modulo == 1:
+                table.append(Sep.SIMPLE)
+            else:
+                table.append(Sep.DOUBLE)
         table.pop()
         table.append(Sep.DOUBLE)
-
-        # Create the best footer.
-        if self._best_row:
-            table.append(CellRow([Sep.DOUBLE, Cell("Best", Adjust.CENTER), Sep.DOUBLE]))
-            for category in sorted(categories, key=ordering["category"]):
-                for p in sorted(categories[category], key=ordering["planner"]):
-                    if p is None:
-                        table[-1].append(Cell("", Adjust.CENTER, len(self._metrics)))
-                        table[-1].append(Sep.DOUBLE)
-                        continue
-                    for metric in sorted(self._metrics, key=ordering["metric"]):
-                        results = [
-                            result
-                            for result in self._results
-                            if result.planner_name == p.name
-                        ]
-                        value = metric.best_across_domains(results, self._results)
-                        table[-1].append(Cell(value, Adjust.CENTER))
-                        table[-1].append(Sep.SIMPLE)
-                    table[-1].pop()
-                    table[-1].append(Sep.DOUBLE)
-            table.append(Sep.DOUBLE)
 
         # Add the padding to the cells.
         for line in table.lines:
@@ -364,7 +399,7 @@ class TableTerminalWritter(Writter):
                     col_length[line.column_of(cell) + i] for i in range(cell.span)
                 ) + (cell.span - 1)
 
-        # Print the cells.
+        # Print the table.
         prev_line = None
         for line_idx in range(1, len(table), 2):
             line, sep = table[line_idx], table[line_idx - 1]
