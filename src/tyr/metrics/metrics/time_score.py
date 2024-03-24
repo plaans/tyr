@@ -5,11 +5,11 @@ from tyr.metrics.metric import Metric
 from tyr.planners.model.result import PlannerResult, PlannerResultStatus
 
 
-class AgileScoreMetric(Metric):
-    """A metric to evaluate the agile score of a planner."""
+class TimeScoreMetric(Metric):
+    """A metric to evaluate the time score of a planner."""
 
     def abbrev(self) -> str:
-        return "AS"
+        return "TS"
 
     def evaluate(self, results: List[PlannerResult]) -> str:
         """Evaluate the performance of a planner."""
@@ -39,4 +39,4 @@ class AgileScoreMetric(Metric):
         return f"{score:.2f}"
 
 
-__all__ = ["AgileScoreMetric"]
+__all__ = ["TimeScoreMetric"]

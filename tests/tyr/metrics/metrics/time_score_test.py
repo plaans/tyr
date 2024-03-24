@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from tyr.metrics.metrics.agile_score import AgileScoreMetric
+from tyr.metrics.metrics.time_score import TimeScoreMetric
 from tyr.planners.model.config import SolveConfig
 from tyr.planners.model.result import PlannerResult, PlannerResultStatus
 
@@ -23,7 +23,7 @@ def planner_result(status_name: str, computation_time: float):
 
 class TestAgileScoreMetric:
     def test_abbrev(self):
-        assert AgileScoreMetric().abbrev() == "AS"
+        assert TimeScoreMetric().abbrev() == "TS"
 
     @pytest.mark.parametrize(
         "computation_time, expected",
@@ -54,12 +54,12 @@ class TestAgileScoreMetric:
         else:
             expected = f"{expected*100:.2f}" if expected != 1 else "100"
         results = [planner_result(status.name, computation_time)]
-        result = AgileScoreMetric().evaluate(results)
+        result = TimeScoreMetric().evaluate(results)
         assert result == expected
 
     def test_agile_score_multiple_results(self):
         results = [planner_result("solved", i) for i in range(7)]
-        result = AgileScoreMetric().evaluate(results)
+        result = TimeScoreMetric().evaluate(results)
         expected = (
             sum(
                 [
@@ -78,7 +78,7 @@ class TestAgileScoreMetric:
 
     def test_agile_score_empty_results(self):
         results = []
-        result = AgileScoreMetric().evaluate(results)
+        result = TimeScoreMetric().evaluate(results)
         assert result == "-"
 
     def test_agile_score_skip_not_run_unsupported_error(self):
@@ -89,5 +89,5 @@ class TestAgileScoreMetric:
             planner_result("error", 0.5),
         ]
         expected = "100"
-        result = AgileScoreMetric().evaluate(results)
+        result = TimeScoreMetric().evaluate(results)
         assert result == expected

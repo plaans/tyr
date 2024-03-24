@@ -1,5 +1,5 @@
-from . import agile_score, coverage
-from .agile_score import *
+from . import coverage, time_score
 from .coverage import *
+from .time_score import *
 
-__all__ = agile_score.__all__ + coverage.__all__
+__all__ = coverage.__all__ + time_score.__all__
