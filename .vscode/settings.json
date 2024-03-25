@@ -12,10 +12,12 @@
         "requirements/aries.txt": "python-misc"
     },
     "material-icon-theme.folders.associations": {
+        "domains": "context",
         "metrics": "benchmark",
         "planners": "resolver",
         "plotters": "theme",
         "problems": "context",
+        "shortcuts": "contract",
         "tyr": "project"
     },
     "python.testing.pytestArgs": [
