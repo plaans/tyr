@@ -166,7 +166,6 @@ class Plotter(Abstract, Singleton, metaclass=AbstractSingletonMeta):
                 result += f"mark={symbol},\n"
                 result += "mark size=2,\n"
                 result += f"mark options={{fill={color}}},\n"
-                result += "smooth,\n"
                 result += "]\n"
                 result += "coordinates {\n"
                 for x, y in zip(data[0], data[1]):
