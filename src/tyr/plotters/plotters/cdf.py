@@ -1,7 +1,7 @@
 from typing import List, Tuple
 
 from tyr.planners.model.config import RunningMode
-from tyr.planners.model.result import PlannerResult
+from tyr.planners.model.result import PlannerResult, PlannerResultStatus
 from tyr.plotters.plotter import Plotter
 
 
@@ -25,16 +25,17 @@ class CdfPlotter(Plotter):
         """Extract the data to plot."""
         # pylint: disable = duplicate-code
 
+        all_data = [r for r in data if r.running_mode == RunningMode.ONESHOT]
         times = sorted(
             [
                 float(r.computation_time or r.config.timeout)
-                for r in data
-                if r.running_mode == RunningMode.ONESHOT
+                for r in all_data
+                if r.status == PlannerResultStatus.SOLVED
             ]
         )
         return (
             times,
-            list(i / len(times) for i in range(1, len(times) + 1)),
+            list(i / len(all_data) * 100 for i in range(1, len(times) + 1)),
         )
 
 
