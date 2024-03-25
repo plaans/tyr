@@ -116,6 +116,12 @@ memout_option = click.option(
     help="Memout for planners in bytes. Default to 4GB.",
 )
 
+latex_option = click.option(
+    "--latex",
+    is_flag=True,
+    help="Generate LaTeX code of the result.",
+)
+
 planners_filter = click.option(
     "-p",
     "--planners",
@@ -275,7 +281,7 @@ def cli_bench(
 @planners_filter
 @domains_filter
 @plotters_filter
-@click.option("--latex", is_flag=True, help="Generate LaTeX code for the plot.")
+@latex_option
 @pass_context
 def cli_plot(
     ctx: CliContext,
@@ -398,6 +404,7 @@ def cli_solve(
 @metrics_filter
 @click.option("--best-col", is_flag=True, help="Print the best metrics on the right.")
 @click.option("--best-row", is_flag=True, help="Print the best metrics on the bottom.")
+@latex_option
 @pass_context
 def cli_table(
     ctx: CliContext,
@@ -412,6 +419,7 @@ def cli_table(
     metrics: List[str],
     best_col: bool,
     best_row: bool,
+    latex: bool,
 ):
     config = config or ctx.config
     cli_config = {
@@ -425,6 +433,7 @@ def cli_table(
         "metrics": metrics,
         "best_column": best_col,
         "best_row": best_row,
+        "latex": latex,
     }
     conf = merge_configs(cli_config, yaml_config(config, "table"), DEFAULT_CONFIG)
 
@@ -438,6 +447,7 @@ def cli_table(
         conf["metrics"],
         conf["best_column"],
         conf["best_row"],
+        conf["latex"],
     )
 
 

@@ -18,6 +18,7 @@ def run_table(
     metric_filters: List[str],
     best_column: bool,
     best_row: bool,
+    latex: bool,
 ):
     """Analyse the planners over the domains based on the database content.
 
@@ -30,6 +31,7 @@ def run_table(
         metric_filters (List[str]): A list of regex filters on metric names.
         best_column (bool): Whether to print the best metrics on the right.
         best_row (bool): Whether to print the best metrics on the bottom.
+        latex (bool): Whether to print the table in latex format.
     """
     # pylint: disable = duplicate-code
 
@@ -42,6 +44,7 @@ def run_table(
         ctx.config,
         best_column,
         best_row,
+        latex,
     )
     tw.session_starts()
 

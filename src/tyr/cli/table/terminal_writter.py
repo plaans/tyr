@@ -29,12 +29,16 @@ class Sep(Enum):
     SIMPLE = auto()
     DOUBLE = auto()
 
-    def __str__(self) -> str:
+    def fmt(self, latex: bool) -> str:
+        """Returns the string representation of the separator."""
         if self is Sep.SIMPLE:
-            return "│"
+            return "&" if latex else "│"
         if self is Sep.DOUBLE:
-            return "║"
+            return "& &" if latex else "║"
         raise NotImplementedError(f"{self} is not supported to print a separator")
+
+    def __str__(self) -> str:
+        return self.fmt(False)
 
 
 @dataclass
@@ -50,7 +54,15 @@ class Cell:
         if self.length == -1:
             self.length = len(self.value)
 
-    def __str__(self) -> str:
+    def fmt(self, latex: bool) -> str:
+        """Returns the string representation of the cell."""
+        if latex:
+            a = (
+                "c"
+                if self.adjust == Adjust.CENTER
+                else "l" if self.adjust == Adjust.LEFT else "r"
+            )
+            return f"\\multicolumn{{{self.span}}}{{{a}}}{{{self.value.strip()}}}"
         if self.adjust == Adjust.CENTER:
             return self.value.center(self.length)
         if self.adjust == Adjust.LEFT:
@@ -58,6 +70,9 @@ class Cell:
         if self.adjust == Adjust.RIGHT:
             return self.value.rjust(self.length)
         raise NotImplementedError(f"{self.adjust} is not supported to print a cell")
+
+    def __str__(self) -> str:
+        return self.fmt(False)
 
 
 @dataclass
@@ -87,6 +102,10 @@ class CellRow:
                 return col
             col += item.span
         raise ValueError(f"{cell} is not in the row.")
+
+    def index(self, item: Union[Cell, Sep], start: int = 0):
+        """Returns the index of an item in the row."""
+        return self.row.index(item, start)
 
     @property
     def num_columns(self) -> int:
@@ -144,6 +163,7 @@ class TableTerminalWritter(Writter):
         config: Optional[Path] = None,
         best_column: bool = False,
         best_row: bool = False,
+        latex: bool = False,
     ) -> None:
         super().__init__(solve_config, out, verbosity, config)
         self._results: List[PlannerResult] = []
@@ -152,6 +172,7 @@ class TableTerminalWritter(Writter):
         self._metrics: List[Metric] = []
         self._best_column = best_column
         self._best_row = best_row
+        self._latex = latex
 
     # =============================== Manipulation =============================== #
 
@@ -326,8 +347,10 @@ class TableTerminalWritter(Writter):
             table.append(CellRow([Sep.DOUBLE]))
             for k, v in enumerate(row_header):
                 to_print = v if k == len(row_header) - 1 or i % row_modulo == 0 else ""
-                table[-1].append(Cell(to_print, Adjust.CENTER))
-                table[-1].append(Sep.DOUBLE)
+                table[-1].append(Cell(to_print, Adjust.RIGHT))
+                table[-1].append(Sep.SIMPLE)
+            table[-1].pop()
+            table[-1].append(Sep.DOUBLE)
 
             for j, col_header in enumerate(flat_col_headers[-1]):
                 crt_col_header: Set[Tuple] = raw_col_headers  # type: ignore
@@ -355,7 +378,7 @@ class TableTerminalWritter(Writter):
                     ]
                     value = m.evaluate(results, self._results)
 
-                table[-1].append(Cell(value, Adjust.CENTER))
+                table[-1].append(Cell(value, Adjust.RIGHT))
                 # XXX: This assums that each header has the same number of subheaders.
                 if j % col_modulo < col_modulo - 1:
                     table[-1].append(Sep.SIMPLE)
@@ -400,14 +423,79 @@ class TableTerminalWritter(Writter):
                 ) + (cell.span - 1)
 
         # Print the table.
+        if self._latex:
+            self.latex_print(table, col_length, flat_row_headers)
+        else:
+            self.term_print(table, col_length)
+
+    # ================================== Format ================================== #
+
+    def latex_print(
+        self,
+        table: CellTable,
+        col_length: Dict[int, int],
+        col_headers: List[List[Tuple]],
+    ) -> None:
+        """Prints a table of cells in LaTeX."""
+        self.line("\\begin{table}[htb]")
+        self.line("\\centering")
+        self.line("\\renewcommand{\\arraystretch}{1.2}")
+        self.line("\\def\\hs{\\hspace{0.35cm}}")
+        num_col = max(col_length) + 1 + len([i for i in table[-2] if i is Sep.DOUBLE])
+        self.line("\\begin{tabular}{" + "@{\\hs}c" * num_col + "@{}}")
+        self.line("\\toprule")
+
+        for line_idx in range(1, len(table), 2):
+            line, sep = table[line_idx], table[line_idx - 1]
+            if line_idx not in [1, len(table) - 1]:
+                if sep is Sep.DOUBLE:
+                    if line_idx // 2 == len(col_headers):
+                        self.line("\\\\\\midrule")
+                    elif line_idx // 2 < len(col_headers):
+                        self.write("\\\\")
+                        next_line = table[line_idx + 2]
+                        start = next_line.index(Sep.DOUBLE, 1) // 2 + 2
+                        crt_col = 0
+                        for item_idx, item in enumerate(next_line):
+                            if item_idx == 0:
+                                continue
+                            if isinstance(item, Cell):
+                                crt_col += item.span
+                                continue
+                            if item is Sep.DOUBLE:
+                                crt_col += 1
+                            if crt_col < start or item is not Sep.DOUBLE:
+                                continue
+                            self.write("\\cmidrule{" + f"{start}-{crt_col-1}" + "}")
+                            start = crt_col + 1
+                        # \cmidrule{4-6} \cmidrule{8-10} \cmidrule{12-14}
+                        self.line()
+                    else:
+                        self.line("\\\\\\hdashline")
+                else:
+                    self.line("\\\\")
+            for item_idx, item in enumerate(line):
+                if item_idx not in [0, len(line) - 1]:
+                    self.write(item.fmt(self._latex))
+        self.line("\\\\\\bottomrule")
+
+        self.line("\\end{tabular}")
+        self.line("\\caption{Table of metrics.}")
+        self.line("\\label{tab:metrics}")
+        self.line("\\end{table}")
+
+    def term_print(self, table: CellTable, col_length: Dict[int, int]) -> None:
+        """Prints a table of cells in the terminal."""
         prev_line = None
         for line_idx in range(1, len(table), 2):
             line, sep = table[line_idx], table[line_idx - 1]
             self.horizontal_separator(prev_line, line, col_length, sep)
             for item in line:
-                self.write(str(item))
+                self.write(item.fmt(self._latex))
             prev_line = line
         self.horizontal_separator(prev_line, None, col_length, table[-1])
+
+    # ================================ Separators ================================ #
 
     def horizontal_separator(
         self,
