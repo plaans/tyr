@@ -37,7 +37,6 @@ DEFAULT_CONFIG = {
     "no_db": False,
     # Plot
     "plotters": [],
-    "latex": False,
     # Solve
     "planner": "",
     "problem": "",
@@ -46,6 +45,8 @@ DEFAULT_CONFIG = {
     "metrics": [],
     "best_column": False,
     "best_row": False,
+    "latex": False,
+    "latex_caption": "Table of metrics.",
 }
 
 
@@ -405,6 +406,7 @@ def cli_solve(
 @click.option("--best-col", is_flag=True, help="Print the best metrics on the right.")
 @click.option("--best-row", is_flag=True, help="Print the best metrics on the bottom.")
 @latex_option
+@click.option("--latex-caption", type=str, help="Caption for the LaTeX table.")
 @pass_context
 def cli_table(
     ctx: CliContext,
@@ -420,6 +422,7 @@ def cli_table(
     best_col: bool,
     best_row: bool,
     latex: bool,
+    latex_caption: str,
 ):
     config = config or ctx.config
     cli_config = {
@@ -434,6 +437,7 @@ def cli_table(
         "best_column": best_col,
         "best_row": best_row,
         "latex": latex,
+        "latex_caption": latex_caption,
     }
     conf = merge_configs(cli_config, yaml_config(config, "table"), DEFAULT_CONFIG)
 
@@ -448,6 +452,7 @@ def cli_table(
         conf["best_column"],
         conf["best_row"],
         conf["latex"],
+        conf["latex_caption"],
     )
 
 

@@ -60,9 +60,7 @@ class Cell:
             a = (
                 "c"
                 if self.adjust == Adjust.CENTER
-                else "l"
-                if self.adjust == Adjust.LEFT
-                else "r"
+                else "l" if self.adjust == Adjust.LEFT else "r"
             )
             return f"\\multicolumn{{{self.span}}}{{{a}}}{{{self.value.strip()}}}"
         if self.adjust == Adjust.CENTER:
@@ -153,6 +151,7 @@ class CellTable:
         return len(self.rows)
 
 
+# pylint: disable = too-many-instance-attributes
 class TableTerminalWritter(Writter):
     """Terminal writter for the analysis command."""
 
@@ -166,6 +165,7 @@ class TableTerminalWritter(Writter):
         best_column: bool = False,
         best_row: bool = False,
         latex: bool = False,
+        latex_caption: str = "",
     ) -> None:
         super().__init__(solve_config, out, verbosity, config)
         self._results: List[PlannerResult] = []
@@ -175,6 +175,7 @@ class TableTerminalWritter(Writter):
         self._best_column = best_column
         self._best_row = best_row
         self._latex = latex
+        self._latex_caption = latex_caption
 
     # =============================== Manipulation =============================== #
 
@@ -482,7 +483,7 @@ class TableTerminalWritter(Writter):
         self.line("\\\\\\bottomrule")
 
         self.line("\\end{tabular}")
-        self.line("\\caption{Table of metrics.}")
+        self.line(f"\\caption{{{self._latex_caption}}}")
         self.line("\\label{tab:metrics}")
         self.line("\\end{table}")
 
