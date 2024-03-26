@@ -16,7 +16,7 @@ from tyr.problems.model.instance import ProblemInstance
 
 
 class Adjust(Enum):
-    """Enumeration of the possible adjustments for a cell value."""
+    """Enumeration of the possible horizontal adjustments for a cell value."""
 
     CENTER = auto()
     LEFT = auto()
@@ -47,7 +47,8 @@ class Cell:
 
     value: str
     adjust: Adjust
-    span: int = 1
+    h_span: int = 1
+    v_span: int = 1
     length: int = -1
 
     def __post_init__(self):
@@ -60,11 +61,9 @@ class Cell:
             a = (
                 "c"
                 if self.adjust == Adjust.CENTER
-                else "l"
-                if self.adjust == Adjust.LEFT
-                else "r"
+                else "l" if self.adjust == Adjust.LEFT else "r"
             )
-            return f"\\multicolumn{{{self.span}}}{{{a}}}{{{self.value.strip()}}}"
+            return f"\\multicolumn{{{self.h_span}}}{{{a}}}{{{self.value.strip()}}}"
         if self.adjust == Adjust.CENTER:
             return self.value.center(self.length)
         if self.adjust == Adjust.LEFT:
@@ -102,7 +101,7 @@ class CellRow:
         for item in self.cells:
             if item is cell:
                 return col
-            col += item.span
+            col += item.h_span
         raise ValueError(f"{cell} is not in the row.")
 
     def index(self, item: Union[Cell, Sep], start: int = 0):
@@ -112,7 +111,7 @@ class CellRow:
     @property
     def num_columns(self) -> int:
         """Returns the number of columns in the row."""
-        return sum(cell.span for cell in self.cells)
+        return sum(cell.h_span for cell in self.cells)
 
     def __iter__(self):
         return self.row.__iter__()
@@ -321,28 +320,23 @@ class TableTerminalWritter(Writter):
         table = CellTable([Sep.DOUBLE])
 
         # Create the column headers.
-        for col_headers in flat_col_headers:
-            table.append(
-                CellRow(
-                    [
-                        Sep.DOUBLE,
-                        Cell("", Adjust.CENTER, len(flat_row_headers)),
-                        Sep.DOUBLE,
-                    ]
-                )
-            )
+        for i, col_headers in enumerate(flat_col_headers):
+            v_span = len(flat_col_headers) * (1 if i == 0 else -1)
+            empty = Cell("", Adjust.CENTER, len(flat_row_headers), v_span=v_span)
+            table.append(CellRow([Sep.DOUBLE, empty, Sep.DOUBLE]))
             col_modulo = int(len(col_headers) / len(flat_col_headers[-2]))
-            for i, col_header in enumerate(col_headers):
+            for j, col_header in enumerate(col_headers):
                 # XXX: This assums that each header has the same number of subheaders.
                 span = int(len(flat_col_headers[-1]) / len(col_headers))
                 table[-1].append(Cell(col_header[-1], Adjust.CENTER, span))
-                if span == 1 and i % col_modulo < col_modulo - 1:
+                if span == 1 and j % col_modulo < col_modulo - 1:
                     table[-1].append(Sep.SIMPLE)
                 else:
                     table[-1].append(Sep.DOUBLE)
             table.append(Sep.DOUBLE)
 
         # Create the cells.
+        # XXX: This assums that each header has the same number of subheaders.
         row_modulo = (
             int(len(flat_row_headers[-1]) / len(flat_row_headers[-2]))
             if len(flat_row_headers) > 1
@@ -352,7 +346,12 @@ class TableTerminalWritter(Writter):
             table.append(CellRow([Sep.DOUBLE]))
             for k, v in enumerate(row_header):
                 to_print = v if k == len(row_header) - 1 or i % row_modulo == 0 else ""
-                table[-1].append(Cell(to_print, Adjust.RIGHT))
+                v_span = (
+                    1
+                    if k == len(row_header) - 1
+                    else row_modulo * (1 if to_print else -1)
+                )
+                table[-1].append(Cell(to_print, Adjust.RIGHT, v_span=v_span))
                 table[-1].append(Sep.SIMPLE)
             table[-1].pop()
             table[-1].append(Sep.DOUBLE)
@@ -404,11 +403,11 @@ class TableTerminalWritter(Writter):
 
         # Compute the length of each column.
         col_length: Dict[int, int] = defaultdict(lambda: 0)
-        max_span = max(cell.span for line in table.lines for cell in line.cells)
+        max_span = max(cell.h_span for line in table.lines for cell in line.cells)
         for span in range(1, max_span + 1):
             for line in table.lines:
                 for cell in line.cells:
-                    if cell.span != span:
+                    if cell.h_span != span:
                         continue
                     length = sum(
                         col_length[line.column_of(cell) + i] for i in range(span)
@@ -424,8 +423,8 @@ class TableTerminalWritter(Writter):
         for line in table.lines:
             for cell in line.cells:
                 cell.length = sum(
-                    col_length[line.column_of(cell) + i] for i in range(cell.span)
-                ) + (cell.span - 1)
+                    col_length[line.column_of(cell) + i] for i in range(cell.h_span)
+                ) + (cell.h_span - 1)
 
         # Print the table.
         if self._latex:
@@ -465,7 +464,7 @@ class TableTerminalWritter(Writter):
                             if item_idx == 0:
                                 continue
                             if isinstance(item, Cell):
-                                crt_col += item.span
+                                crt_col += item.h_span
                                 continue
                             if item is Sep.DOUBLE:
                                 crt_col += 1
@@ -594,32 +593,51 @@ class TableTerminalWritter(Writter):
             raise ValueError("The two lines must start with the same separator.")
 
         self.line()
-        if prev_line[0] is Sep.SIMPLE:
-            self.write("├" if line_sep is Sep.SIMPLE else "╞")
+        if next_line[1].v_span < 0:
+            self.write(str(prev_line[0]))
         else:
-            self.write("╟" if line_sep is Sep.SIMPLE else "╠")
+            if prev_line[0] is Sep.SIMPLE:
+                self.write("├" if line_sep is Sep.SIMPLE else "╞")
+            else:
+                self.write("╟" if line_sep is Sep.SIMPLE else "╠")
 
         prev_cell, prev_sep, prev_cell_idx = prev_line[1], prev_line[2], 1
         next_cell, next_sep, next_cell_idx = next_line[1], next_line[2], 1
         for c in sorted(col_length.keys()):
             length = col_length[c]
-            end_prev_cell = prev_line.column_of(prev_cell) + prev_cell.span - 1 == c
-            end_next_cell = next_line.column_of(next_cell) + next_cell.span - 1 == c
-            self.write(("─" if line_sep is Sep.SIMPLE else "═") * length)
+            end_prev_cell = prev_line.column_of(prev_cell) + prev_cell.h_span - 1 == c
+            end_next_cell = next_line.column_of(next_cell) + next_cell.h_span - 1 == c
+            self.write(
+                (
+                    " "
+                    if next_cell.v_span < 0
+                    else "─" if line_sep is Sep.SIMPLE else "═"
+                )
+                * length
+            )
             if c == prev_line.num_columns - 1:
                 if prev_sep != next_sep:
                     raise ValueError("The two lines must end with the same separator.")
-                if prev_sep is Sep.SIMPLE:
-                    self.write("┤" if line_sep is Sep.SIMPLE else "╡")
+                if next_cell.v_span < 0:
+                    self.write(str(next_sep))
                 else:
-                    self.write("╢" if line_sep is Sep.SIMPLE else "╣")
+                    if prev_sep is Sep.SIMPLE:
+                        self.write("┤" if line_sep is Sep.SIMPLE else "╡")
+                    else:
+                        self.write("╢" if line_sep is Sep.SIMPLE else "╣")
             elif end_prev_cell and end_next_cell:
                 if prev_sep != next_sep:
                     raise ValueError("The two lines must have with the same separator.")
-                if prev_sep is Sep.SIMPLE:
-                    self.write("┼" if line_sep is Sep.SIMPLE else "╪")
+                if next_cell.v_span < 0:
+                    if prev_sep is Sep.SIMPLE:
+                        self.write("├" if line_sep is Sep.SIMPLE else "╞")
+                    else:
+                        self.write("╟" if line_sep is Sep.SIMPLE else "╠")
                 else:
-                    self.write("╫" if line_sep is Sep.SIMPLE else "╬")
+                    if prev_sep is Sep.SIMPLE:
+                        self.write("┼" if line_sep is Sep.SIMPLE else "╪")
+                    else:
+                        self.write("╫" if line_sep is Sep.SIMPLE else "╬")
                 prev_cell_idx += 2
                 prev_cell, prev_sep = prev_line[prev_cell_idx : prev_cell_idx + 2]
                 next_cell_idx += 2
@@ -639,7 +657,13 @@ class TableTerminalWritter(Writter):
                 next_cell_idx += 2
                 next_cell, next_sep = next_line[next_cell_idx : next_cell_idx + 2]
             else:
-                self.write(("─" if line_sep is Sep.SIMPLE else "═"))
+                self.write(
+                    (
+                        " "
+                        if next_cell.v_span < 0
+                        else "─" if line_sep is Sep.SIMPLE else "═"
+                    )
+                )
 
 
 __all__ = ["TableTerminalWritter"]
