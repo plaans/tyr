@@ -60,7 +60,9 @@ class Cell:
             a = (
                 "c"
                 if self.adjust == Adjust.CENTER
-                else "l" if self.adjust == Adjust.LEFT else "r"
+                else "l"
+                if self.adjust == Adjust.LEFT
+                else "r"
             )
             return f"\\multicolumn{{{self.span}}}{{{a}}}{{{self.value.strip()}}}"
         if self.adjust == Adjust.CENTER:
