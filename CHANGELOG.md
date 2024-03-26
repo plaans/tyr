@@ -4,6 +4,70 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [1.14.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.13.0...v1.14.0) (2024-03-26)
+
+
+### Bug Fixes
+
+* **database:** bigger timeout detection ([f0388c7](https://gitlab.laas.fr/rgodet1/tyr/commit/f0388c7d6fb120f031b32e5a6df2ebf0cf0b2c1b))
+* **database:** loading not run results returns None ([b7bd8af](https://gitlab.laas.fr/rgodet1/tyr/commit/b7bd8afe664f01a848225ee7f735dd9f4cdb7e84))
+* **database:** return None if result is timeout and config has a bigger one ([15a7767](https://gitlab.laas.fr/rgodet1/tyr/commit/15a776764fcb2552bf3b2668a8aa59d97bc7667b))
+* **domains:**  insertion version of goto-simple domain ([8c1db0d](https://gitlab.laas.fr/rgodet1/tyr/commit/8c1db0d120b90b445f1b63a963bac458f07a6463))
+* **domains:** goto-complex and hard number of goals ([f8c62d6](https://gitlab.laas.fr/rgodet1/tyr/commit/f8c62d6b447f7a931a1bf96a9c2007be47f0097f))
+* **metric:** filter not_run, error, and unsupported ([3273da0](https://gitlab.laas.fr/rgodet1/tyr/commit/3273da00895331488dd76f52607732c3c158d9e2))
+* **planner:** detect memout based on logs ([d73f48d](https://gitlab.laas.fr/rgodet1/tyr/commit/d73f48d0b10cb80065571e42ad1945f8f61216e9))
+* **planners:** planner name in result was based on upf engine name ([b99e066](https://gitlab.laas.fr/rgodet1/tyr/commit/b99e066de26531cb6061f7f030004bdb4aaf86dd))
+* **plotters:** sum times for cactus and survival ([7f480be](https://gitlab.laas.fr/rgodet1/tyr/commit/7f480bea17865f1668ef835b3991fa048d46e09e))
+* **table:** order columns ([d3de96b](https://gitlab.laas.fr/rgodet1/tyr/commit/d3de96b8994cfc13f29690eb0a8cd6a1644eb274))
+* **test:** specify metric mock's abbreviation ([18f0751](https://gitlab.laas.fr/rgodet1/tyr/commit/18f0751273b23c3ab871fe2af5a27c2f260104df))
+
+
+### Features
+
+* **analyse:** add best footer and column ([3754e82](https://gitlab.laas.fr/rgodet1/tyr/commit/3754e8246324f791077681f2f537484d0a38986f))
+* **analyse:** can disable best row and col ([3c9bde3](https://gitlab.laas.fr/rgodet1/tyr/commit/3c9bde3885f52696754a98b0190e759d8d843008))
+* **analyse:** can order planners, metrics, domains and categories ([864fde6](https://gitlab.laas.fr/rgodet1/tyr/commit/864fde6034531f7d75500fd0eefccc8f2847313c))
+* **analyse:** filter not run problems and check unsupported consistency ([b09b9ee](https://gitlab.laas.fr/rgodet1/tyr/commit/b09b9ee530cd27ce9c8723c844a8c81e156446e3))
+* **analyse:** mapping for domain, planner, and add categories ([16ebd04](https://gitlab.laas.fr/rgodet1/tyr/commit/16ebd04d0bbe9631ea408ccf708b6b386250f0a2))
+* **analyse:** show the number of instances in a domain ([8be64c6](https://gitlab.laas.fr/rgodet1/tyr/commit/8be64c6d2cd585f5aa4778803f1356cb18db2341))
+* **cli:** add analyse command ([8eee482](https://gitlab.laas.fr/rgodet1/tyr/commit/8eee48232cc6ca0706dcf3fa1aa88f7ea4f54fa8))
+* **cli:** add plot command ([5681d87](https://gitlab.laas.fr/rgodet1/tyr/commit/5681d871220cbd7fab757992e617f4cc06692ba6))
+* **cli:** can chain commands ([a3ef91a](https://gitlab.laas.fr/rgodet1/tyr/commit/a3ef91a5f96b839ba7842d80f520ee511d1c8e06))
+* **cli:** can export table in LaTeX ([b1a245f](https://gitlab.laas.fr/rgodet1/tyr/commit/b1a245f906e7b4e8e7b94293565abb08c0c43991))
+* **cli:** can group cell vertical in table ([920125f](https://gitlab.laas.fr/rgodet1/tyr/commit/920125f5907acb8ba0ff0e6000292badedcd1dec))
+* **cli:** can specify caption of latex table ([a22cc2b](https://gitlab.laas.fr/rgodet1/tyr/commit/a22cc2b0e4d647d28f735aa8bdbebed4eb6ccb4a))
+* **cli:** headers of the table are more customizable ([0096b99](https://gitlab.laas.fr/rgodet1/tyr/commit/0096b992fbaff7f6f31f65f0b6ae2b6550aeb30d))
+* **collector:** collect metrics ([9de17b8](https://gitlab.laas.fr/rgodet1/tyr/commit/9de17b8e6a2b7d0584b9d2ca7096881632047665))
+* **database:** can keep unsupported results ([3b85f8a](https://gitlab.laas.fr/rgodet1/tyr/commit/3b85f8aa8fdd8cad66abd94823e259b1a790015f))
+* **domains:** add complex and hard goto ([fa7f682](https://gitlab.laas.fr/rgodet1/tyr/commit/fa7f68293b627e86f4693b464dc5fd69fbf0007d))
+* **domains:** add Factories Simple ([d7a446e](https://gitlab.laas.fr/rgodet1/tyr/commit/d7a446ead71890c992ae8776aa4c4b1d7b11e4ea))
+* **domains:** add instance 31-40 for gotos, with 1-10 goto tasks ([99bb90a](https://gitlab.laas.fr/rgodet1/tyr/commit/99bb90a61b397851fd9dcb66e08329fcbf5b8904))
+* **domains:** add rovers versions ([a898fb1](https://gitlab.laas.fr/rgodet1/tyr/commit/a898fb105c8c08920d878bdd8634f6d018050f97))
+* **domains:** add simple goto in base and linear versions ([e9be1a5](https://gitlab.laas.fr/rgodet1/tyr/commit/e9be1a53b359fc1ffc7a61c00d8dec524bce732b))
+* **domains:** add task insertion version of simple goto ([4cd8b02](https://gitlab.laas.fr/rgodet1/tyr/commit/4cd8b02d183484a7da3c02955ae2b8fab2b67ed8))
+* **domains:** add transport ([402bb0f](https://gitlab.laas.fr/rgodet1/tyr/commit/402bb0fe2f6ba1684e67492390c9f8324a5ab0bb))
+* **domains:** add versions for transport ([6a582e3](https://gitlab.laas.fr/rgodet1/tyr/commit/6a582e395fedd196eb5aaca8a180cf7b92a26a64))
+* **metrics:** add quality score ([204dfa2](https://gitlab.laas.fr/rgodet1/tyr/commit/204dfa21a7e01362a166fe1e635b889f4cbc29ad))
+* **metrics:** creation ([2dc6583](https://gitlab.laas.fr/rgodet1/tyr/commit/2dc65833be5cf3f8967e2ac51f377a79ff445717))
+* **pddl planner:** can override the temporary file extension ([def5a8a](https://gitlab.laas.fr/rgodet1/tyr/commit/def5a8a5b65b1275ccdbf7fdd614db1a43ef9748))
+* **planners:** add aries-linear version for simple-goto ([1d203c5](https://gitlab.laas.fr/rgodet1/tyr/commit/1d203c55a0543c7aaf37082a5d1c54b28dc644fe))
+* **planners:** add exponential versions for aries, linear and panda-pi ([61d3383](https://gitlab.laas.fr/rgodet1/tyr/commit/61d3383d8e612e5238f1c062c764a46cb817cbd1))
+* **planners:** add linear planner, winner of ipc-23 ([baaace1](https://gitlab.laas.fr/rgodet1/tyr/commit/baaace1fc9a11fed84e12d132ace32a3086fe461))
+* **planners:** add PandaPi planner linear version ([2a78d56](https://gitlab.laas.fr/rgodet1/tyr/commit/2a78d56c3c76273d80f0fd6be9545b83246d9c7a))
+* **planners:** create generic singularity planner ([bd7fd69](https://gitlab.laas.fr/rgodet1/tyr/commit/bd7fd6951bffc52b296e4fd6ea1502646f119091))
+* **planners:** get makespan of hierarchical plans ([f203d10](https://gitlab.laas.fr/rgodet1/tyr/commit/f203d105c37e4ca5f515989a6e462eec86e74a6e))
+* **planner:** use makespan if no metric is specified ([a426eea](https://gitlab.laas.fr/rgodet1/tyr/commit/a426eea20b855e3911cc6c701b57a1948307d1e1))
+* **plotters:** add CDF ([d883599](https://gitlab.laas.fr/rgodet1/tyr/commit/d883599b3ed179205598dab719f73fd3cbd82a56))
+* **plotters:** add reversed cdf plot ([b99f54d](https://gitlab.laas.fr/rgodet1/tyr/commit/b99f54da8e5d8cfa43238b661b39ac45d352746a))
+* **plotters:** cactus and survival ([b9982a6](https://gitlab.laas.fr/rgodet1/tyr/commit/b9982a60b199ec25b7e236a89149c967b6b62341))
+* **plotters:** can export in latex ([54b7b0c](https://gitlab.laas.fr/rgodet1/tyr/commit/54b7b0c0710e33812d2920d9b431aaaf275db0a4))
+* **table:** can select metrics by abbreviation ([fdb3be6](https://gitlab.laas.fr/rgodet1/tyr/commit/fdb3be61d49d53a8918f631a13cf84b24e420f66))
+
+
+### Reverts
+
+* hddl-writter branch of upf has been merged into master ([af0c26b](https://gitlab.laas.fr/rgodet1/tyr/commit/af0c26b080e43f6fe5f9d1d60e983a5b61e21241))
+
 # [1.13.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.12.0...v1.13.0) (2024-03-19)
 
 
