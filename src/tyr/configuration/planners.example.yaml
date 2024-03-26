@@ -1,4 +1,8 @@
 ---
+# ============================================================================ #
+#                                     Aries                                    #
+# ============================================================================ #
+
 - name: aries
   problems:
     depots-hierarchical: base
@@ -6,6 +10,10 @@
     depots-hierarchical-temporal-numeric: red_no_div
     depots-numeric: red
     depots-temporal-numeric: red_no_div
+    factories-simple-hierarchical: base
+    goto-complex-hierarchical: base
+    goto-hard-hierarchical: base
+    goto-simple-hierarchical: base
     jobshop-scheduling: base
     jobshop-temporal-numeric: base
     rcpsp-scheduling: base
@@ -20,8 +28,88 @@
     satellite-hierarchical-temporal-numeric: red_no_float
     satellite-numeric: red
     satellite-temporal-numeric: red_no_float
+    transport-hierarchical: base
   env:
     ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
+
+- name: aries-exponential
+  problems:
+    factories-simple-hierarchical: exponential
+    goto-complex-hierarchical: exponential
+    goto-hard-hierarchical: exponential
+    goto-simple-hierarchical: exponential
+    rovers-hierarchical: exponential
+    transport-hierarchical: exponential
+  env:
+    ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
+
+- name: aries-linear
+  problems:
+    factories-simple-hierarchical: linear
+    goto-complex-hierarchical: linear
+    goto-hard-hierarchical: linear
+    goto-simple-hierarchical: linear
+    rovers-hierarchical: linear
+    transport-hierarchical: linear
+  env:
+    ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
+
+- name: aries-insertion
+  problems:
+    factories-simple-hierarchical: insertion
+    goto-complex-hierarchical: insertion
+    goto-hard-hierarchical: insertion
+    goto-simple-hierarchical: insertion
+    rovers-hierarchical: insertion
+    transport-hierarchical: insertion
+  env:
+    ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
+
+# ============================================================================ #
+#                                    Linear                                    #
+# ============================================================================ #
+
+- name: linear
+  problems:
+    depots-hierarchical: base
+    factories-simple-hierarchical: base
+    goto-complex-hierarchical: base
+    goto-hard-hierarchical: base
+    goto-simple-hierarchical: base
+    rovers-hierarchical: base
+    satellite-hierarchical: base
+    transport-hierarchical: base
+
+- name: linear-exponential
+  problems:
+    factories-simple-hierarchical: exponential
+    goto-complex-hierarchical: exponential
+    goto-hard-hierarchical: exponential
+    goto-simple-hierarchical: exponential
+    rovers-hierarchical: exponential
+    transport-hierarchical: exponential
+
+- name: linear-linear
+  problems:
+    factories-simple-hierarchical: linear
+    goto-complex-hierarchical: linear
+    goto-hard-hierarchical: linear
+    goto-simple-hierarchical: linear
+    rovers-hierarchical: linear
+    transport-hierarchical: linear
+
+- name: linear-insertion
+  problems:
+    factories-simple-hierarchical: insertion
+    goto-complex-hierarchical: insertion
+    goto-hard-hierarchical: insertion
+    goto-simple-hierarchical: insertion
+    rovers-hierarchical: insertion
+    transport-hierarchical: insertion
+
+# ============================================================================ #
+#                                      LPG                                     #
+# ============================================================================ #
 
 - name: lpg
   anytime_name: lpg-anytime
@@ -35,6 +123,10 @@
     satellite-numeric: red
     satellite-temporal-numeric: red_no_float
 
+# ============================================================================ #
+#                                     Optic                                    #
+# ============================================================================ #
+
 - name: optic
   problems:
     depots-numeric: red
@@ -46,8 +138,44 @@
     satellite-numeric: red
     satellite-temporal-numeric: red_no_float
 
+# ============================================================================ #
+#                                    PandaPi                                   #
+# ============================================================================ #
+
 - name: panda-pi
   problems:
     depots-hierarchical: base
+    factories-simple-hierarchical: base
+    goto-complex-hierarchical: base
+    goto-hard-hierarchical: base
+    goto-simple-hierarchical: base
     rovers-hierarchical: base
     satellite-hierarchical: base
+    transport-hierarchical: base
+
+- name: panda-pi-exponential
+  problems:
+    factories-simple-hierarchical: exponential
+    goto-complex-hierarchical: exponential
+    goto-hard-hierarchical: exponential
+    goto-simple-hierarchical: exponential
+    rovers-hierarchical: exponential
+    transport-hierarchical: exponential
+
+- name: panda-pi-linear
+  problems:
+    factories-simple-hierarchical: linear
+    goto-complex-hierarchical: linear
+    goto-hard-hierarchical: linear
+    goto-simple-hierarchical: linear
+    rovers-hierarchical: linear
+    transport-hierarchical: linear
+
+- name: panda-pi-insertion
+  problems:
+    factories-simple-hierarchical: insertion
+    goto-complex-hierarchical: insertion
+    goto-hard-hierarchical: insertion
+    goto-simple-hierarchical: insertion
+    rovers-hierarchical: insertion
+    transport-hierarchical: insertion

@@ -2,8 +2,12 @@ import re
 from dataclasses import dataclass, field
 from typing import Generic, List, TypeVar
 
+from tyr.metrics import scanner as metric_scanner
+from tyr.metrics.metric import Metric
 from tyr.planners import scanner as planner_scanner
 from tyr.planners.model.planner import Planner
+from tyr.plotters import scanner as plotter_scanner
+from tyr.plotters.plotter import Plotter
 from tyr.problems import scanner as domain_scanner
 from tyr.problems.model.instance import ProblemInstance
 
@@ -25,6 +29,35 @@ class CollectionResult(Generic[T]):
             int: The total number of collected items.
         """
         return len(self.selected) + len(self.deselected) + len(self.skipped)
+
+
+def collect_metrics(*filters: str) -> CollectionResult[Metric]:
+    """
+    Args:
+        filters (List[str]): A list of regex filters on metric names.
+
+    Returns:
+        CollectionResult[Metric]: The collected metrics for the benchmark.
+    """
+    all_metrics = metric_scanner.get_all_metrics()
+    selected: List[Metric] = []
+
+    if len(filters) == 0:
+        return CollectionResult(all_metrics)
+
+    for flt in filters:
+        re_filter = re.compile(flt)
+
+        for metric in all_metrics:
+            if re_filter.match(metric.name) is not None:
+                selected.append(metric)
+            elif re_filter.match(metric.abbrev()) is not None:
+                selected.append(metric)
+
+    selected = list(set(selected))  # Remove duplicates
+    deselected = [m for m in all_metrics if m not in selected]
+
+    return CollectionResult(selected, deselected)
 
 
 def collect_planners(*filters: str) -> CollectionResult[Planner]:
@@ -54,9 +87,37 @@ def collect_planners(*filters: str) -> CollectionResult[Planner]:
     return CollectionResult(selected, deselected)
 
 
+def collect_plotters(
+    *filters: str,
+) -> CollectionResult[Plotter]:
+    """
+    Args:
+        filters (List[str]): A list of regex filters on plot names.
+
+    Returns:
+        CollectionResult[Plotter]: The collected plots.
+    """
+    all_plots = plotter_scanner.get_all_plotters()
+    selected: List[Plotter] = []
+
+    if len(filters) == 0:
+        return CollectionResult(all_plots)
+
+    for flt in filters:
+        re_filter = re.compile(flt)
+
+        for plot in all_plots:
+            if re_filter.match(plot.name) is not None:
+                selected.append(plot)
+
+    selected = list(set(selected))  # Remove duplicates
+    deselected = [p for p in all_plots if p not in selected]
+
+    return CollectionResult(selected, deselected)
+
+
 def collect_problems(*filters: str) -> CollectionResult[ProblemInstance]:
     """
-
     Args:
         filters (List[str]): A list of regex filters on problem names.
 
@@ -87,4 +148,10 @@ def collect_problems(*filters: str) -> CollectionResult[ProblemInstance]:
     return CollectionResult(selected, desectected, skipped)
 
 
-__all__ = ["collect_planners", "collect_problems", "CollectionResult"]
+__all__ = [
+    "collect_metrics",
+    "collect_planners",
+    "collect_plotters",
+    "collect_problems",
+    "CollectionResult",
+]

@@ -88,7 +88,7 @@ class ProblemInstance:
         version = self.versions["base"].value
 
         if (num_metrics := len(version.quality_metrics)) == 0:
-            return None
+            return self._get_makespan_of_plan(plan)
         if num_metrics > 1:
             raise ValueError("Multiple quality metrics is not supported")
 
@@ -106,6 +106,8 @@ class ProblemInstance:
             return float(
                 max(float(str(plan.assignment[a.end])) for a in plan.activities)
             )
+        if plan.kind == PlanKind.HIERARCHICAL_PLAN:
+            return self._get_makespan_of_plan(plan.action_plan)
         return None
 
 

@@ -50,3 +50,6 @@ class TestTyrPDDLPlanner:
 
     def test_automatic_name(self, planner: TyrPDDLPlanner):
         assert planner.name == "mock-planner"
+
+    def test_default_extension(self, planner: TyrPDDLPlanner):
+        assert planner._file_extension() == "pddl"

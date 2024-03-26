@@ -64,6 +64,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
 
     @staticmethod
     def from_upf(
+        planner_name: str,
         problem: ProblemInstance,
         result: PlanGenerationResult,
         config: SolveConfig,
@@ -72,6 +73,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
         """Converts a result from the unified planning library to our inner result format.
 
         Args:
+            planner_name (str): The name of the planner solving the problem.
             problem (ProblemInstance): The problem solved by the planner.
             result (PlanGenerationResult): The result to convert.
             config (SolveConfig): The configuration used to solve the problem.
@@ -90,7 +92,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             plan_quality = problem.get_quality_of_plan(result.plan)
 
         return PlannerResult(
-            result.engine_name,
+            planner_name,
             problem,
             running_mode,
             PlannerResultStatus.from_upf(result.status),

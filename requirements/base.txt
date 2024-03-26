@@ -3,6 +3,7 @@
 
 click
 joblib
+plotly
 
 # Aries requirements symbolic link
 -r aries.txt

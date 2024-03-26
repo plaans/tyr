@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, TextIO, Tuple, Union
 
-from tyr.cli.bench.collector import CollectionResult
+from tyr.cli.collector import CollectionResult
 from tyr.cli.writter import Writter
 from tyr.planners.model.config import RunningMode, SolveConfig
 from tyr.planners.model.planner import Planner
@@ -61,8 +61,7 @@ class BenchTerminalWritter(Writter):
         verbosity: int = 0,
         config: Optional[Path] = None,
     ) -> None:
-        super().__init__(out, verbosity, config)
-        self._solve_config = solve_config
+        super().__init__(solve_config, out, verbosity, config)
         self._num_to_run = 0
         self._main_color = "green"
         self._results: List[BenchResult] = []
@@ -82,15 +81,6 @@ class BenchTerminalWritter(Writter):
 
     def session_name(self) -> str:
         return "bench"
-
-    def session_starts(self):
-        super().session_starts()
-        self.report_solve_config(self._solve_config)
-        self.line(
-            f"parallel: {self._solve_config.jobs} job"
-            + ("" if self._solve_config.jobs == 1 else "s")
-        )
-        self.report_collecting()
 
     def session_finished(self):
         """Prints summary of the finished benchmark session."""
@@ -233,25 +223,9 @@ class BenchTerminalWritter(Writter):
             len(planners.selected) * len(problems.selected) * len(running_modes)
         )
 
-        def report(result: CollectionResult, name: str):
-            total = result.total
-            selected = len(result.selected)
-            deselected = len(result.deselected)
-            skipped = len(result.skipped)
-
-            line = f"collected {total} {name}" + ("" if total <= 1 else "s")
-            if deselected:
-                line += f" / {deselected} deselected"
-            if skipped:
-                line += f" / {skipped} skipped"
-            if total > selected:
-                line += f" / {selected} selected"
-
-            self.line(line, bold=True)
-
         self.rewrite("")
-        report(planners, "planner")
-        report(problems, "problem")
+        self.report_collected(planners, "planner")
+        self.report_collected(problems, "problem")
 
     def report_running_mode(self, running_mode: RunningMode):
         """Prints a report about a new running mode.

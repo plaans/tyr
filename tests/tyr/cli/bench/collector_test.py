@@ -3,9 +3,17 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from tyr import AbstractDomain, Planner, collect_planners
-from tyr.cli.bench.collector import collect_problems
-from tyr.patterns.singleton import Singleton
+from tyr import (
+    AbstractDomain,
+    Metric,
+    Planner,
+    Plotter,
+    Singleton,
+    collect_metrics,
+    collect_planners,
+    collect_plotters,
+    collect_problems,
+)
 
 
 class ProblemCache(Singleton):
@@ -28,11 +36,28 @@ class TestCollectors:
 
     @staticmethod
     @pytest.fixture()
+    def all_metrics():
+        metrics = [MagicMock() for _ in range(10)]
+        for i, metric in enumerate(metrics):
+            metric.name = f"metric-{i}"
+            metric.abbrev.return_value = f"m{i}"
+        yield metrics
+
+    @staticmethod
+    @pytest.fixture()
     def all_planners():
         planners = [MagicMock() for _ in range(10)]
         for i, planner in enumerate(planners):
             planner.name = f"planner-{i}"
         yield planners
+
+    @staticmethod
+    @pytest.fixture()
+    def all_plotters():
+        plotters = [MagicMock() for _ in range(10)]
+        for i, plotter in enumerate(plotters):
+            plotter.name = f"plotter-{i}"
+        yield plotters
 
     @staticmethod
     @pytest.fixture()
@@ -51,6 +76,55 @@ class TestCollectors:
     # ============================================================================ #
     #                                     Tests                                    #
     # ============================================================================ #
+
+    # ================================== Metrics ================================= #
+
+    @patch("tyr.metrics.scanner.get_all_metrics")
+    def test_collect_metrics_all(
+        self,
+        mocked_get_all_metrics: Mock,
+        all_metrics: List[Metric],
+    ):
+        mocked_get_all_metrics.return_value = all_metrics
+        result = collect_metrics()
+        assert set(result.selected) == set(all_metrics)
+        assert len(set(result.deselected)) == 0
+        assert len(set(result.skipped)) == 0
+
+    @patch("tyr.metrics.scanner.get_all_metrics")
+    def test_collect_metrics_one_filter(
+        self,
+        mocked_get_all_metrics: Mock,
+        all_metrics: List[Metric],
+    ):
+        mocked_get_all_metrics.return_value = all_metrics
+        filter1 = ".*[4-8]"
+
+        selected = [p for p in all_metrics if int(p.name[-1]) in range(4, 9)]
+        deselected = [p for p in all_metrics if int(p.name[-1]) not in range(4, 9)]
+
+        result = collect_metrics(filter1)
+        assert set(result.selected) == set(selected)
+        assert set(result.deselected) == set(deselected)
+        assert len(set(result.skipped)) == 0
+
+    @patch("tyr.metrics.scanner.get_all_metrics")
+    def test_collect_metrics_two_filters(
+        self,
+        mocked_get_all_metrics: Mock,
+        all_metrics: List[Metric],
+    ):
+        mocked_get_all_metrics.return_value = all_metrics
+        filter1 = ".*[4-8]"
+        filter2 = ".*[1-5]"
+
+        selected = [p for p in all_metrics if int(p.name[-1]) in range(1, 9)]
+        deselected = [p for p in all_metrics if int(p.name[-1]) not in range(1, 9)]
+
+        result = collect_metrics(filter1, filter2)
+        assert set(result.selected) == set(selected)
+        assert set(result.deselected) == set(deselected)
+        assert len(set(result.skipped)) == 0
 
     # ================================= Planners ================================= #
 
@@ -97,6 +171,55 @@ class TestCollectors:
         deselected = [p for p in all_planners if int(p.name[-1]) not in range(1, 9)]
 
         result = collect_planners(filter1, filter2)
+        assert set(result.selected) == set(selected)
+        assert set(result.deselected) == set(deselected)
+        assert len(set(result.skipped)) == 0
+
+    # ================================= Plotters ================================= #
+
+    @patch("tyr.plotters.scanner.get_all_plotters")
+    def test_collect_plotters_all(
+        self,
+        mocked_get_all_plotters: Mock,
+        all_plotters: List[Plotter],
+    ):
+        mocked_get_all_plotters.return_value = all_plotters
+        result = collect_plotters()
+        assert set(result.selected) == set(all_plotters)
+        assert len(set(result.deselected)) == 0
+        assert len(set(result.skipped)) == 0
+
+    @patch("tyr.plotters.scanner.get_all_plotters")
+    def test_collect_plotters_one_filter(
+        self,
+        mocked_get_all_plotters: Mock,
+        all_plotters: List[Plotter],
+    ):
+        mocked_get_all_plotters.return_value = all_plotters
+        filter1 = ".*[4-8]"
+
+        selected = [p for p in all_plotters if int(p.name[-1]) in range(4, 9)]
+        deselected = [p for p in all_plotters if int(p.name[-1]) not in range(4, 9)]
+
+        result = collect_plotters(filter1)
+        assert set(result.selected) == set(selected)
+        assert set(result.deselected) == set(deselected)
+        assert len(set(result.skipped)) == 0
+
+    @patch("tyr.plotters.scanner.get_all_plotters")
+    def test_collect_plotters_two_filters(
+        self,
+        mocked_get_all_plotters: Mock,
+        all_plotters: List[Plotter],
+    ):
+        mocked_get_all_plotters.return_value = all_plotters
+        filter1 = ".*[4-8]"
+        filter2 = ".*[1-5]"
+
+        selected = [p for p in all_plotters if int(p.name[-1]) in range(1, 9)]
+        deselected = [p for p in all_plotters if int(p.name[-1]) not in range(1, 9)]
+
+        result = collect_plotters(filter1, filter2)
         assert set(result.selected) == set(selected)
         assert set(result.deselected) == set(deselected)
         assert len(set(result.skipped)) == 0

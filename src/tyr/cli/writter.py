@@ -6,6 +6,7 @@ import time
 from pathlib import Path
 from typing import List, Optional, TextIO, Union
 
+from tyr.cli.collector import CollectionResult
 from tyr.configuration.loader import get_config_file
 from tyr.planners.model.config import SolveConfig
 
@@ -52,6 +53,7 @@ class Writter:
 
     def __init__(
         self,
+        solve_config: SolveConfig,
         out: Union[Optional[TextIO], List[TextIO]] = None,
         verbosity: int = 0,
         config: Optional[Path] = None,
@@ -70,6 +72,7 @@ class Writter:
         self._out = list(out)
         self._verbosity = verbosity
         self._config = get_config_file("cli", config)
+        self._solve_config = solve_config
         self._crt_line = ""
         self._fullwidth = shutil.get_terminal_size(fallback=(80, 24))[0]
         self._starttime = 0
@@ -196,21 +199,48 @@ class Writter:
         """Reports the beginning of a collection process."""
         self.write("collecting...", flush=True, bold=True)
 
-    def report_solve_config(self, solve_config: SolveConfig):
-        """Prints a report about the configuration being used for the resolution.
+    def report_collected(self, result: CollectionResult, name: str):
+        """Reports the result of a collection process."""
+        total = result.total
+        selected = len(result.selected)
+        deselected = len(result.deselected)
+        skipped = len(result.skipped)
 
-        Args:
-            solve_config (SolveConfig): The configuration being used.
-        """
-        msg = f"timeout: {self.format_seconds(solve_config.timeout)}"
+        line = f"collected {total} {name}" + ("" if total <= 1 else "s")
+        if deselected:
+            line += f" / {deselected} deselected"
+        if skipped:
+            line += f" / {skipped} skipped"
+        if total > selected:
+            line += f" / {selected} selected"
 
-        num_bytes = solve_config.memout * 1.0
+        self.line(line, bold=True)
+
+    def report_solve_config(self):
+        """Prints a report about the configuration being used for the resolution."""
+        # Timeout & Memout
+        msg = f"timeout: {self.format_seconds(self._solve_config.timeout)}"
+        num_bytes = self._solve_config.memout * 1.0
         msg += f" -- memout: {int(num_bytes)} Bytes"
         for unit in ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB"]:
             if num_bytes < 1024:
                 msg += f" ({num_bytes:.2f} {unit})"
                 break
             num_bytes /= 1024
+        self.line(msg)
+
+        # Parallel & Database
+        msg = f"parallel: {self._solve_config.jobs} job" + (
+            "" if self._solve_config.jobs == 1 else "s"
+        )
+        db_status = (
+            "disabled"
+            if self._solve_config.no_db
+            else "unique source"
+            if self._solve_config.db_only
+            else "enabled"
+        )
+        msg += f" -- database: {db_status}"
         self.line(msg)
 
     # ============================================================================ #
@@ -230,6 +260,8 @@ class Writter:
         self.line(msg)
         self.line(f"rootdir: {os.getcwd()}")
         self.line(f"config: {self._config}")
+        self.report_solve_config()
+        self.report_collecting()
 
     # ============================================================================ #
     #                                  Formatting                                  #

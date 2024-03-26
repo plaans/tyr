@@ -92,8 +92,9 @@ class TestProblemInstance(ModelTest):
             return orig_version
 
         problem._versions = {"base": Lazy(build_version)}
-        result = problem.get_quality_of_plan(plan)
-        assert result is None
+        with patch.object(problem, "_get_makespan_of_plan") as mock_get_makespan:
+            problem.get_quality_of_plan(plan)
+            mock_get_makespan.assert_called_once_with(plan)
 
     def test_get_quality_of_plan_multiple_metrics(
         self, problem: ProblemInstance, plan: str
@@ -147,6 +148,26 @@ class TestProblemInstance(ModelTest):
         plan.activities = {Mock(end="1"), Mock(end="2"), Mock(end="3")}
         plan.assignment = {"1": 2.5, "2": 3.0, "3": 1.5}
         assert problem._get_makespan_of_plan(plan) == 3.0
+
+    def test_get_makespan_of_plan_sequential_hierarchical_plan(self, problem):
+        plan = MagicMock(spec=Plan)
+        plan.kind = PlanKind.HIERARCHICAL_PLAN
+        plan.action_plan = MagicMock(spec=Plan)
+        plan.action_plan.kind = PlanKind.SEQUENTIAL_PLAN
+        plan.action_plan.actions = ["action1", "action2", "action3"]
+        assert problem._get_makespan_of_plan(plan) == 3.0
+
+    def test_get_makespan_of_plan_timed_hierarchical_plan(self, problem):
+        plan = MagicMock(spec=Plan)
+        plan.kind = PlanKind.HIERARCHICAL_PLAN
+        plan.action_plan = MagicMock(spec=Plan)
+        plan.action_plan.kind = PlanKind.TIME_TRIGGERED_PLAN
+        plan.action_plan.timed_actions = [
+            (0, "action1", 2),
+            (2, "action2", 6),
+            (8, "action3", None),
+        ]
+        assert problem._get_makespan_of_plan(plan) == 8.0
 
     def test_get_makespan_of_plan_unknown(self, problem):
         plan = MagicMock(spec=Plan)

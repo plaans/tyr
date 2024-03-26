@@ -35,6 +35,9 @@ class TyrPDDLPlanner(PDDLAnytimePlanner):
     def supports(_) -> bool:
         return True
 
+    def _file_extension(self) -> str:
+        return "pddl"
+
     def _get_plan(self, proc_out: List[str]) -> str:
         raise NotImplementedError()
 
@@ -56,8 +59,9 @@ class TyrPDDLPlanner(PDDLAnytimePlanner):
         logs: List[LogMessage] = []
 
         with tempfile.TemporaryDirectory() as tempdir:
-            domain_filename = os.path.join(tempdir, "domain.pddl")
-            problem_filename = os.path.join(tempdir, "problem.pddl")
+            ext = self._file_extension()
+            domain_filename = os.path.join(tempdir, f"domain.{ext}")
+            problem_filename = os.path.join(tempdir, f"problem.{ext}")
             plan_filename = os.path.join(tempdir, "plan.txt")
             self._writer.write_domain(domain_filename)
             self._writer.write_problem(problem_filename)

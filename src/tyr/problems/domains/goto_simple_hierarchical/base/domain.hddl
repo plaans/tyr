@@ -1,0 +1,51 @@
+(define (domain simple_goto)
+    (:requirements
+        :negative-preconditions
+        :hierarchy
+        :typing)
+
+    (:types position truck)
+
+    (:predicates
+        (road ?p1 ?p2 - position)
+        (at ?t - truck ?p - position))
+
+    (:task goto 
+        :parameters (
+            ?t - truck
+            ?d - position))
+
+    (:method m-noop
+        :parameters (
+            ?t - truck
+            ?d - position)
+        :task (goto ?t ?d)
+        :subtasks (noop ?t ?d))
+
+    (:method m-rec
+        :parameters (
+            ?t - truck
+            ?s ?n ?d - position)
+        :task (goto ?t ?d)
+        :ordered-subtasks (and
+            (move ?t ?s ?n)
+            (goto ?t ?d)))
+
+    (:action noop
+        :parameters (
+            ?t - truck
+            ?d - position)
+        :precondition (at ?t ?d)
+        :effect ())
+
+    (:action move
+        :parameters (
+            ?t - truck
+            ?s ?d - position)
+        :precondition (and
+            (at ?t ?s)
+            (not (= ?s ?d))
+            (road ?s ?d))
+        :effect (and
+            (not (at ?t ?s))
+            (at ?t ?d))))

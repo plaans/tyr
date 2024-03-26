@@ -39,6 +39,8 @@ skips = ["*_test.py", "*/test_*.py"]
 
 [tool.black]
 target-version = ["py38"]
+
+
 [tool.coverage.report]
 exclude_also = [
     "def __repr__",
@@ -59,6 +61,7 @@ omit = [
     "src/tyr/__main__.py",
     "src/tyr/cli/*",
     "src/tyr/planners/planners/*",
+    "src/tyr/plotters/plotters/*",
     "src/tyr/problems/domains/*",
 ]
 

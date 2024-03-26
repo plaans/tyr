@@ -1,4 +1,4 @@
-from tyr.cli.bench import collector
+from tyr.cli import collector
 from tyr.cli.config import CliContext
 from tyr.cli.solve.terminal_writter import SolveTerminalWritter
 from tyr.planners.database import Database
