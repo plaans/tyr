@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional
+from typing import Dict, List, Optional
 
 import unified_planning as up
 from unified_planning.model.scheduling.scheduling_problem import SchedulingProblem
@@ -10,14 +10,14 @@ from tyr.problems.model import AbstractDomain, ProblemInstance
 
 class Problem:
     def __init__(self) -> None:
-        self.jobs: list[int] = []
-        self.res: list[int] = []
+        self.jobs: List[int] = []
+        self.res: List[int] = []
         self.horizon = -1
 
-        self.succs: dict[int, list[int]] = {}
-        self.durations: list[int] = []
-        self.demands: list[list[int]] = []
-        self.capacities: list[int] = []
+        self.succs: Dict[int, List[int]] = {}
+        self.durations: List[int] = []
+        self.demands: List[List[int]] = []
+        self.capacities: List[int] = []
 
 
 def ints(strs):
