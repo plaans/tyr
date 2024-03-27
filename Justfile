@@ -37,7 +37,7 @@ build_aries:
 
 # Build the Apptainer image.
 build_apptainer:
-    singularity build --fakeroot --writable-tmpfs tyr.sif tyr.def
+    singularity build --fakeroot --writable-tmpfs container/tyr.sif container/tyr.def
 
 # ================================== Linters ================================= #
 
