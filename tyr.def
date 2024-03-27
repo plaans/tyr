@@ -1,0 +1,26 @@
+Bootstrap: docker
+From: python:3.12-slim
+
+%files
+    libs/* libs/
+    requirements/* requirements/
+    src/* src/
+    tests/* tests/
+    pyproject.toml
+
+%post
+    apt update && apt install -y build-essential curl git
+    curl https://sh.rustup.rs | sh -s -- --no-modify-path -y
+    . "$HOME/.cargo/env"
+    cargo build --release --bin up-server --manifest-path libs/aries/Cargo.toml
+    cp libs/aries/target/release/up-server libs/aries/planning/unified/plugin/up_aries/bin/up-aries_linux_amd64
+    pip install -r requirements/dev.txt
+
+%runscript
+    exec python -m tyr "$@"
+
+%test
+    python -m pytest tests/
+
+%labels
+    Author Roland Godet <rgodet@laas.fr>

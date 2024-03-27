@@ -35,6 +35,10 @@ build_aries:
     cargo build --release --bin up-server --manifest-path {{ aries_dir }}/Cargo.toml
     cp {{ aries_dir }}/target/release/up-server {{ aries_dir }}/planning/unified/plugin/up_aries/bin/up-aries_linux_amd64
 
+# Build the Apptainer image.
+build_apptainer:
+    singularity build --fakeroot --writable-tmpfs tyr.sif tyr.def
+
 # ================================== Linters ================================= #
 
 # Format Justfile.
