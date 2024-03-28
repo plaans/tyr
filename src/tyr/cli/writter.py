@@ -222,7 +222,11 @@ class Writter:
         # Database
         db_status = (
             "disabled"
-            if self._solve_config.no_db
+            if self._solve_config.no_db_load and self._solve_config.no_db_save
+            else "load only"
+            if self._solve_config.no_db_save
+            else "save only"
+            if self._solve_config.no_db_load
             else "unique source"
             if self._solve_config.db_only
             else "enabled"

@@ -37,7 +37,8 @@ def run_solve(
     # Perform resolution.
     register_all_planners()
     result = planner.solve(problem, solve_config, running_mode)
-    Database().save_planner_result(result)
+    if solve_config.no_db_save is False:
+        Database().save_planner_result(result)
     tw.report_result(planner, result)
 
     # End the session.

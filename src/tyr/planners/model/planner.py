@@ -138,7 +138,7 @@ class Planner:
             planner_name = self.anytime_name
 
         # Check the database.
-        if config.no_db is False:
+        if config.no_db_load is False:
             db = Database().load_planner_result(
                 planner_name,
                 problem,

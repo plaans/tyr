@@ -35,7 +35,8 @@ DEFAULT_CONFIG = {
     "logs_path": "",
     "memout": 4 * 1024**3,
     "metrics": [],
-    "no_db": False,
+    "no_db_load": False,
+    "no_db_save": False,
     "oneshot": False,
     "out": [],
     "planner": "",
@@ -83,6 +84,11 @@ config_option = click.option(
     type=click.Path(exists=True),
     help="Path to a configuration file.",
 )
+db_only_option = click.option(
+    "--db-only",
+    is_flag=True,
+    help="Only use the database for results.",
+)
 db_path_option = click.option(
     "--db-path",
     type=str,
@@ -117,6 +123,16 @@ metrics_filter = click.option(
     type=str,
     multiple=True,
     help="A list of regex filters on metric names.",
+)
+no_db_load_option = click.option(
+    "--no-db-load",
+    is_flag=True,
+    help="Do not use the database for results loading.",
+)
+no_db_save_option = click.option(
+    "--no-db-save",
+    is_flag=True,
+    help="Do not use the database for results saving.",
 )
 out_option = click.option(
     "-o",
@@ -212,8 +228,9 @@ if negative (n_cpus + 1 + jobs) are used. Default to {DEFAULT_CONFIG['jobs']}.",
 @domains_filter
 @click.option("--anytime", is_flag=True, help="Perform anytime solving method only.")
 @click.option("--oneshot", is_flag=True, help="Perform oneshot solving method only.")
-@click.option("--db-only", is_flag=True, help="Only use the database for results.")
-@click.option("--no-db", is_flag=True, help="Do not use the database for results.")
+@db_only_option
+@no_db_load_option
+@no_db_save_option
 @pass_context
 def cli_bench(
     ctx: CliContext,
@@ -231,7 +248,8 @@ def cli_bench(
     anytime: bool,
     oneshot: bool,
     db_only: bool,
-    no_db: bool,
+    no_db_load: bool,
+    no_db_save: bool,
 ):
     config = config or ctx.config
     cli_config = {
@@ -248,7 +266,8 @@ def cli_bench(
         "anytime": anytime,
         "oneshot": oneshot,
         "db_only": db_only,
-        "no_db": no_db,
+        "no_db_load": no_db_load,
+        "no_db_save": no_db_save,
     }
     conf = merge_configs(cli_config, yaml_config(config, "bench"), DEFAULT_CONFIG)
     update_context(
@@ -270,10 +289,10 @@ def cli_bench(
     else:
         running_modes = [RunningMode.ANYTIME, RunningMode.ONESHOT]
 
-    if conf["db_only"] and conf["no_db"]:
+    if conf["db_only"] and conf["no_db_load"]:
         raise click.BadOptionUsage(
-            "--db-only --no-db",
-            "Cannot use both --db-only and --no-db.",
+            "--db-only --no-db-load",
+            "Cannot use both --db-only and --no-db-load.",
         )
 
     solve_config = SolveConfig(
@@ -281,7 +300,8 @@ def cli_bench(
         conf["memout"],
         conf["timeout"],
         conf["db_only"],
-        conf["no_db"],
+        conf["no_db_load"],
+        conf["no_db_save"],
     )
 
     run_bench(ctx, solve_config, conf["planners"], conf["domains"], running_modes)
@@ -385,6 +405,7 @@ def cli_plot(
     is_flag=True,
     help="Stop the search after the first found solution.",
 )
+@no_db_save_option
 @pass_context
 def cli_solve(
     ctx: CliContext,
@@ -399,6 +420,7 @@ def cli_solve(
     timeout: int,
     memout: int,
     fs: bool,
+    no_db_save: bool,
 ):
     config = config or ctx.config
     cli_config = {
@@ -412,6 +434,7 @@ def cli_solve(
         "timeout": timeout,
         "memout": memout,
         "fs": fs,
+        "no_db_save": no_db_save,
     }
     conf = merge_configs(cli_config, yaml_config(config, "solve"), DEFAULT_CONFIG)
 
@@ -432,7 +455,14 @@ def cli_solve(
 
     running_mode = RunningMode.ONESHOT if conf["fs"] else RunningMode.ANYTIME
 
-    solve_config = SolveConfig(1, conf["memout"], conf["timeout"], False, True)
+    solve_config = SolveConfig(
+        jobs=1,
+        memout=conf["memout"],
+        timeout=conf["timeout"],
+        db_only=False,
+        no_db_load=True,
+        no_db_save=conf["no_db_save"],
+    )
     run_solve(ctx, solve_config, conf["planner"], conf["problem"], running_mode)
 
 

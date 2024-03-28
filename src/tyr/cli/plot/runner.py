@@ -32,7 +32,7 @@ def run_plot(
     # pylint: disable = duplicate-code
 
     # Create the writter and start the session.
-    solve_config = SolveConfig(1, memout, timeout, True, False)
+    solve_config = SolveConfig(1, memout, timeout, True, False, True)
     tw = PlotTerminalWritter(solve_config, ctx.out, ctx.verbosity, ctx.config)
     tw.session_starts()
 
