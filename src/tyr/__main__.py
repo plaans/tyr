@@ -21,32 +21,29 @@ from tyr.cli.plot.runner import run_plot
 # ============================================================================ #
 
 DEFAULT_CONFIG = {
-    # Default
-    "memout": 4 * 1024**3,
-    "timeout": 5,
-    "verbose": 0,
-    "quiet": 0,
-    "out": [],
-    # Bench
-    "jobs": 1,
-    "planners": [],
-    "domains": [],
     "anytime": False,
-    "oneshot": False,
-    "db_only": False,
-    "no_db": False,
-    # Plot
-    "plotters": [],
-    # Solve
-    "planner": "",
-    "problem": "",
-    "fs": False,
-    # Table
-    "metrics": [],
     "best_column": False,
     "best_row": False,
+    "db_only": False,
+    "db_path": "",
+    "domains": [],
+    "fs": False,
+    "jobs": 1,
     "latex": False,
     "latex_caption": "Table of metrics.",
+    "logs_path": "",
+    "memout": 4 * 1024**3,
+    "metrics": [],
+    "no_db": False,
+    "oneshot": False,
+    "out": [],
+    "planner": "",
+    "plotters": [],
+    "planners": [],
+    "problem": "",
+    "quiet": 0,
+    "timeout": 5,
+    "verbose": 0,
 }
 
 
@@ -78,57 +75,12 @@ def yaml_config(path: Optional[Path], name: str) -> dict:
 
 pass_context = click.make_pass_decorator(CliContext, ensure=True)
 
-verbose_option = click.option(
-    "-v",
-    "--verbose",
-    count=True,
-    help="Increase verbosity.",
-)
-quiet_option = click.option(
-    "-q",
-    "--quiet",
-    count=True,
-    help="Decrease verbosity.",
-)
-out_option = click.option(
-    "-o",
-    "--out",
-    multiple=True,
-    type=click.File("w"),
-    help="Output files. Default to stdout.",
-)
+
 config_option = click.option(
     "-c",
     "--config",
     type=click.Path(exists=True),
     help="Path to a configuration file.",
-)
-
-timeout_option = click.option(
-    "-t",
-    "--timeout",
-    type=int,
-    help=f"Timeout for planners in seconds. Default to {DEFAULT_CONFIG['timeout']}s.",
-)
-memout_option = click.option(
-    "-m",
-    "--memout",
-    type=int,
-    help="Memout for planners in bytes. Default to 4GB.",
-)
-
-latex_option = click.option(
-    "--latex",
-    is_flag=True,
-    help="Generate LaTeX code of the result.",
-)
-
-planners_filter = click.option(
-    "-p",
-    "--planners",
-    type=str,
-    multiple=True,
-    help="A list of regex filters on planner names.",
 )
 domains_filter = click.option(
     "-d",
@@ -137,6 +89,17 @@ domains_filter = click.option(
     multiple=True,
     help="A list of regex filters on domain names. A domain name is of the form DOMAIN:UID.",
 )
+latex_option = click.option(
+    "--latex",
+    is_flag=True,
+    help="Generate LaTeX code of the result.",
+)
+memout_option = click.option(
+    "-m",
+    "--memout",
+    type=int,
+    help="Memout for planners in bytes. Default to 4GB.",
+)
 metrics_filter = click.option(
     "-M",
     "--metrics",
@@ -144,12 +107,44 @@ metrics_filter = click.option(
     multiple=True,
     help="A list of regex filters on metric names.",
 )
+out_option = click.option(
+    "-o",
+    "--out",
+    multiple=True,
+    type=click.File("w"),
+    help="Output files. Default to stdout.",
+)
+planners_filter = click.option(
+    "-p",
+    "--planners",
+    type=str,
+    multiple=True,
+    help="A list of regex filters on planner names.",
+)
 plotters_filter = click.option(
     "-P",
     "--plotters",
     type=str,
     multiple=True,
     help="A list of regex filters on plotter names.",
+)
+quiet_option = click.option(
+    "-q",
+    "--quiet",
+    count=True,
+    help="Decrease verbosity.",
+)
+timeout_option = click.option(
+    "-t",
+    "--timeout",
+    type=int,
+    help=f"Timeout for planners in seconds. Default to {DEFAULT_CONFIG['timeout']}s.",
+)
+verbose_option = click.option(
+    "-v",
+    "--verbose",
+    count=True,
+    help="Increase verbosity.",
 )
 
 
@@ -403,8 +398,9 @@ def cli_solve(
 @planners_filter
 @domains_filter
 @metrics_filter
-@click.option("--best-col", is_flag=True, help="Print the best metrics on the right.")
-@click.option("--best-row", is_flag=True, help="Print the best metrics on the bottom.")
+# NOTE: The following options are deprecrated for the moment and not implemented.
+# @click.option("--best-col", is_flag=True, help="Print the best metrics on the right.")
+# @click.option("--best-row", is_flag=True, help="Print the best metrics on the bottom.")
 @latex_option
 @click.option("--latex-caption", type=str, help="Caption for the LaTeX table.")
 @pass_context
@@ -419,8 +415,8 @@ def cli_table(
     planners: List[str],
     domains: List[str],
     metrics: List[str],
-    best_col: bool,
-    best_row: bool,
+    # best_col: bool,
+    # best_row: bool,
     latex: bool,
     latex_caption: str,
 ):
@@ -434,8 +430,8 @@ def cli_table(
         "planners": planners,
         "domains": domains,
         "metrics": metrics,
-        "best_column": best_col,
-        "best_row": best_row,
+        # "best_column": best_col,
+        # "best_row": best_row,
         "latex": latex,
         "latex_caption": latex_caption,
     }
@@ -449,8 +445,10 @@ def cli_table(
         conf["planners"],
         conf["domains"],
         conf["metrics"],
-        conf["best_column"],
-        conf["best_row"],
+        # conf["best_column"],
+        # conf["best_row"],
+        False,
+        False,
         conf["latex"],
         conf["latex_caption"],
     )
