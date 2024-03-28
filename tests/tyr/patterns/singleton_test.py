@@ -36,3 +36,15 @@ class TestSingleton:
         base = Singleton()
         child = ChildSingleton()
         assert base is not child
+
+    def test_post_init(self):
+        class SingletonWithPostInit(Singleton):
+            def __init__(self) -> None:
+                super().__init__()
+                self.counter = 0
+
+            def __post_init__(self):
+                self.counter += 1
+
+        singleton = [SingletonWithPostInit() for _ in range(10)][0]
+        assert singleton.counter == 1
