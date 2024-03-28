@@ -16,7 +16,7 @@ from tyr import (
     ProblemInstance,
     SolveConfig,
 )
-from tyr.core.constants import LOGS_DIR
+from tyr.core.paths import TyrPaths
 from tyr.planners.database import Database
 from tyr.planners.model.config import RunningMode
 from tyr.planners.model.result import PlannerResultStatus
@@ -139,7 +139,7 @@ class TestPlanner(ModelTest):
         problem.domain._name = domain_name
 
         expected = (
-            LOGS_DIR
+            TyrPaths().logs
             / planner_name
             / domain_name
             / f"{problem_id}-{running_mode.name.lower()}"

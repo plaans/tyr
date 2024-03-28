@@ -14,7 +14,7 @@ from unified_planning.engines import PlanGenerationResult, PlanGenerationResultS
 from unified_planning.environment import get_environment
 from unified_planning.shortcuts import AbstractProblem, Engine
 
-from tyr.core.constants import LOGS_DIR
+from tyr.core.paths import TyrPaths
 from tyr.planners.database import Database
 from tyr.planners.model.config import PlannerConfig, RunningMode, SolveConfig
 from tyr.planners.model.result import PlannerResult, PlannerResultStatus
@@ -89,7 +89,7 @@ class Planner:
             Path: The path of the log file.
         """
         folder = (
-            LOGS_DIR
+            TyrPaths().logs
             / self.name
             / problem.domain.name
             / f"{problem.uid}-{running_mode.name.lower()}"
