@@ -8,6 +8,7 @@ from typing import List, Optional, TextIO, Union
 
 from tyr.cli.collector import CollectionResult
 from tyr.configuration.loader import get_config_file
+from tyr.core.paths import TyrPaths
 from tyr.planners.model.config import SolveConfig
 
 
@@ -218,21 +219,7 @@ class Writter:
 
     def report_solve_config(self):
         """Prints a report about the configuration being used for the resolution."""
-        # Timeout & Memout
-        msg = f"timeout: {self.format_seconds(self._solve_config.timeout)}"
-        num_bytes = self._solve_config.memout * 1.0
-        msg += f" -- memout: {int(num_bytes)} Bytes"
-        for unit in ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB"]:
-            if num_bytes < 1024:
-                msg += f" ({num_bytes:.2f} {unit})"
-                break
-            num_bytes /= 1024
-        self.line(msg)
-
-        # Parallel & Database
-        msg = f"parallel: {self._solve_config.jobs} job" + (
-            "" if self._solve_config.jobs == 1 else "s"
-        )
+        # Database
         db_status = (
             "disabled"
             if self._solve_config.no_db
@@ -240,7 +227,22 @@ class Writter:
             if self._solve_config.db_only
             else "enabled"
         )
-        msg += f" -- database: {db_status}"
+        self.line(f"database: {TyrPaths().db} -- {db_status}")
+
+        # Timeout
+        msg = f"timeout: {self.format_seconds(self._solve_config.timeout)}"
+        num_bytes = self._solve_config.memout * 1.0
+
+        # Memout
+        msg += f" -- memout: {int(num_bytes)} Bytes"
+        for unit in ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB"]:
+            if num_bytes < 1024:
+                msg += f" ({num_bytes:.2f} {unit})"
+                break
+            num_bytes /= 1024
+
+        # Parallel
+        msg += f" -- jobs: {self._solve_config.jobs}"
         self.line(msg)
 
     # ============================================================================ #
@@ -256,10 +258,12 @@ class Writter:
         self._starttime = time.time()
 
         self.separator("=", f"Tyr {self.session_name()} session starts", bold=True)
+        self.line(f"start at {time.strftime('%Y-%m-%d %H:%M:%S')} on {platform.node()}")
         msg = f"platform {sys.platform} -- Python {platform.python_version()} -- {sys.executable}"
         self.line(msg)
-        self.line(f"rootdir: {os.getcwd()}")
+        self.line(f"rootdir: {os.getcwd()} -- verbosity: {self.verbosity}")
         self.line(f"config: {self._config}")
+        self.line(f"logs: {TyrPaths().logs}")
         self.report_solve_config()
         self.report_collecting()
 
