@@ -153,7 +153,7 @@ verbose_option = click.option(
 # ============================================================================ #
 
 
-@click.group(chain=True)
+@click.group()
 @verbose_option
 @quiet_option
 @out_option
