@@ -15,6 +15,7 @@ from tyr import (  # type: ignore
     run_table,
 )
 from tyr.cli.plot.runner import run_plot
+from tyr.core.paths import TyrPaths
 
 # ============================================================================ #
 #                                 Configuration                                #
@@ -82,6 +83,11 @@ config_option = click.option(
     type=click.Path(exists=True),
     help="Path to a configuration file.",
 )
+db_path_option = click.option(
+    "--db-path",
+    type=str,
+    help="Path to the SQLite database file.",
+)
 domains_filter = click.option(
     "-d",
     "--domains",
@@ -93,6 +99,11 @@ latex_option = click.option(
     "--latex",
     is_flag=True,
     help="Generate LaTeX code of the result.",
+)
+logs_path_option = click.option(
+    "--logs-path",
+    type=str,
+    help="Path to the logs directory.",
 )
 memout_option = click.option(
     "-m",
@@ -157,16 +168,20 @@ verbose_option = click.option(
 @verbose_option
 @quiet_option
 @out_option
+@logs_path_option
+@db_path_option
 @config_option
 @pass_context
-def cli(ctx: CliContext, verbose, quiet, out, config):
-    update_context(ctx, verbose, quiet, out, config)
+def cli(ctx: CliContext, verbose, quiet, out, logs_path, db_path, config):
+    update_context(ctx, verbose, quiet, out, logs_path, db_path, config)
 
 
-def update_context(ctx, verbose, quiet, out, config):
+def update_context(ctx, verbose, quiet, out, logs_path, db_path, config):
     ctx.verbosity += verbose - quiet
     ctx.out.extend(out)
     ctx.config = config
+    TyrPaths().logs = logs_path or TyrPaths().logs
+    TyrPaths().db = db_path or TyrPaths().db
 
 
 # ============================================================================ #
@@ -181,6 +196,8 @@ def update_context(ctx, verbose, quiet, out, config):
 @verbose_option
 @quiet_option
 @out_option
+@logs_path_option
+@db_path_option
 @config_option
 @timeout_option
 @memout_option
@@ -203,6 +220,8 @@ def cli_bench(
     verbose: int,
     quiet: int,
     out,
+    logs_path: str,
+    db_path: str,
     config,
     timeout: int,
     memout: int,
@@ -219,6 +238,8 @@ def cli_bench(
         "verbose": verbose,
         "quiet": quiet,
         "out": out,
+        "logs_path": logs_path,
+        "db_path": db_path,
         "timeout": timeout,
         "memout": memout,
         "jobs": jobs,
@@ -230,8 +251,15 @@ def cli_bench(
         "no_db": no_db,
     }
     conf = merge_configs(cli_config, yaml_config(config, "bench"), DEFAULT_CONFIG)
-
-    update_context(ctx, conf["verbose"], conf["quiet"], conf["out"], config)
+    update_context(
+        ctx,
+        conf["verbose"],
+        conf["quiet"],
+        conf["out"],
+        conf["logs_path"],
+        conf["db_path"],
+        config,
+    )
 
     if conf["anytime"] and conf["oneshot"]:
         running_modes = [RunningMode.ANYTIME, RunningMode.ONESHOT]
@@ -271,6 +299,8 @@ def cli_bench(
 @verbose_option
 @quiet_option
 @out_option
+@logs_path_option
+@db_path_option
 @config_option
 @timeout_option
 @memout_option
@@ -284,6 +314,8 @@ def cli_plot(
     verbose: int,
     quiet: int,
     out,
+    logs_path: str,
+    db_path: str,
     config,
     timeout: int,
     memout: int,
@@ -297,6 +329,8 @@ def cli_plot(
         "verbose": verbose,
         "quiet": quiet,
         "out": out,
+        "logs_path": logs_path,
+        "db_path": db_path,
         "timeout": timeout,
         "memout": memout,
         "planners": planners,
@@ -305,8 +339,16 @@ def cli_plot(
         "latex": latex,
     }
     conf = merge_configs(cli_config, yaml_config(config, "plot"), DEFAULT_CONFIG)
+    update_context(
+        ctx,
+        conf["verbose"],
+        conf["quiet"],
+        conf["out"],
+        conf["logs_path"],
+        conf["db_path"],
+        config,
+    )
 
-    update_context(ctx, conf["verbose"], conf["quiet"], conf["out"], config)
     run_plot(
         ctx,
         conf["timeout"],
@@ -330,6 +372,8 @@ def cli_plot(
 @verbose_option
 @quiet_option
 @out_option
+@logs_path_option
+@db_path_option
 @config_option
 @click.argument("planner", type=str, required=False)
 @click.argument("problem", type=str, required=False)
@@ -347,6 +391,8 @@ def cli_solve(
     verbose,
     quiet: int,
     out,
+    logs_path: str,
+    db_path: str,
     config,
     planner: str,
     problem: str,
@@ -359,6 +405,8 @@ def cli_solve(
         "verbose": verbose,
         "quiet": quiet,
         "out": out,
+        "logs_path": logs_path,
+        "db_path": db_path,
         "planner": planner,
         "problem": problem,
         "timeout": timeout,
@@ -372,7 +420,15 @@ def cli_solve(
     if conf["problem"] == "":
         raise click.BadArgumentUsage("Missing argument 'PROBLEM'.")
 
-    update_context(ctx, conf["verbose"], conf["quiet"], conf["out"], config)
+    update_context(
+        ctx,
+        conf["verbose"],
+        conf["quiet"],
+        conf["out"],
+        conf["logs_path"],
+        conf["db_path"],
+        config,
+    )
 
     running_mode = RunningMode.ONESHOT if conf["fs"] else RunningMode.ANYTIME
 
@@ -392,6 +448,8 @@ def cli_solve(
 @verbose_option
 @quiet_option
 @out_option
+@logs_path_option
+@db_path_option
 @config_option
 @timeout_option
 @memout_option
@@ -409,6 +467,8 @@ def cli_table(
     verbose: int,
     quiet: int,
     out,
+    logs_path: str,
+    db_path: str,
     config,
     timeout: int,
     memout: int,
@@ -425,6 +485,8 @@ def cli_table(
         "verbose": verbose,
         "quiet": quiet,
         "out": out,
+        "logs_path": logs_path,
+        "db_path": db_path,
         "timeout": timeout,
         "memout": memout,
         "planners": planners,
@@ -436,8 +498,16 @@ def cli_table(
         "latex_caption": latex_caption,
     }
     conf = merge_configs(cli_config, yaml_config(config, "table"), DEFAULT_CONFIG)
+    update_context(
+        ctx,
+        conf["verbose"],
+        conf["quiet"],
+        conf["out"],
+        conf["logs_path"],
+        conf["db_path"],
+        config,
+    )
 
-    update_context(ctx, conf["verbose"], conf["quiet"], conf["out"], config)
     run_table(
         ctx,
         conf["timeout"],
