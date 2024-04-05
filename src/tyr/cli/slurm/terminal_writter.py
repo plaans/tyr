@@ -102,7 +102,7 @@ class SlurmTerminalWritter(Writter):
                 self.write(" ")
             self.write(f'"{domain.name}:"')
         self.line(")")
-        self.line("DOMAIN_IDX=$((SLURM_ARRAY_TASK_ID / ${#DOMAINS[@]}))")
+        self.line("DOMAIN_IDX=$((SLURM_ARRAY_TASK_ID / ${#PLANNERS[@]}))")
         self.line("DOMAIN=${DOMAINS[$DOMAIN_IDX]}")
 
         # Print the command to run.
