@@ -15,38 +15,40 @@ from tyr import (  # type: ignore
     run_table,
 )
 from tyr.cli.plot.runner import run_plot
+from tyr.cli.slurm.runner import run_slurm
+from tyr.core.paths import TyrPaths
 
 # ============================================================================ #
 #                                 Configuration                                #
 # ============================================================================ #
 
 DEFAULT_CONFIG = {
-    # Default
-    "memout": 4 * 1024**3,
-    "timeout": 5,
-    "verbose": 0,
-    "quiet": 0,
-    "out": [],
-    # Bench
-    "jobs": 1,
-    "planners": [],
-    "domains": [],
     "anytime": False,
-    "oneshot": False,
-    "db_only": False,
-    "no_db": False,
-    # Plot
-    "plotters": [],
-    # Solve
-    "planner": "",
-    "problem": "",
-    "fs": False,
-    # Table
-    "metrics": [],
     "best_column": False,
     "best_row": False,
+    "db_only": False,
+    "db_path": "",
+    "domains": [],
+    "fs": False,
+    "jobs": 1,
     "latex": False,
     "latex_caption": "Table of metrics.",
+    "logs_path": "",
+    "memout": 4 * 1024**3,
+    "metrics": [],
+    "no_db_load": False,
+    "no_db_save": False,
+    "nodelist": [],
+    "oneshot": False,
+    "out": [],
+    "planner": "",
+    "plotters": [],
+    "planners": [],
+    "problem": "",
+    "quiet": 0,
+    "timeout": 5,
+    "user_mail": None,
+    "verbose": 0,
 }
 
 
@@ -64,6 +66,16 @@ def merge_configs(cli_config: dict, file_config: dict, default_config: dict) -> 
     return config
 
 
+def merge_running_modes(anytime: bool, oneshot: bool) -> List[RunningMode]:
+    if anytime and oneshot:
+        return [RunningMode.ANYTIME, RunningMode.ONESHOT]
+    if anytime:
+        return [RunningMode.ANYTIME]
+    if oneshot:
+        return [RunningMode.ONESHOT]
+    return [RunningMode.ANYTIME, RunningMode.ONESHOT]
+
+
 def yaml_config(path: Optional[Path], name: str) -> dict:
     config = load_config("cli", path)
     if name in config:
@@ -78,24 +90,11 @@ def yaml_config(path: Optional[Path], name: str) -> dict:
 
 pass_context = click.make_pass_decorator(CliContext, ensure=True)
 
-verbose_option = click.option(
-    "-v",
-    "--verbose",
-    count=True,
-    help="Increase verbosity.",
-)
-quiet_option = click.option(
-    "-q",
-    "--quiet",
-    count=True,
-    help="Decrease verbosity.",
-)
-out_option = click.option(
-    "-o",
-    "--out",
-    multiple=True,
-    type=click.File("w"),
-    help="Output files. Default to stdout.",
+
+anytime_option = click.option(
+    "--anytime",
+    is_flag=True,
+    help="Perform anytime solving method only.",
 )
 config_option = click.option(
     "-c",
@@ -103,32 +102,15 @@ config_option = click.option(
     type=click.Path(exists=True),
     help="Path to a configuration file.",
 )
-
-timeout_option = click.option(
-    "-t",
-    "--timeout",
-    type=int,
-    help=f"Timeout for planners in seconds. Default to {DEFAULT_CONFIG['timeout']}s.",
-)
-memout_option = click.option(
-    "-m",
-    "--memout",
-    type=int,
-    help="Memout for planners in bytes. Default to 4GB.",
-)
-
-latex_option = click.option(
-    "--latex",
+db_only_option = click.option(
+    "--db-only",
     is_flag=True,
-    help="Generate LaTeX code of the result.",
+    help="Only use the database for results.",
 )
-
-planners_filter = click.option(
-    "-p",
-    "--planners",
+db_path_option = click.option(
+    "--db-path",
     type=str,
-    multiple=True,
-    help="A list of regex filters on planner names.",
+    help="Path to the SQLite database file.",
 )
 domains_filter = click.option(
     "-d",
@@ -137,12 +119,64 @@ domains_filter = click.option(
     multiple=True,
     help="A list of regex filters on domain names. A domain name is of the form DOMAIN:UID.",
 )
+jobs_option = click.option(
+    "-j",
+    "--jobs",
+    type=int,
+    help=f"Number of CPUs to use for parallel computation, \
+if negative (n_cpus + 1 + jobs) are used. Default to {DEFAULT_CONFIG['jobs']}.",
+)
+latex_option = click.option(
+    "--latex",
+    is_flag=True,
+    help="Generate LaTeX code of the result.",
+)
+logs_path_option = click.option(
+    "--logs-path",
+    type=str,
+    help="Path to the logs directory.",
+)
+memout_option = click.option(
+    "-m",
+    "--memout",
+    type=int,
+    help="Memout for planners in bytes. Default to 4GB.",
+)
 metrics_filter = click.option(
     "-M",
     "--metrics",
     type=str,
     multiple=True,
     help="A list of regex filters on metric names.",
+)
+no_db_load_option = click.option(
+    "--no-db-load",
+    is_flag=True,
+    help="Do not use the database for results loading.",
+)
+no_db_save_option = click.option(
+    "--no-db-save",
+    is_flag=True,
+    help="Do not use the database for results saving.",
+)
+oneshot_option = click.option(
+    "--oneshot",
+    is_flag=True,
+    help="Perform oneshot solving method only.",
+)
+out_option = click.option(
+    "-o",
+    "--out",
+    multiple=True,
+    type=click.File("w"),
+    help="Output files. Default to stdout.",
+)
+planners_filter = click.option(
+    "-p",
+    "--planners",
+    type=str,
+    multiple=True,
+    help="A list of regex filters on planner names.",
 )
 plotters_filter = click.option(
     "-P",
@@ -151,6 +185,24 @@ plotters_filter = click.option(
     multiple=True,
     help="A list of regex filters on plotter names.",
 )
+quiet_option = click.option(
+    "-q",
+    "--quiet",
+    count=True,
+    help="Decrease verbosity.",
+)
+timeout_option = click.option(
+    "-t",
+    "--timeout",
+    type=int,
+    help=f"Timeout for planners in seconds. Default to {DEFAULT_CONFIG['timeout']}s.",
+)
+verbose_option = click.option(
+    "-v",
+    "--verbose",
+    count=True,
+    help="Increase verbosity.",
+)
 
 
 # ============================================================================ #
@@ -158,20 +210,24 @@ plotters_filter = click.option(
 # ============================================================================ #
 
 
-@click.group(chain=True)
+@click.group()
 @verbose_option
 @quiet_option
 @out_option
+@logs_path_option
+@db_path_option
 @config_option
 @pass_context
-def cli(ctx: CliContext, verbose, quiet, out, config):
-    update_context(ctx, verbose, quiet, out, config)
+def cli(ctx: CliContext, verbose, quiet, out, logs_path, db_path, config):
+    update_context(ctx, verbose, quiet, out, logs_path, db_path, config)
 
 
-def update_context(ctx, verbose, quiet, out, config):
+def update_context(ctx, verbose, quiet, out, logs_path, db_path, config):
     ctx.verbosity += verbose - quiet
     ctx.out.extend(out)
     ctx.config = config
+    TyrPaths().logs = logs_path or TyrPaths().logs
+    TyrPaths().db = db_path or TyrPaths().db
 
 
 # ============================================================================ #
@@ -186,28 +242,27 @@ def update_context(ctx, verbose, quiet, out, config):
 @verbose_option
 @quiet_option
 @out_option
+@logs_path_option
+@db_path_option
 @config_option
 @timeout_option
 @memout_option
-@click.option(
-    "-j",
-    "--jobs",
-    type=int,
-    help=f"Number of CPUs to use for parallel computation, \
-if negative (n_cpus + 1 + jobs) are used. Default to {DEFAULT_CONFIG['jobs']}.",
-)
+@jobs_option
 @planners_filter
 @domains_filter
-@click.option("--anytime", is_flag=True, help="Perform anytime solving method only.")
-@click.option("--oneshot", is_flag=True, help="Perform oneshot solving method only.")
-@click.option("--db-only", is_flag=True, help="Only use the database for results.")
-@click.option("--no-db", is_flag=True, help="Do not use the database for results.")
+@anytime_option
+@oneshot_option
+@db_only_option
+@no_db_load_option
+@no_db_save_option
 @pass_context
 def cli_bench(
     ctx: CliContext,
     verbose: int,
     quiet: int,
     out,
+    logs_path: str,
+    db_path: str,
     config,
     timeout: int,
     memout: int,
@@ -217,13 +272,16 @@ def cli_bench(
     anytime: bool,
     oneshot: bool,
     db_only: bool,
-    no_db: bool,
+    no_db_load: bool,
+    no_db_save: bool,
 ):
     config = config or ctx.config
     cli_config = {
         "verbose": verbose,
         "quiet": quiet,
         "out": out,
+        "logs_path": logs_path,
+        "db_path": db_path,
         "timeout": timeout,
         "memout": memout,
         "jobs": jobs,
@@ -232,25 +290,25 @@ def cli_bench(
         "anytime": anytime,
         "oneshot": oneshot,
         "db_only": db_only,
-        "no_db": no_db,
+        "no_db_load": no_db_load,
+        "no_db_save": no_db_save,
     }
     conf = merge_configs(cli_config, yaml_config(config, "bench"), DEFAULT_CONFIG)
+    update_context(
+        ctx,
+        conf["verbose"],
+        conf["quiet"],
+        conf["out"],
+        conf["logs_path"],
+        conf["db_path"],
+        config,
+    )
 
-    update_context(ctx, conf["verbose"], conf["quiet"], conf["out"], config)
-
-    if conf["anytime"] and conf["oneshot"]:
-        running_modes = [RunningMode.ANYTIME, RunningMode.ONESHOT]
-    elif conf["anytime"]:
-        running_modes = [RunningMode.ANYTIME]
-    elif conf["oneshot"]:
-        running_modes = [RunningMode.ONESHOT]
-    else:
-        running_modes = [RunningMode.ANYTIME, RunningMode.ONESHOT]
-
-    if conf["db_only"] and conf["no_db"]:
+    running_modes = merge_running_modes(conf["anytime"], conf["oneshot"])
+    if conf["db_only"] and conf["no_db_load"]:
         raise click.BadOptionUsage(
-            "--db-only --no-db",
-            "Cannot use both --db-only and --no-db.",
+            "--db-only --no-db-load",
+            "Cannot use both --db-only and --no-db-load.",
         )
 
     solve_config = SolveConfig(
@@ -258,7 +316,8 @@ def cli_bench(
         conf["memout"],
         conf["timeout"],
         conf["db_only"],
-        conf["no_db"],
+        conf["no_db_load"],
+        conf["no_db_save"],
     )
 
     run_bench(ctx, solve_config, conf["planners"], conf["domains"], running_modes)
@@ -276,6 +335,8 @@ def cli_bench(
 @verbose_option
 @quiet_option
 @out_option
+@logs_path_option
+@db_path_option
 @config_option
 @timeout_option
 @memout_option
@@ -289,6 +350,8 @@ def cli_plot(
     verbose: int,
     quiet: int,
     out,
+    logs_path: str,
+    db_path: str,
     config,
     timeout: int,
     memout: int,
@@ -302,6 +365,8 @@ def cli_plot(
         "verbose": verbose,
         "quiet": quiet,
         "out": out,
+        "logs_path": logs_path,
+        "db_path": db_path,
         "timeout": timeout,
         "memout": memout,
         "planners": planners,
@@ -310,8 +375,16 @@ def cli_plot(
         "latex": latex,
     }
     conf = merge_configs(cli_config, yaml_config(config, "plot"), DEFAULT_CONFIG)
+    update_context(
+        ctx,
+        conf["verbose"],
+        conf["quiet"],
+        conf["out"],
+        conf["logs_path"],
+        conf["db_path"],
+        config,
+    )
 
-    update_context(ctx, conf["verbose"], conf["quiet"], conf["out"], config)
     run_plot(
         ctx,
         conf["timeout"],
@@ -320,6 +393,105 @@ def cli_plot(
         conf["domains"],
         conf["plotters"],
         conf["latex"],
+    )
+
+
+# ============================================================================ #
+#                                     Slurm                                    #
+# ============================================================================ #
+
+
+@cli.command(
+    "slurm",
+    help="Create the slurm script to run the resolution.",
+)
+@verbose_option
+@quiet_option
+@out_option
+@logs_path_option
+@db_path_option
+@config_option
+@timeout_option
+@memout_option
+@planners_filter
+@domains_filter
+@anytime_option
+@oneshot_option
+@click.option(
+    "--user-mail",
+    type=str,
+    help="Email to send the notifications.",
+)
+@click.option(
+    "--nodelist",
+    type=str,
+    multiple=True,
+    help="The list of nodes to use on the cluster.",
+)
+@pass_context
+def cli_slurm(
+    ctx: CliContext,
+    verbose: int,
+    quiet: int,
+    out,
+    logs_path: str,
+    db_path: str,
+    config,
+    timeout: int,
+    memout: int,
+    planners: List[str],
+    domains: List[str],
+    anytime: bool,
+    oneshot: bool,
+    user_mail: str,
+    nodelist: List[str],
+):
+    config = config or ctx.config
+    cli_config = {
+        "verbose": verbose,
+        "quiet": quiet,
+        "out": out,
+        "logs_path": logs_path,
+        "db_path": db_path,
+        "timeout": timeout,
+        "memout": memout,
+        "planners": planners,
+        "domains": domains,
+        "anytime": anytime,
+        "oneshot": oneshot,
+        "user_mail": user_mail,
+        "nodelist": nodelist,
+    }
+    conf = merge_configs(cli_config, yaml_config(config, "slurm"), DEFAULT_CONFIG)
+    update_context(
+        ctx,
+        conf["verbose"],
+        conf["quiet"],
+        conf["out"],
+        conf["logs_path"],
+        conf["db_path"],
+        config,
+    )
+
+    running_modes = merge_running_modes(conf["anytime"], conf["oneshot"])
+
+    solve_config = SolveConfig(
+        jobs=1,
+        memout=conf["memout"],
+        timeout=conf["timeout"],
+        db_only=False,
+        no_db_load=False,
+        no_db_save=False,
+    )
+
+    run_slurm(
+        ctx,
+        solve_config,
+        conf["planners"],
+        conf["domains"],
+        running_modes,
+        conf["user_mail"],
+        conf["nodelist"],
     )
 
 
@@ -335,6 +507,8 @@ def cli_plot(
 @verbose_option
 @quiet_option
 @out_option
+@logs_path_option
+@db_path_option
 @config_option
 @click.argument("planner", type=str, required=False)
 @click.argument("problem", type=str, required=False)
@@ -346,29 +520,36 @@ def cli_plot(
     is_flag=True,
     help="Stop the search after the first found solution.",
 )
+@no_db_save_option
 @pass_context
 def cli_solve(
     ctx: CliContext,
     verbose,
     quiet: int,
     out,
+    logs_path: str,
+    db_path: str,
     config,
     planner: str,
     problem: str,
     timeout: int,
     memout: int,
     fs: bool,
+    no_db_save: bool,
 ):
     config = config or ctx.config
     cli_config = {
         "verbose": verbose,
         "quiet": quiet,
         "out": out,
+        "logs_path": logs_path,
+        "db_path": db_path,
         "planner": planner,
         "problem": problem,
         "timeout": timeout,
         "memout": memout,
         "fs": fs,
+        "no_db_save": no_db_save,
     }
     conf = merge_configs(cli_config, yaml_config(config, "solve"), DEFAULT_CONFIG)
 
@@ -377,11 +558,26 @@ def cli_solve(
     if conf["problem"] == "":
         raise click.BadArgumentUsage("Missing argument 'PROBLEM'.")
 
-    update_context(ctx, conf["verbose"], conf["quiet"], conf["out"], config)
+    update_context(
+        ctx,
+        conf["verbose"],
+        conf["quiet"],
+        conf["out"],
+        conf["logs_path"],
+        conf["db_path"],
+        config,
+    )
 
     running_mode = RunningMode.ONESHOT if conf["fs"] else RunningMode.ANYTIME
 
-    solve_config = SolveConfig(1, conf["memout"], conf["timeout"], False, True)
+    solve_config = SolveConfig(
+        jobs=1,
+        memout=conf["memout"],
+        timeout=conf["timeout"],
+        db_only=False,
+        no_db_load=True,
+        no_db_save=conf["no_db_save"],
+    )
     run_solve(ctx, solve_config, conf["planner"], conf["problem"], running_mode)
 
 
@@ -397,14 +593,17 @@ def cli_solve(
 @verbose_option
 @quiet_option
 @out_option
+@logs_path_option
+@db_path_option
 @config_option
 @timeout_option
 @memout_option
 @planners_filter
 @domains_filter
 @metrics_filter
-@click.option("--best-col", is_flag=True, help="Print the best metrics on the right.")
-@click.option("--best-row", is_flag=True, help="Print the best metrics on the bottom.")
+# NOTE: The following options are deprecrated for the moment and not implemented.
+# @click.option("--best-col", is_flag=True, help="Print the best metrics on the right.")
+# @click.option("--best-row", is_flag=True, help="Print the best metrics on the bottom.")
 @latex_option
 @click.option("--latex-caption", type=str, help="Caption for the LaTeX table.")
 @pass_context
@@ -413,14 +612,16 @@ def cli_table(
     verbose: int,
     quiet: int,
     out,
+    logs_path: str,
+    db_path: str,
     config,
     timeout: int,
     memout: int,
     planners: List[str],
     domains: List[str],
     metrics: List[str],
-    best_col: bool,
-    best_row: bool,
+    # best_col: bool,
+    # best_row: bool,
     latex: bool,
     latex_caption: str,
 ):
@@ -429,19 +630,29 @@ def cli_table(
         "verbose": verbose,
         "quiet": quiet,
         "out": out,
+        "logs_path": logs_path,
+        "db_path": db_path,
         "timeout": timeout,
         "memout": memout,
         "planners": planners,
         "domains": domains,
         "metrics": metrics,
-        "best_column": best_col,
-        "best_row": best_row,
+        # "best_column": best_col,
+        # "best_row": best_row,
         "latex": latex,
         "latex_caption": latex_caption,
     }
     conf = merge_configs(cli_config, yaml_config(config, "table"), DEFAULT_CONFIG)
+    update_context(
+        ctx,
+        conf["verbose"],
+        conf["quiet"],
+        conf["out"],
+        conf["logs_path"],
+        conf["db_path"],
+        config,
+    )
 
-    update_context(ctx, conf["verbose"], conf["quiet"], conf["out"], config)
     run_table(
         ctx,
         conf["timeout"],
@@ -449,8 +660,10 @@ def cli_table(
         conf["planners"],
         conf["domains"],
         conf["metrics"],
-        conf["best_column"],
-        conf["best_row"],
+        # conf["best_column"],
+        # conf["best_row"],
+        False,
+        False,
         conf["latex"],
         conf["latex_caption"],
     )

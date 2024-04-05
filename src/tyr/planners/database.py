@@ -4,7 +4,7 @@ from contextlib import contextmanager
 from dataclasses import replace
 from typing import TYPE_CHECKING, Optional
 
-from tyr.core.constants import DB_FILE
+from tyr.core.paths import TyrPaths
 from tyr.patterns.singleton import Singleton
 from tyr.problems.model.instance import ProblemInstance
 
@@ -16,8 +16,7 @@ if TYPE_CHECKING:
 class Database(Singleton):
     """Utility class to manage the database."""
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __post_init__(self) -> None:
         self._create_table()
 
     @contextmanager
@@ -27,7 +26,7 @@ class Database(Singleton):
         Yields:
             Connection: The cursor to communicate with the database.
         """
-        conn = sqlite3.connect(DB_FILE)
+        conn = sqlite3.connect(TyrPaths().db)
         try:
             yield conn
         finally:

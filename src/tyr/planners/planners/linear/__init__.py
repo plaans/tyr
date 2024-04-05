@@ -1,14 +1,14 @@
-from tyr.planners.model.singulatiry_planner import SingularityPlanner
+from tyr.planners.model.apptainer_planner import ApptainerPlanner
 
 
 # pylint: disable=too-many-ancestors
-class LinearPlanner(SingularityPlanner):
-    """The Linear planner wrapped into local singularity planner."""
+class LinearPlanner(ApptainerPlanner):
+    """The Linear planner wrapped into local apptainer planner."""
 
     def _file_extension(self) -> str:
         return "hddl"
 
-    def _get_singularity_file_name(self) -> str:
+    def _get_apptainer_file_name(self) -> str:
         return "config-sat-1.sif"
 
 

@@ -8,14 +8,14 @@ from unified_planning.shortcuts import Problem
 from tyr.planners.model.pddl_planner import TyrPDDLPlanner
 
 
-class SingularityPlanner(TyrPDDLPlanner):
-    """A planner of the IPC stored into a singularity file."""
+class ApptainerPlanner(TyrPDDLPlanner):
+    """A planner of the IPC stored into a apptainer file."""
 
     def __init__(self, needs_requirements=True, rewrite_bool_assignments=False) -> None:
         super().__init__(needs_requirements, rewrite_bool_assignments)
         self._plan_found: Optional[bool] = None
 
-    def _get_singularity_file_name(self) -> str:
+    def _get_apptainer_file_name(self) -> str:
         raise NotImplementedError
 
     def _get_cmd(
@@ -24,10 +24,10 @@ class SingularityPlanner(TyrPDDLPlanner):
         problem_filename: str,
         plan_filename: str,
     ) -> List[str]:
-        base = "singularity run"
+        base = "apptainer run"
         home = Path(domain_filename).parent.as_posix()
         planner_file = inspect.getfile(self.__class__)
-        sif = (Path(planner_file).parent / self._get_singularity_file_name()).as_posix()
+        sif = (Path(planner_file).parent / self._get_apptainer_file_name()).as_posix()
         cmd = f"{base} -H {home} -C {sif} {domain_filename} {problem_filename} {plan_filename}"
         return cmd.split()
 
@@ -86,4 +86,4 @@ class SingularityPlanner(TyrPDDLPlanner):
         return PlanGenerationResultStatus.INTERNAL_ERROR
 
 
-__all__ = ["SingularityPlanner"]
+__all__ = ["ApptainerPlanner"]

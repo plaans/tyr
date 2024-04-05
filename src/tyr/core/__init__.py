@@ -1,4 +1,4 @@
-from . import constants
-from .constants import *
+from . import paths
+from .paths import *
 
-__all__ = constants.__all__
+__all__ = paths.__all__

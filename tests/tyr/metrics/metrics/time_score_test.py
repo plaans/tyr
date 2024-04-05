@@ -14,7 +14,7 @@ def planner_result(status_name: str, computation_time: float):
         MagicMock(),
         MagicMock(),
         getattr(PlannerResultStatus, status_name.upper()),
-        SolveConfig(1, 1, 5, False, False),
+        SolveConfig(1, 1, 5, False, False, False),
         computation_time,
         MagicMock(),
         MagicMock(),

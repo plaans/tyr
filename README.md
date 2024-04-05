@@ -54,7 +54,7 @@ sudo apt install curl
 curl https://sh.rustup.rs -sSf | sh
 ```
 
-If you want to use the PandaPi planner, you also have to [install Singularity](https://docs.sylabs.io/guides/latest/admin-guide/installation.html).
+If you want to use the PandaPi or LinearComplex planner, you also have to [install Apptainer](https://apptainer.org/docs/admin/main/installation.html).
 
 ### Installing the Module
 

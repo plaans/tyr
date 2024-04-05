@@ -3,7 +3,7 @@ version: '3'
 services:
   tyr:
     image: tyr
-    build: .
+    build: ..
     command: just _ci-local
     volumes:
-      - .:/root/workspace
+      - ..:/root/workspace

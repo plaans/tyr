@@ -474,7 +474,6 @@ class TableTerminalWritter(Writter):
                                 continue
                             self.write("\\cmidrule{" + f"{start}-{crt_col-1}" + "}")
                             start = crt_col + 1
-                        # \cmidrule{4-6} \cmidrule{8-10} \cmidrule{12-14}
                         self.line()
                     else:
                         self.line("\\\\\\hdashline")

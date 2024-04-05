@@ -25,7 +25,8 @@ class SolveConfig:
     memout: int
     timeout: int
     db_only: bool
-    no_db: bool
+    no_db_load: bool
+    no_db_save: bool
 
 
 class RunningMode(Enum):

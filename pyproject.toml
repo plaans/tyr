@@ -32,12 +32,15 @@ classifiers = [
 repository = "https://gitlab.laas.fr/rgodet1/tyr.git"
 changelog = "https://gitlab.laas.fr/rgodet1/tyr/-/tree/main/CHANGELOG.md"
 
+[tool.bandit]
+exclude_dirs = ["src/tyr/planners/planners"]
 
 [tool.bandit.assert_used]
 skips = ["*_test.py", "*/test_*.py"]
 
 
 [tool.black]
+extend-exclude = "src/tyr/planners/planners/*"
 target-version = ["py38"]
 
 
@@ -69,14 +72,17 @@ omit = [
 [tool.flake8]
 max-line-length = 100
 per-file-ignores = "__init__.py:F401,F403"
+exclude = "src/tyr/planners/planners/*"
 extend-ignore = "E203"
 
 
 [tool.isort]
+extend_skip_glob = ["src/tyr/planners/planners/*"]
 profile = "black"
 
 
 [tool.mypy]
+exclude = ["src/tyr/planners/planners/*"]
 ignore_missing_imports = true
 
 
@@ -124,7 +130,7 @@ ignore = ["CVS", "domains"]
 # ignore-list. The regex matches against paths and can be in Posix or Windows
 # format. Because '\\' represents the directory delimiter on Windows systems, it
 # can't be used as an escape character.
-# ignore-paths =
+ignore-paths = "^src/tyr/planners/planners/.*"
 
 # Files or directories matching the regular expression patterns are skipped. The
 # regex matches against base names, not paths. The default value ignores Emacs

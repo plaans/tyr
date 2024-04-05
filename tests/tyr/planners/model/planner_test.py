@@ -16,7 +16,7 @@ from tyr import (
     ProblemInstance,
     SolveConfig,
 )
-from tyr.core.constants import LOGS_DIR
+from tyr.core.paths import TyrPaths
 from tyr.planners.database import Database
 from tyr.planners.model.config import RunningMode
 from tyr.planners.model.result import PlannerResultStatus
@@ -74,7 +74,8 @@ class TestPlanner(ModelTest):
             memout=4 * 1024 * 1024 * 1024,  # 4GB
             timeout=350,
             db_only=False,
-            no_db=False,
+            no_db_load=False,
+            no_db_save=False,
         )
 
     # ============================================================================ #
@@ -139,7 +140,7 @@ class TestPlanner(ModelTest):
         problem.domain._name = domain_name
 
         expected = (
-            LOGS_DIR
+            TyrPaths().logs
             / planner_name
             / domain_name
             / f"{problem_id}-{running_mode.name.lower()}"
@@ -183,13 +184,13 @@ class TestPlanner(ModelTest):
             result = planner.solve(problem, solve_config, RunningMode.ONESHOT)
             assert result == load_mock.return_value
 
-    def test_solver_database_result_no_db(
+    def test_solver_database_result_no_db_load(
         self,
         planner: Planner,
         problem: ProblemInstance,
         solve_config: SolveConfig,
     ):
-        solve_config = replace(solve_config, no_db=True)
+        solve_config = replace(solve_config, no_db_load=True)
         db = Database()
         with patch.object(db, "load_planner_result") as load_mock:
             planner.solve(problem, solve_config, RunningMode.ONESHOT)
@@ -228,7 +229,7 @@ class TestPlanner(ModelTest):
         problem: ProblemInstance,
         solve_config: SolveConfig,
     ):
-        solve_config = replace(solve_config, no_db=True)
+        solve_config = replace(solve_config, no_db_load=True)
         mocked_planner.solve = lambda x, y, z: Planner.solve(mocked_planner, x, y, z)
         try:
             mocked_planner.solve(problem, solve_config, True)

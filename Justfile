@@ -5,7 +5,7 @@
 
 # ================================= Variables ================================ #
 
-aries_dir := "libs/aries"
+aries_dir := "src/tyr/planners/planners/aries"
 coverage_dir := "coverage"
 logs_dir := "logs"
 python_dir := ".venv"
@@ -34,6 +34,10 @@ reset target="prod" python_version="3.11": clear (install target python_version)
 build_aries:
     cargo build --release --bin up-server --manifest-path {{ aries_dir }}/Cargo.toml
     cp {{ aries_dir }}/target/release/up-server {{ aries_dir }}/planning/unified/plugin/up_aries/bin/up-aries_linux_amd64
+
+# Build the Apptainer image.
+build_apptainer:
+    apptainer build --fakeroot --writable-tmpfs container/tyr.sif container/tyr.def
 
 # ================================== Linters ================================= #
 
@@ -99,6 +103,9 @@ bench *args: (tyr "bench" args)
 
 # Run the plot command.
 plot *args: (tyr "plot" args)
+
+# Run the slurm command.
+slurm *args: (tyr "slurm" args)
 
 # Run the solve command.
 solve *args: (tyr "solve" args)

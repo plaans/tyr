@@ -5,11 +5,11 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 from unified_planning.engines.results import PlanGenerationResultStatus
 
-from tyr.planners.model.singulatiry_planner import SingularityPlanner
+from tyr.planners.model.apptainer_planner import ApptainerPlanner
 
 
-class MockPlanner(SingularityPlanner):
-    def _get_singularity_file_name(self):
+class MockPlanner(ApptainerPlanner):
+    def _get_apptainer_file_name(self):
         return "file.sif"
 
 
@@ -18,13 +18,13 @@ def planner():
     yield MockPlanner()
 
 
-class TestSingularityPlanner:
+class TestApptainerPlanner:
     def test_get_cmd(self, planner: MockPlanner):
         file = Path(__file__).parent / "file.sif"
         domain = "/tmp/domain.pddl"  # nosec: B108
         problem = "/tmp/problem.pddl"  # nosec: B108
         plan = "/tmp/plan.txt"  # nosec: B108
-        expected = f"singularity run -H /tmp -C {file} {domain} {problem} {plan}"
+        expected = f"apptainer run -H /tmp -C {file} {domain} {problem} {plan}"
         result = planner._get_cmd(domain, problem, plan)
         assert result == expected.split()
 
@@ -34,7 +34,7 @@ class TestSingularityPlanner:
         domain = "/tmp/domain.pddl"  # nosec: B108
         problem = "/tmp/problem.pddl"  # nosec: B108
         plan = "/tmp/plan.txt"  # nosec: B108
-        expected = f"singularity run -H /tmp -C {file} {domain} {problem} {plan}"
+        expected = f"apptainer run -H /tmp -C {file} {domain} {problem} {plan}"
         result = planner._get_anytime_cmd(domain, problem, plan)
         assert result == expected.split()
 
@@ -43,7 +43,7 @@ class TestSingularityPlanner:
         assert planner._get_plan(MagicMock()) == ""
         assert planner._plan_found is False
 
-    @patch("tyr.planners.model.singulatiry_planner.TyrPDDLPlanner._plan_from_str")
+    @patch("tyr.planners.model.apptainer_planner.TyrPDDLPlanner._plan_from_str")
     def test_get_plan_from_str(self, super_mock: Mock, planner: MockPlanner):
         problem = MagicMock()
         get_item_named = MagicMock()
