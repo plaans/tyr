@@ -15,6 +15,7 @@ from tyr import (  # type: ignore
     run_table,
 )
 from tyr.cli.plot.runner import run_plot
+from tyr.cli.slurm.runner import run_slurm
 from tyr.core.paths import TyrPaths
 
 # ============================================================================ #
@@ -37,6 +38,7 @@ DEFAULT_CONFIG = {
     "metrics": [],
     "no_db_load": False,
     "no_db_save": False,
+    "nodelist": [],
     "oneshot": False,
     "out": [],
     "planner": "",
@@ -45,6 +47,7 @@ DEFAULT_CONFIG = {
     "problem": "",
     "quiet": 0,
     "timeout": 5,
+    "user_mail": None,
     "verbose": 0,
 }
 
@@ -63,6 +66,16 @@ def merge_configs(cli_config: dict, file_config: dict, default_config: dict) -> 
     return config
 
 
+def merge_running_modes(anytime: bool, oneshot: bool) -> List[RunningMode]:
+    if anytime and oneshot:
+        return [RunningMode.ANYTIME, RunningMode.ONESHOT]
+    if anytime:
+        return [RunningMode.ANYTIME]
+    if oneshot:
+        return [RunningMode.ONESHOT]
+    return [RunningMode.ANYTIME, RunningMode.ONESHOT]
+
+
 def yaml_config(path: Optional[Path], name: str) -> dict:
     config = load_config("cli", path)
     if name in config:
@@ -78,6 +91,11 @@ def yaml_config(path: Optional[Path], name: str) -> dict:
 pass_context = click.make_pass_decorator(CliContext, ensure=True)
 
 
+anytime_option = click.option(
+    "--anytime",
+    is_flag=True,
+    help="Perform anytime solving method only.",
+)
 config_option = click.option(
     "-c",
     "--config",
@@ -100,6 +118,13 @@ domains_filter = click.option(
     type=str,
     multiple=True,
     help="A list of regex filters on domain names. A domain name is of the form DOMAIN:UID.",
+)
+jobs_option = click.option(
+    "-j",
+    "--jobs",
+    type=int,
+    help=f"Number of CPUs to use for parallel computation, \
+if negative (n_cpus + 1 + jobs) are used. Default to {DEFAULT_CONFIG['jobs']}.",
 )
 latex_option = click.option(
     "--latex",
@@ -133,6 +158,11 @@ no_db_save_option = click.option(
     "--no-db-save",
     is_flag=True,
     help="Do not use the database for results saving.",
+)
+oneshot_option = click.option(
+    "--oneshot",
+    is_flag=True,
+    help="Perform oneshot solving method only.",
 )
 out_option = click.option(
     "-o",
@@ -217,17 +247,11 @@ def update_context(ctx, verbose, quiet, out, logs_path, db_path, config):
 @config_option
 @timeout_option
 @memout_option
-@click.option(
-    "-j",
-    "--jobs",
-    type=int,
-    help=f"Number of CPUs to use for parallel computation, \
-if negative (n_cpus + 1 + jobs) are used. Default to {DEFAULT_CONFIG['jobs']}.",
-)
+@jobs_option
 @planners_filter
 @domains_filter
-@click.option("--anytime", is_flag=True, help="Perform anytime solving method only.")
-@click.option("--oneshot", is_flag=True, help="Perform oneshot solving method only.")
+@anytime_option
+@oneshot_option
 @db_only_option
 @no_db_load_option
 @no_db_save_option
@@ -280,15 +304,7 @@ def cli_bench(
         config,
     )
 
-    if conf["anytime"] and conf["oneshot"]:
-        running_modes = [RunningMode.ANYTIME, RunningMode.ONESHOT]
-    elif conf["anytime"]:
-        running_modes = [RunningMode.ANYTIME]
-    elif conf["oneshot"]:
-        running_modes = [RunningMode.ONESHOT]
-    else:
-        running_modes = [RunningMode.ANYTIME, RunningMode.ONESHOT]
-
+    running_modes = merge_running_modes(conf["anytime"], conf["oneshot"])
     if conf["db_only"] and conf["no_db_load"]:
         raise click.BadOptionUsage(
             "--db-only --no-db-load",
@@ -377,6 +393,105 @@ def cli_plot(
         conf["domains"],
         conf["plotters"],
         conf["latex"],
+    )
+
+
+# ============================================================================ #
+#                                     Slurm                                    #
+# ============================================================================ #
+
+
+@cli.command(
+    "slurm",
+    help="Create the slurm script to run the resolution.",
+)
+@verbose_option
+@quiet_option
+@out_option
+@logs_path_option
+@db_path_option
+@config_option
+@timeout_option
+@memout_option
+@planners_filter
+@domains_filter
+@anytime_option
+@oneshot_option
+@click.option(
+    "--user-mail",
+    type=str,
+    help="Email to send the notifications.",
+)
+@click.option(
+    "--nodelist",
+    type=str,
+    multiple=True,
+    help="The list of nodes to use on the cluster.",
+)
+@pass_context
+def cli_slurm(
+    ctx: CliContext,
+    verbose: int,
+    quiet: int,
+    out,
+    logs_path: str,
+    db_path: str,
+    config,
+    timeout: int,
+    memout: int,
+    planners: List[str],
+    domains: List[str],
+    anytime: bool,
+    oneshot: bool,
+    user_mail: str,
+    nodelist: List[str],
+):
+    config = config or ctx.config
+    cli_config = {
+        "verbose": verbose,
+        "quiet": quiet,
+        "out": out,
+        "logs_path": logs_path,
+        "db_path": db_path,
+        "timeout": timeout,
+        "memout": memout,
+        "planners": planners,
+        "domains": domains,
+        "anytime": anytime,
+        "oneshot": oneshot,
+        "user_mail": user_mail,
+        "nodelist": nodelist,
+    }
+    conf = merge_configs(cli_config, yaml_config(config, "slurm"), DEFAULT_CONFIG)
+    update_context(
+        ctx,
+        conf["verbose"],
+        conf["quiet"],
+        conf["out"],
+        conf["logs_path"],
+        conf["db_path"],
+        config,
+    )
+
+    running_modes = merge_running_modes(conf["anytime"], conf["oneshot"])
+
+    solve_config = SolveConfig(
+        jobs=1,
+        memout=conf["memout"],
+        timeout=conf["timeout"],
+        db_only=False,
+        no_db_load=False,
+        no_db_save=False,
+    )
+
+    run_slurm(
+        ctx,
+        solve_config,
+        conf["planners"],
+        conf["domains"],
+        running_modes,
+        conf["user_mail"],
+        conf["nodelist"],
     )
 
 

@@ -104,6 +104,9 @@ bench *args: (tyr "bench" args)
 # Run the plot command.
 plot *args: (tyr "plot" args)
 
+# Run the slurm command.
+slurm *args: (tyr "slurm" args)
+
 # Run the solve command.
 solve *args: (tyr "solve" args)
 
