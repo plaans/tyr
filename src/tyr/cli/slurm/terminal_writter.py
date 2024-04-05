@@ -114,7 +114,7 @@ class SlurmTerminalWritter(Writter):
         self.line()
         self.line(
             " ".join(
-                f"""srun ./container/tyr.sif bench -p $PLANNER -d $DOMAIN --logs-path logs/
+                f"""srun tyr.sif bench -p $PLANNER -d $DOMAIN --logs-path logs/
 --db-path db.sqlite3 --timeout {self._solve_config.timeout} --memout {self._solve_config.memout}
 --verbose{running_options}""".splitlines()
             )
