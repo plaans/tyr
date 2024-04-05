@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [1.15.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.14.0...v1.15.0) (2024-04-05)
+
+
+### Bug Fixes
+
+* **apptainer:** remove non example configuration files and install apptainer ([0fb583a](https://gitlab.laas.fr/rgodet1/tyr/commit/0fb583a4aea9e47413658e66dbb97048a6145853))
+* **slurm:** domain index computation ([086db47](https://gitlab.laas.fr/rgodet1/tyr/commit/086db472c7f01fa9ddb9a720684c517aa6a4294e))
+* **slurm:** sif location ([baed91d](https://gitlab.laas.fr/rgodet1/tyr/commit/baed91da7c84c8a81a7304f67cce2bbc8cbef0e2))
+* **tests:** disable potential planner timeout signal ([5309b27](https://gitlab.laas.fr/rgodet1/tyr/commit/5309b27bb2f7aa853f98cc0248a7bfc269a7d3b3))
+
+
+### Features
+
+* **cli:** add slurm cmd ([322b398](https://gitlab.laas.fr/rgodet1/tyr/commit/322b398ebbcc735e45b33baf8e80a6d72197172c))
+* **cli:** can specify db and logs paths ([bf19e96](https://gitlab.laas.fr/rgodet1/tyr/commit/bf19e961d7fbecf6566c821117195077f85ec794))
+* **cli:** distinction between no-db-load and no-db-save ([8652f38](https://gitlab.laas.fr/rgodet1/tyr/commit/8652f38f9761c66c249529ba27ebf933eb1809f0))
+* **pattern:** singleton can have a post_init method ([82229a0](https://gitlab.laas.fr/rgodet1/tyr/commit/82229a0eaad886c8d77af634c19a42baab5c7022))
+
+
+### Reverts
+
+* **cli:** disable chaining ([c46c9b6](https://gitlab.laas.fr/rgodet1/tyr/commit/c46c9b6675541068218edeaeeeaee09570e191ea))
+
 # [1.14.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.13.0...v1.14.0) (2024-03-26)
 
 
