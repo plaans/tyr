@@ -13,16 +13,22 @@ def register_all_planners():
 
     env = get_environment()
     env.factory.add_engine(
-        "aries", "libs.aries.planning.unified.plugin.up_aries", "Aries"
+        "aries", "tyr.planners.planners.aries.planning.unified.plugin.up_aries", "Aries"
     )
     env.factory.add_engine(
-        "aries-exponential", "libs.aries.planning.unified.plugin.up_aries", "Aries"
+        "aries-exponential",
+        "tyr.planners.planners.aries.planning.unified.plugin.up_aries",
+        "Aries",
     )
     env.factory.add_engine(
-        "aries-linear", "libs.aries.planning.unified.plugin.up_aries", "Aries"
+        "aries-linear",
+        "tyr.planners.planners.aries.planning.unified.plugin.up_aries",
+        "Aries",
     )
     env.factory.add_engine(
-        "aries-insertion", "libs.aries.planning.unified.plugin.up_aries", "Aries"
+        "aries-insertion",
+        "tyr.planners.planners.aries.planning.unified.plugin.up_aries",
+        "Aries",
     )
 
     for _, name, _ in walk_packages(planners_module.__path__):
