@@ -1,4 +1,5 @@
 import signal
+
 import pytest
 
 from tyr.planners.model.config import RunningMode, SolveConfig
