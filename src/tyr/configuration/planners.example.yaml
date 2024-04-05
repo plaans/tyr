@@ -31,6 +31,7 @@
     transport-hierarchical: base
   env:
     ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
+  upf_engine: tyr.planners.planners.aries.planning.unified.plugin.up_aries.Aries
 
 - name: aries-exponential
   problems:
@@ -42,6 +43,7 @@
     transport-hierarchical: exponential
   env:
     ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
+  upf_engine: tyr.planners.planners.aries.planning.unified.plugin.up_aries.Aries
 
 - name: aries-linear
   problems:
@@ -53,6 +55,7 @@
     transport-hierarchical: linear
   env:
     ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
+  upf_engine: tyr.planners.planners.aries.planning.unified.plugin.up_aries.Aries
 
 - name: aries-insertion
   problems:
@@ -64,6 +67,7 @@
     transport-hierarchical: insertion
   env:
     ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
+  upf_engine: tyr.planners.planners.aries.planning.unified.plugin.up_aries.Aries
 
 # ============================================================================ #
 #                                    Linear                                    #

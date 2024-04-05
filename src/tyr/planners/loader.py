@@ -4,6 +4,7 @@ from pkgutil import walk_packages
 from unified_planning.environment import get_environment
 
 from tyr.planners.model.pddl_planner import TyrPDDLPlanner
+from tyr.planners.scanner import get_all_planner_configs
 
 
 def register_all_planners():
@@ -12,24 +13,9 @@ def register_all_planners():
     import tyr.planners.planners as planners_module
 
     env = get_environment()
-    env.factory.add_engine(
-        "aries", "tyr.planners.planners.aries.planning.unified.plugin.up_aries", "Aries"
-    )
-    env.factory.add_engine(
-        "aries-exponential",
-        "tyr.planners.planners.aries.planning.unified.plugin.up_aries",
-        "Aries",
-    )
-    env.factory.add_engine(
-        "aries-linear",
-        "tyr.planners.planners.aries.planning.unified.plugin.up_aries",
-        "Aries",
-    )
-    env.factory.add_engine(
-        "aries-insertion",
-        "tyr.planners.planners.aries.planning.unified.plugin.up_aries",
-        "Aries",
-    )
+    for config in get_all_planner_configs():
+        if config.upf_engine is not None:
+            env.factory.add_engine(config.name, *config.upf_engine.rsplit(".", 1))
 
     for _, name, _ in walk_packages(planners_module.__path__):
         module = import_module(f"{planners_module.__name__}.{name}")
