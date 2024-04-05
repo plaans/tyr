@@ -5,7 +5,7 @@
 
 # ================================= Variables ================================ #
 
-aries_dir := "libs/aries"
+aries_dir := "src/tyr/planners/planners/aries"
 coverage_dir := "coverage"
 logs_dir := "logs"
 python_dir := ".venv"

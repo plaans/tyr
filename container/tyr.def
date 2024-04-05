@@ -2,7 +2,6 @@ Bootstrap: docker
 From: python:3.12-slim
 
 %files
-    libs/* libs/
     requirements/* requirements/
     src/* src/
     tests/* tests/
@@ -23,9 +22,9 @@ From: python:3.12-slim
     . "$HOME/.cargo/env"
 
     # Compile Aries
-    cargo build --release --bin up-server --manifest-path libs/aries/Cargo.toml
-    cp libs/aries/target/release/up-server libs/aries/planning/unified/plugin/up_aries/bin/up-aries_linux_amd64
-    cargo clean --manifest-path libs/aries/Cargo.toml
+    cargo build --release --bin up-server --manifest-path src/tyr/planners/planners/aries/Cargo.toml
+    cp src/tyr/planners/planners/aries/target/release/up-server src/tyr/planners/planners/aries/planning/unified/plugin/up_aries/bin/up-aries_linux_amd64
+    cargo clean --manifest-path src/tyr/planners/planners/aries/Cargo.toml
 
     # Install Python dependencies
     apt install -y git

@@ -1,1 +1,1 @@
-../libs/aries/planning/unified/requirements.txt
+../src/tyr/planners/planners/aries/planning/unified/requirements.txt
