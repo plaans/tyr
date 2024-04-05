@@ -1,3 +1,4 @@
+import signal
 import pytest
 
 from tyr.planners.model.config import RunningMode, SolveConfig
@@ -23,3 +24,4 @@ class TestResolution:
         problem = domain.get_problem("01")
         assert problem is not None
         planner.solve(problem, config, RunningMode.ONESHOT)  # Check no crash
+        signal.alarm(0)  # Disable potential timeout
