@@ -111,7 +111,7 @@ class SlurmTerminalWritter(Writter):
             running_options += " --anytime"
         if RunningMode.ONESHOT in running_modes:
             running_options += " --oneshot"
-        self.line()
+        self.line("\necho \"==> Running '$PLANNER' on '$DOMAIN'\"")
         self.line(
             " ".join(
                 f"""srun tyr.sif bench -p $PLANNER -d $DOMAIN --logs-path logs/
