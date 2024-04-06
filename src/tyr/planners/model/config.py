@@ -12,6 +12,7 @@ class PlannerConfig:
     env: Dict[str, str] = field(default_factory=dict)
     anytime_name: Optional[str] = None
     oneshot_name: Optional[str] = None
+    upf_engine: Optional[str] = None
 
     def __hash__(self) -> int:
         return hash(self.name) + hash(str(self.problems))
