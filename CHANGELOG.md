@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [1.16.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.15.0...v1.16.0) (2024-04-06)
+
+
+### Features
+
+* **planners:** upf engine can be specified in the config file ([2df3287](https://gitlab.laas.fr/rgodet1/tyr/commit/2df3287bc42c721f3e46675a6ca03aaaeebcf522))
+
 # [1.15.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.14.0...v1.15.0) (2024-04-05)
 
 
