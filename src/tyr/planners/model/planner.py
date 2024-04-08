@@ -112,8 +112,49 @@ class Planner:
         except KeyError:
             return None
 
-    # pylint: disable = too-many-locals, too-many-branches, too-many-statements
     def solve(
+        self,
+        problem: ProblemInstance,
+        config: SolveConfig,
+        running_mode: RunningMode,
+    ) -> Generator[PlannerResult, None, None]:
+        """
+        Tries to solve the given problem with the given configuration.
+
+        Args:
+            problem (ProblemInstance): The problem to solve.
+            config (SolveConfig): The configuration to use during the resolution.
+            running_mode (RunningMode): The mode to use to run the resolution.
+
+        Returns:
+            Generator[PlannerResult, None, None]: The results of the resolution.
+        """
+        for result in self._solve(problem, config, running_mode):
+            if config.no_db_save is False:
+                Database().save_planner_result(result)
+            yield result
+
+    def solve_single(
+        self,
+        problem: ProblemInstance,
+        config: SolveConfig,
+        running_mode: RunningMode,
+    ) -> PlannerResult:
+        """
+        Tries to solve the given problem with the given configuration.
+
+        Args:
+            problem (ProblemInstance): The problem to solve.
+            config (SolveConfig): The configuration to use during the resolution.
+            running_mode (RunningMode): The mode to use to run the resolution.
+
+        Returns:
+            Generator[PlannerResult, None, None]: The last result of the resolution.
+        """
+        return list(self.solve(problem, config, running_mode)).pop()
+
+    # pylint: disable = too-many-locals, too-many-branches, too-many-statements
+    def _solve(
         self,
         problem: ProblemInstance,
         config: SolveConfig,

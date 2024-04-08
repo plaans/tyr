@@ -75,7 +75,7 @@ class TestPlanner(ModelTest):
             timeout=350,
             db_only=False,
             no_db_load=False,
-            no_db_save=False,
+            no_db_save=True,
         )
 
     # ============================================================================ #
@@ -221,6 +221,52 @@ class TestPlanner(ModelTest):
             result = list(planner.solve(problem, solve_config, RunningMode.ONESHOT))[-1]
             assert result.status == PlannerResultStatus.NOT_RUN
 
+    def test_solver_database_save_result(
+        self,
+        mock_planner: Planner,
+        problem: ProblemInstance,
+        solve_config: SolveConfig,
+    ):
+        solve_config = replace(solve_config, no_db_save=False)
+        db = Database()
+        with patch.object(db, "save_planner_result") as save_mock:
+            result = PlannerResult(
+                mock_planner.name,
+                problem,
+                RunningMode.ONESHOT,
+                PlannerResultStatus.SOLVED,
+                solve_config,
+            )
+            mock_planner._solve.return_value = [result]
+            mock_planner.solve = lambda x, y, z: list(
+                Planner.solve(mock_planner, x, y, z)
+            )
+            mock_planner.solve(problem, solve_config, RunningMode.ANYTIME)
+            save_mock.assert_called_once_with(result)
+
+    def test_solver_database_save_result_no_db_save(
+        self,
+        mock_planner: Planner,
+        problem: ProblemInstance,
+        solve_config: SolveConfig,
+    ):
+        solve_config = replace(solve_config, no_db_save=True)
+        db = Database()
+        with patch.object(db, "save_planner_result") as save_mock:
+            result = PlannerResult(
+                mock_planner.name,
+                problem,
+                RunningMode.ONESHOT,
+                PlannerResultStatus.SOLVED,
+                solve_config,
+            )
+            mock_planner._solve.return_value = [result]
+            mock_planner.solve = lambda x, y, z: list(
+                Planner.solve(mock_planner, x, y, z)
+            )
+            mock_planner.solve(problem, solve_config, RunningMode.ANYTIME)
+            save_mock.assert_not_called()
+
     # =================================== Solve ================================== #
 
     def test_solve_get_version_if_db_has_nothing(
@@ -231,10 +277,11 @@ class TestPlanner(ModelTest):
     ):
         solve_config = replace(solve_config, no_db_load=True)
         mock_planner.solve = lambda x, y, z: list(Planner.solve(mock_planner, x, y, z))
+        mock_planner._solve = lambda x, y, z: Planner._solve(mock_planner, x, y, z)
         try:
             mock_planner.solve(problem, solve_config, True)
-        except Exception:  # nosec: B110
-            pass
+        except Exception as err:  # nosec: B110
+            print(err)
         mock_planner.get_version.assert_called_once_with(problem)
 
     def test_solve_no_available_version(
@@ -571,6 +618,18 @@ class TestPlanner(ModelTest):
         log_folder = planner.get_log_file(problem, "", RunningMode.ONESHOT).parent
         list(planner.solve(problem, solve_config, RunningMode.ONESHOT))[-1]
         mocked_rmtree.assert_called_once_with(log_folder, True)
+
+    def test_solve_single(
+        self, mock_planner: Planner, problem: ProblemInstance, solve_config: SolveConfig
+    ):
+        mock_planner._solve.return_value = list([Mock(), Mock(), Mock()])
+        mock_planner.solve = lambda x, y, z: iter(Planner.solve(mock_planner, x, y, z))
+        mock_planner.solve_single = lambda x, y, z: Planner.solve_single(
+            mock_planner, x, y, z
+        )
+
+        result = mock_planner.solve_single(problem, solve_config, RunningMode.ONESHOT)
+        assert result == mock_planner._solve.return_value[-1]
 
     # ================================= Equality ================================= #
 
