@@ -68,12 +68,12 @@ def merge_configs(cli_config: dict, file_config: dict, default_config: dict) -> 
 
 def merge_running_modes(anytime: bool, oneshot: bool) -> List[RunningMode]:
     if anytime and oneshot:
-        return [RunningMode.ANYTIME, RunningMode.ONESHOT]
+        return [RunningMode.ANYTIME]
     if anytime:
         return [RunningMode.ANYTIME]
     if oneshot:
         return [RunningMode.ONESHOT]
-    return [RunningMode.ANYTIME, RunningMode.ONESHOT]
+    return [RunningMode.ANYTIME]
 
 
 def yaml_config(path: Optional[Path], name: str) -> dict:
