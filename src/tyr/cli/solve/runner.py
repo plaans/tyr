@@ -36,9 +36,12 @@ def run_solve(
 
     # Perform resolution.
     register_all_planners()
-    result = planner.solve(problem, solve_config, running_mode)
-    if solve_config.no_db_save is False:
-        Database().save_planner_result(result)
+    result = None
+    for result in planner.solve(problem, solve_config, running_mode):
+        if solve_config.no_db_save is False:
+            Database().save_planner_result(result)
+    if result is None:
+        raise RuntimeError("No result was produced by the planner.")
     tw.report_result(planner, result)
 
     # End the session.

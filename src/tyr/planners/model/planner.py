@@ -118,7 +118,7 @@ class Planner:
         problem: ProblemInstance,
         config: SolveConfig,
         running_mode: RunningMode,
-    ) -> PlannerResult:
+    ) -> Generator[PlannerResult, None, None]:
         """Tries to solve the given problem with the given configuration.
 
         Args:
@@ -127,7 +127,7 @@ class Planner:
             running_mode (RunningMode): The mode to use to run the resolution.
 
         Returns:
-            PlannerResult: The result of the resolution.
+            Generator[PlannerResult, None, None]: The results of the resolution.
         """
         # Get the planner based on the running mode.
         if running_mode == RunningMode.ONESHOT:
@@ -146,15 +146,18 @@ class Planner:
                 running_mode,
             )
             if db is not None:
-                return db
+                yield db
+                return
             if config.db_only:
-                return PlannerResult.not_run(problem, self, config, running_mode)
+                yield PlannerResult.not_run(problem, self, config, running_mode)
+                return
 
         # Get the version to solve.
         version = self.get_version(problem)
         if version is None:
             # No version found, the problem is not supported.
-            return PlannerResult.unsupported(problem, self, config, running_mode)
+            yield PlannerResult.unsupported(problem, self, config, running_mode)
+            return
 
         # Limits the virtual memory of the current process.
         resource.setrlimit(resource.RLIMIT_AS, (config.memout, resource.RLIM_INFINITY))
@@ -198,8 +201,15 @@ class Planner:
                                 config.timeout,
                                 log_file,
                             ):
-                                self._last_upf_result = result
-                                start, end = s, e
+                                self._last_upf_result, start, end = result, s, e
+                                yield self._handle_upf_result(
+                                    result,
+                                    planner_name,
+                                    problem,
+                                    running_mode,
+                                    config,
+                                    (start, end),
+                                )
                         # Disable the timeout alarm.
                         signal.alarm(0)
                     except TimeoutError:
@@ -212,37 +222,23 @@ class Planner:
                                 pass  # This can happen if the process is already terminated
                         # Return a timeout result if no result was found.
                         if self.last_upf_result is None:
-                            return PlannerResult.timeout(
+                            yield PlannerResult.timeout(
                                 problem,
                                 self,
                                 config,
                                 running_mode,
                             )
+                            return
 
-            if self.last_upf_result is not None:
-                # Save the plan in logs
-                plan_path = self.get_log_file(problem, "plan", running_mode)
-                with open(plan_path, "w", encoding="utf-8") as log_file:
-                    log_file.write(str(self.last_upf_result.plan))
-
-            # Convert the result into inner format and set computation time if not present.
-            result = PlannerResult.from_upf(
+            yield self._handle_upf_result(
+                self.last_upf_result,
                 planner_name,
                 problem,
-                self.last_upf_result,
-                config,
                 running_mode,
+                config,
+                (start, end),
             )
-            if (
-                self.last_upf_result is not None
-                and self.last_upf_result.plan is not None
-                and self.last_upf_result.status == PlanGenerationResultStatus.TIMEOUT
-            ):
-                # On anytime mode, last result can be timeout even if an intermediate was solved.
-                result.status = PlannerResultStatus.SOLVED
-            if result.computation_time is None:
-                result.computation_time = end - start
-            return result
+            return
 
         except Exception:  # pylint: disable=broad-exception-caught
             # An error occured...
@@ -270,7 +266,8 @@ class Planner:
             )
             if memout:
                 result = replace(result, status=PlannerResultStatus.MEMOUT)
-            return result
+            yield result
+            return
 
     def _solve_anytime(
         self,
@@ -311,6 +308,41 @@ class Planner:
         )
         end = time.time()
         return upf_result, start, end
+
+    # pylint: disable = too-many-arguments
+    def _handle_upf_result(
+        self,
+        upf_result: PlanGenerationResult,
+        planner_name: str,
+        problem: ProblemInstance,
+        running_mode: RunningMode,
+        config: SolveConfig,
+        times: Tuple[float, float],
+    ) -> PlannerResult:
+        if upf_result is not None:
+            # Save the plan in logs
+            plan_path = self.get_log_file(problem, "plan", running_mode)
+            with open(plan_path, "w", encoding="utf-8") as log_file:
+                log_file.write(str(upf_result.plan))
+
+        # Convert the result into inner format and set computation time if not present.
+        result = PlannerResult.from_upf(
+            planner_name,
+            problem,
+            upf_result,
+            config,
+            running_mode,
+        )
+        if (
+            upf_result is not None
+            and upf_result.plan is not None
+            and upf_result.status == PlanGenerationResultStatus.TIMEOUT
+        ):
+            # On anytime mode, last result can be timeout even if an intermediate was solved.
+            result.status = PlannerResultStatus.SOLVED
+        if result.computation_time is None:
+            result.computation_time = times[1] - times[0]
+        return result
 
     @staticmethod
     def _solve_timed_out(signum, frame):

@@ -27,9 +27,12 @@ def _solve(
 ):
     register_all_planners()
     tw.report_planner_started(problem.domain, planner, problem)
-    result = planner.solve(problem, solve_config, running_mode)
-    if solve_config.no_db_save is False:
-        Database().save_planner_result(result)
+    result = None
+    for result in planner.solve(problem, solve_config, running_mode):
+        if solve_config.no_db_save is False:
+            Database().save_planner_result(result)
+    if result is None:
+        raise RuntimeError("No result was produced by the planner.")
     tw.set_results(results)
     tw.report_planner_result(problem.domain, planner, result)
 
