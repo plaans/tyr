@@ -129,9 +129,15 @@ class Planner:
         Returns:
             Generator[PlannerResult, None, None]: The results of the resolution.
         """
+        first_result = True and running_mode == RunningMode.ANYTIME
         for result in self._solve(problem, config, running_mode):
             if config.no_db_save is False:
                 Database().save_planner_result(result)
+                if first_result:
+                    first_result = False
+                    Database().save_planner_result(
+                        replace(result, running_mode=RunningMode.ONESHOT)
+                    )
             yield result
 
     def solve_single(

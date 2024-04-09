@@ -3,7 +3,7 @@ import resource
 import time
 from dataclasses import replace
 from typing import Any, Dict
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock, call, patch
 
 import pytest
 
@@ -241,7 +241,7 @@ class TestPlanner(ModelTest):
             mock_planner.solve = lambda x, y, z: list(
                 Planner.solve(mock_planner, x, y, z)
             )
-            mock_planner.solve(problem, solve_config, RunningMode.ANYTIME)
+            mock_planner.solve(problem, solve_config, RunningMode.ONESHOT)
             save_mock.assert_called_once_with(result)
 
     def test_solver_database_save_result_no_db_save(
@@ -264,8 +264,75 @@ class TestPlanner(ModelTest):
             mock_planner.solve = lambda x, y, z: list(
                 Planner.solve(mock_planner, x, y, z)
             )
-            mock_planner.solve(problem, solve_config, RunningMode.ANYTIME)
+            mock_planner.solve(problem, solve_config, RunningMode.ONESHOT)
             save_mock.assert_not_called()
+
+    def test_solver_database_save_result_anytime_duplicate_first_as_oneshot(
+        self,
+        mock_planner: Planner,
+        problem: ProblemInstance,
+        solve_config: SolveConfig,
+    ):
+        solve_config = replace(solve_config, no_db_save=False)
+        db = Database()
+        with patch.object(db, "save_planner_result") as save_mock:
+            result1 = PlannerResult(
+                mock_planner.name,
+                problem,
+                RunningMode.ANYTIME,
+                PlannerResultStatus.SOLVED,
+                solve_config,
+            )
+            result2 = PlannerResult(
+                mock_planner.name,
+                problem,
+                RunningMode.ANYTIME,
+                PlannerResultStatus.ERROR,
+                solve_config,
+            )
+            mock_planner._solve.return_value = [result1, result2]
+            mock_planner.solve = lambda x, y, z: list(
+                Planner.solve(mock_planner, x, y, z)
+            )
+            mock_planner.solve(problem, solve_config, RunningMode.ANYTIME)
+            anytime_call = call(result1)
+            oneshot_call = call(replace(result1, running_mode=RunningMode.ONESHOT))
+            final_call = call(result2)
+            save_mock.assert_has_calls([anytime_call, oneshot_call, final_call])
+            assert save_mock.call_count == 3
+
+    def test_solver_database_save_result_oneshot_not_duplicate_first_as_oneshot(
+        self,
+        mock_planner: Planner,
+        problem: ProblemInstance,
+        solve_config: SolveConfig,
+    ):
+        solve_config = replace(solve_config, no_db_save=False)
+        db = Database()
+        with patch.object(db, "save_planner_result") as save_mock:
+            result1 = PlannerResult(
+                mock_planner.name,
+                problem,
+                RunningMode.ONESHOT,
+                PlannerResultStatus.SOLVED,
+                solve_config,
+            )
+            result2 = PlannerResult(
+                mock_planner.name,
+                problem,
+                RunningMode.ONESHOT,
+                PlannerResultStatus.ERROR,
+                solve_config,
+            )
+            mock_planner._solve.return_value = [result1, result2]
+            mock_planner.solve = lambda x, y, z: list(
+                Planner.solve(mock_planner, x, y, z)
+            )
+            mock_planner.solve(problem, solve_config, RunningMode.ONESHOT)
+            first_call = call(result1)
+            final_call = call(result2)
+            save_mock.assert_has_calls([first_call, final_call])
+            assert save_mock.call_count == 2
 
     # =================================== Solve ================================== #
 
