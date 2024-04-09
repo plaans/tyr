@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [1.17.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.16.0...v1.17.0) (2024-04-09)
+
+
+### Features
+
+* **planners:** duplicate first anytime result as oneshot ([61d9c4b](https://gitlab.laas.fr/rgodet1/tyr/commit/61d9c4b476d0e088ceef9ccdf233c53ad6721964))
+* **planners:** return all results ([9f6991f](https://gitlab.laas.fr/rgodet1/tyr/commit/9f6991fe7939fb0d97bcb7c6cf365e539f3fd4c3))
+
 # [1.16.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.15.0...v1.16.0) (2024-04-06)
 
 
