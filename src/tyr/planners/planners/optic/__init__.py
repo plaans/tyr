@@ -43,7 +43,6 @@ class OpticPlanner(TyrPDDLPlanner):
         for idx, line in enumerate(proc_out):
             if sol_found in line:
                 sol_idx = idx
-                break
         if sol_idx == -1:
             # No solution
             plan = []
