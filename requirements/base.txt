@@ -10,4 +10,5 @@ plotly
 
 # Unified Planning
 git+https://github.com/aiplan4eu/unified-planning.git@0355a6b#egg=unified_planning
+up-enhsp
 git+https://github.com/aiplan4eu/up-lpg.git@9db5a58#egg=up-lpg

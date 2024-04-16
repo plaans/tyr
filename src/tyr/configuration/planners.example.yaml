@@ -70,6 +70,17 @@
   upf_engine: tyr.planners.planners.aries.planning.unified.plugin.up_aries.Aries
 
 # ============================================================================ #
+#                                     ENHSP                                    #
+# ============================================================================ #
+
+- name: enhsp
+  anytime_name: enhsp-any
+  problems:
+    depots-numeric: red
+    rovers-numeric: red
+    satellite-numeric: red_no_float
+
+# ============================================================================ #
 #                                    Linear                                    #
 # ============================================================================ #
 
