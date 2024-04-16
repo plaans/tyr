@@ -307,6 +307,8 @@ class Planner:
 
         except Exception:  # pylint: disable=broad-exception-caught
             # An error occured...
+            # Disable the timeout alarm.
+            signal.alarm(0)
             # Try to detect a memory allocation failure.
             memout = False
             if "log_path" in locals():
