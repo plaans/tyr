@@ -129,16 +129,34 @@ class Planner:
         Returns:
             Generator[PlannerResult, None, None]: The results of the resolution.
         """
-        first_result = running_mode == RunningMode.ANYTIME
-        for result in self._solve(problem, config, running_mode):
-            if config.no_db_save is False:
-                Database().save_planner_result(result)
-                if first_result:
-                    first_result = False
-                    Database().save_planner_result(
-                        replace(result, running_mode=RunningMode.ONESHOT)
-                    )
-            yield result
+        start = time.time()
+        try:
+            first_result = running_mode == RunningMode.ANYTIME
+            for result in self._solve(problem, config, running_mode):
+                if config.no_db_save is False:
+                    Database().save_planner_result(result)
+                    if first_result:
+                        first_result = False
+                        Database().save_planner_result(
+                            replace(result, running_mode=RunningMode.ONESHOT)
+                        )
+                yield result
+        except Exception:  # pylint: disable=broad-exception-caught
+            # Save the error in logs.
+            log_path = self.get_log_file(problem, "error", running_mode)
+            with open(log_path, "w", encoding="utf-8") as log_file:
+                log_file.write(traceback.format_exc())
+            # Return an error or memout result.
+            computation_time = time.time() - start
+            yield PlannerResult.error(
+                problem,
+                self,
+                config,
+                running_mode,
+                computation_time,
+                traceback.format_exc(),
+            )
+            return
 
     def solve_single(
         self,
