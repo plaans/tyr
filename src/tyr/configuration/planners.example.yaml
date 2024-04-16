@@ -24,9 +24,9 @@
     rovers-numeric: red
     rovers-temporal-numeric: red_no_div
     satellite-hierarchical: base
-    satellite-hierarchical-numeric: red
+    satellite-hierarchical-numeric: red_no_float
     satellite-hierarchical-temporal-numeric: red_no_float
-    satellite-numeric: red
+    satellite-numeric: red_no_float
     satellite-temporal-numeric: red_no_float
     transport-hierarchical: base
   env:
@@ -124,7 +124,7 @@
     rcpsp-temporal-numeric: base
     rovers-numeric: red
     rovers-temporal-numeric: red_no_div
-    satellite-numeric: red
+    satellite-numeric: red_no_float
     satellite-temporal-numeric: red_no_float
 
 # ============================================================================ #
@@ -139,7 +139,7 @@
     rcpsp-temporal-numeric: no_neg_cond
     rovers-numeric: red
     rovers-temporal-numeric: red_no_div
-    satellite-numeric: red
+    satellite-numeric: red_no_float
     satellite-temporal-numeric: red_no_float
 
 # ============================================================================ #
