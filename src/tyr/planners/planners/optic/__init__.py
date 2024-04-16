@@ -20,7 +20,7 @@ class OpticPlanner(TyrPDDLPlanner):
         plan_filename: str,
     ) -> List[str]:
         binary = (Path(__file__).parent / "optic-cplex").resolve().as_posix()
-        return f"{binary} {domain_filename} {problem_filename} -N".split()
+        return f"{binary} -N {domain_filename} {problem_filename}".split()
 
     def _get_anytime_cmd(
         self,
