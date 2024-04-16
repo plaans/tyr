@@ -60,6 +60,8 @@ def merge_configs(cli_config: dict, file_config: dict, default_config: dict) -> 
         if isinstance(v, (list, tuple)):
             if list(v) != list(default_config[k]):
                 config[k] = v
+        elif isinstance(v, int) and not isinstance(v, bool):
+            config[k] = v
         elif v is not None and v != default_config[k]:
             config[k] = v
 
