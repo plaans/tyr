@@ -93,7 +93,7 @@ class TestProblemInstance(ModelTest):
 
         problem._versions = {"base": Lazy(build_version)}
         with patch.object(problem, "_get_makespan_of_plan") as mock_get_makespan:
-            problem.get_quality_of_plan(plan)
+            problem.get_quality_of_plan(plan, "base")
             mock_get_makespan.assert_called_once_with(plan)
 
     def test_get_quality_of_plan_multiple_metrics(
@@ -108,7 +108,7 @@ class TestProblemInstance(ModelTest):
         problem._versions = {"base": Lazy(build_version)}
 
         with pytest.raises(ValueError):
-            problem.get_quality_of_plan(plan)
+            problem.get_quality_of_plan(plan, "base")
 
     def test_get_quality_minimum_makespan(self, problem: ProblemInstance, plan: str):
         metric = MagicMock()
@@ -116,15 +116,25 @@ class TestProblemInstance(ModelTest):
         problem.versions["base"].value._metrics = [metric]
         with patch.object(problem, "_get_makespan_of_plan") as mock_get_makespan:
             expected = mock_get_makespan.return_value
-            result = problem.get_quality_of_plan(plan)
+            result = problem.get_quality_of_plan(plan, "base")
             assert result == expected
 
     def test_get_unknown_quality_of_plan(self, problem: ProblemInstance, plan: str):
         metric = MagicMock()
         metric.is_minimize_makespan.return_value = False
         problem.versions["base"].value._metrics = [metric]
-        problem.get_quality_of_plan(plan)
+        problem.get_quality_of_plan(plan, "base")
         problem.domain.get_quality_of_plan.assert_called_once()
+
+    @pytest.mark.parametrize("version_name", ["base", "version"])
+    def test_get_quality_of_plan_specific_version(
+        self, problem: ProblemInstance, plan: str, version_name: str
+    ):
+        with patch.object(problem, "_versions") as mock_versions:
+            mock_versions.__getitem__.return_value = MagicMock()
+            with patch.object(problem, "_get_makespan_of_plan") as _:
+                problem.get_quality_of_plan(plan, version_name)
+                mock_versions.__getitem__.assert_called_once_with(version_name)
 
     def test_get_makespan_of_plan_time_triggered_plan(self, problem):
         plan = MagicMock(spec=Plan)

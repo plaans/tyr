@@ -50,6 +50,7 @@ class TestPlannerResult:
         result = PlannerResult.from_upf(
             "mockplanner",
             problem,
+            "version_name",
             upf_result,
             config,
             RunningMode.ONESHOT,
@@ -79,6 +80,7 @@ class TestPlannerResult:
         result = PlannerResult.from_upf(
             "mockplanner",
             problem,
+            "version_name",
             upf_result,
             config,
             RunningMode.ONESHOT,
@@ -96,6 +98,7 @@ class TestPlannerResult:
         result = PlannerResult.from_upf(
             name,
             problem,
+            "version_name",
             upf_result,
             config,
             RunningMode.ONESHOT,
@@ -119,6 +122,7 @@ class TestPlannerResult:
         result = PlannerResult.from_upf(
             "mockplanner",
             problem,
+            "version_name",
             upf_result,
             config,
             RunningMode.ONESHOT,
@@ -128,10 +132,12 @@ class TestPlannerResult:
     @pytest.mark.parametrize(
         ["plan", "quality"], [(None, None), (MagicMock(), 15), (MagicMock(), 7.6)]
     )
+    @pytest.mark.parametrize("version_name", [MagicMock(), MagicMock()])
     def test_from_upf_plan_quality(
         self,
         plan: Optional[Mock],
         quality: Optional[float],
+        version_name: str,
         problem: Mock,
         config: Mock,
         upf_result: PlanGenerationResult,
@@ -141,6 +147,7 @@ class TestPlannerResult:
         result = PlannerResult.from_upf(
             "mockplanner",
             problem,
+            version_name,
             upf_result,
             config,
             RunningMode.ONESHOT,
@@ -150,7 +157,7 @@ class TestPlannerResult:
         if plan is None:
             problem.get_quality_of_plan.assert_not_called()
         else:
-            problem.get_quality_of_plan.assert_called_once_with(plan)
+            problem.get_quality_of_plan.assert_called_once_with(plan, version_name)
 
     # =================================== Error ================================== #
 

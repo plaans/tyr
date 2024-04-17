@@ -156,19 +156,22 @@ class TestPlanner(ModelTest):
     # ================================ Get version =============================== #
 
     def test_get_correct_version(self, planner: Planner, problem: ProblemInstance):
-        version = planner.get_version(problem)
+        name, version = planner.get_version(problem)
+        assert name == "base"
         assert version.uid == problem.uid * 3
 
     def test_get_inexistant_version(self, planner: Planner, problem: ProblemInstance):
         planner.config.problems["mockdomain"] = "inexistant"
-        version = planner.get_version(problem)
+        name, version = planner.get_version(problem)
+        assert name is None
         assert version is None
 
     def test_get_version_from_unsupported_domain(
         self, planner: Planner, problem: ProblemInstance
     ):
         planner.config.problems.clear()
-        version = planner.get_version(problem)
+        name, version = planner.get_version(problem)
+        assert name is None
         assert version is None
 
     # ================================= Database ================================= #
@@ -379,7 +382,7 @@ class TestPlanner(ModelTest):
     ):
         solve_config = replace(solve_config, timeout=timeout)
         mocked_planner = mocked_oneshot_planner.return_value.__enter__.return_value
-        version = planner.get_version(problem)
+        _, version = planner.get_version(problem)
 
         try:
             list(planner.solve(problem, solve_config, RunningMode.ONESHOT))[-1]
@@ -409,7 +412,7 @@ class TestPlanner(ModelTest):
     ):
         solve_config = replace(solve_config, timeout=timeout)
         mocked_planner = mocked_anytime_planner.return_value.__enter__.return_value
-        version = planner.get_version(problem)
+        _, version = planner.get_version(problem)
 
         try:
             list(planner.solve(problem, solve_config, RunningMode.ANYTIME))
@@ -446,6 +449,7 @@ class TestPlanner(ModelTest):
         mocked_result_from_upf.assert_called_once_with(
             planner.name,
             problem,
+            "base",
             upf_result,
             solve_config,
             RunningMode.ONESHOT,
@@ -475,7 +479,7 @@ class TestPlanner(ModelTest):
             computation_time,
             "foo toto",
         )
-        with patch("time.time", side_effect=[0, 0, computation_time]):
+        with patch("time.time", side_effect=[0, 0, 0, computation_time]):
             result = list(planner.solve(problem, solve_config, RunningMode.ONESHOT))[-1]
         assert result == expected
 
@@ -516,7 +520,7 @@ class TestPlanner(ModelTest):
         )
         mocked_result_from_upf.return_value = upf_result
         expected = replace(upf_result, computation_time=computation_time)
-        with patch("time.time", side_effect=[0, 0, computation_time]):
+        with patch("time.time", side_effect=[0, 0, 0, computation_time]):
             result = list(planner.solve(problem, solve_config, RunningMode.ONESHOT))[-1]
         assert result == expected
 
