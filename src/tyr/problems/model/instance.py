@@ -73,11 +73,12 @@ class ProblemInstance:
         """
         self._versions[version_name] = version
 
-    def get_quality_of_plan(self, plan: Plan) -> Optional[float]:
+    def get_quality_of_plan(self, plan: Plan, version_name: str) -> Optional[float]:
         """Extracts the quality of the given plan.
 
         Args:
             plan (Plan): The plan to study.
+            version_name (str): The name of the version to use.
 
         Raises:
             ValueError: When multiple quality metrics have to be measured.
@@ -85,7 +86,7 @@ class ProblemInstance:
         Returns:
             Optional[float]: The quality of the plan if any.
         """
-        version = self.versions["base"].value
+        version = self.versions[version_name].value
 
         if (num_metrics := len(version.quality_metrics)) == 0:
             return self._get_makespan_of_plan(plan)

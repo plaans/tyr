@@ -62,10 +62,12 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
     error_message: str = ""
     from_database: bool = False
 
+    # pylint: disable = too-many-arguments
     @staticmethod
     def from_upf(
         planner_name: str,
         problem: ProblemInstance,
+        version_name: str,
         result: PlanGenerationResult,
         config: SolveConfig,
         running_mode: RunningMode,
@@ -75,6 +77,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
         Args:
             planner_name (str): The name of the planner solving the problem.
             problem (ProblemInstance): The problem solved by the planner.
+            version_name (str): The name of the version of the problem solved.
             result (PlanGenerationResult): The result to convert.
             config (SolveConfig): The configuration used to solve the problem.
             running_mode (RunningMode): The mode used by the planner.
@@ -89,7 +92,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
 
         plan_quality = None
         if result.plan is not None:
-            plan_quality = problem.get_quality_of_plan(result.plan)
+            plan_quality = problem.get_quality_of_plan(result.plan, version_name)
 
         return PlannerResult(
             planner_name,

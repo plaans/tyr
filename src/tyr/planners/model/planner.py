@@ -97,20 +97,23 @@ class Planner:
         folder.mkdir(parents=True, exist_ok=True)
         return folder / f"{file_name}.log"
 
-    def get_version(self, problem: ProblemInstance) -> Optional[AbstractProblem]:
+    def get_version(
+        self, problem: ProblemInstance
+    ) -> Tuple[Optional[str], Optional[AbstractProblem]]:
         """Search the version that the planner has to solve for the given problem.
 
         Args:
             problem (ProblemInstance): The problem to solve.
 
         Returns:
-            Optional[AbstractProblem]: The version to solve. `None` if it is not supported.
+            Optional[AbstractProblem]: The version to solve and its name.
+                `None` for both if it is not supported.
         """
         try:
             version_name = self.config.problems[problem.domain.name]
-            return problem.versions[version_name].value
+            return version_name, problem.versions[version_name].value
         except KeyError:
-            return None
+            return None, None
 
     def solve(
         self,
@@ -218,8 +221,8 @@ class Planner:
                 return
 
         # Get the version to solve.
-        version = self.get_version(problem)
-        if version is None:
+        version_name, version = self.get_version(problem)
+        if version_name is None or version is None:
             # No version found, the problem is not supported.
             yield PlannerResult.unsupported(problem, self, config, running_mode)
             return
@@ -271,6 +274,7 @@ class Planner:
                                     result,
                                     planner_name,
                                     problem,
+                                    version_name,
                                     running_mode,
                                     config,
                                     (start, end),
@@ -299,6 +303,7 @@ class Planner:
                 self.last_upf_result,
                 planner_name,
                 problem,
+                version_name,
                 running_mode,
                 config,
                 (start, end),
@@ -382,6 +387,7 @@ class Planner:
         upf_result: PlanGenerationResult,
         planner_name: str,
         problem: ProblemInstance,
+        version_name: str,
         running_mode: RunningMode,
         config: SolveConfig,
         times: Tuple[float, float],
@@ -396,6 +402,7 @@ class Planner:
         result = PlannerResult.from_upf(
             planner_name,
             problem,
+            version_name,
             upf_result,
             config,
             running_mode,
