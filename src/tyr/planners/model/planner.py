@@ -253,7 +253,7 @@ class Planner:
                         self._last_upf_result = None
                         # Set the timeout alarm.
                         signal.signal(signal.SIGALRM, self._solve_timed_out)
-                        signal.alarm(config.timeout)
+                        signal.alarm(config.timeout + config.timeout_offset)
                         # Get the solutions.
                         if running_mode == RunningMode.ONESHOT:
                             self._last_upf_result, start, end = self._solve_oneshot(

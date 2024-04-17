@@ -25,6 +25,7 @@ class SolveConfig:
     jobs: int
     memout: int
     timeout: int
+    timeout_offset: int
     db_only: bool
     no_db_load: bool
     no_db_save: bool

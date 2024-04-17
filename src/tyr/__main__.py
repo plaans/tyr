@@ -47,6 +47,7 @@ DEFAULT_CONFIG = {
     "problem": "",
     "quiet": 0,
     "timeout": 5,
+    "timeout_offset": 10,
     "user_mail": None,
     "verbose": 0,
 }
@@ -199,6 +200,12 @@ timeout_option = click.option(
     type=int,
     help=f"Timeout for planners in seconds. Default to {DEFAULT_CONFIG['timeout']}s.",
 )
+timeout_offset_option = click.option(
+    "--timeout-offset",
+    type=int,
+    help=f"Additional seconds on timeout for planner to timeout by themselves.\
+        Default to {DEFAULT_CONFIG['timeout_offset']}s.",
+)
 verbose_option = click.option(
     "-v",
     "--verbose",
@@ -248,6 +255,7 @@ def update_context(ctx, verbose, quiet, out, logs_path, db_path, config):
 @db_path_option
 @config_option
 @timeout_option
+@timeout_offset_option
 @memout_option
 @jobs_option
 @planners_filter
@@ -267,6 +275,7 @@ def cli_bench(
     db_path: str,
     config,
     timeout: int,
+    timeout_offset: int,
     memout: int,
     jobs: int,
     planners: List[str],
@@ -285,6 +294,7 @@ def cli_bench(
         "logs_path": logs_path,
         "db_path": db_path,
         "timeout": timeout,
+        "timeout_offset": timeout_offset,
         "memout": memout,
         "jobs": jobs,
         "planners": planners,
@@ -317,6 +327,7 @@ def cli_bench(
         conf["jobs"],
         conf["memout"],
         conf["timeout"],
+        conf["timeout_offset"],
         conf["db_only"],
         conf["no_db_load"],
         conf["no_db_save"],
@@ -414,6 +425,7 @@ def cli_plot(
 @db_path_option
 @config_option
 @timeout_option
+@timeout_offset_option
 @memout_option
 @planners_filter
 @domains_filter
@@ -440,6 +452,7 @@ def cli_slurm(
     db_path: str,
     config,
     timeout: int,
+    timeout_offset: int,
     memout: int,
     planners: List[str],
     domains: List[str],
@@ -456,6 +469,7 @@ def cli_slurm(
         "logs_path": logs_path,
         "db_path": db_path,
         "timeout": timeout,
+        "timeout_offset": timeout_offset,
         "memout": memout,
         "planners": planners,
         "domains": domains,
@@ -481,6 +495,7 @@ def cli_slurm(
         jobs=1,
         memout=conf["memout"],
         timeout=conf["timeout"],
+        timeout_offset=conf["timeout_offset"],
         db_only=False,
         no_db_load=False,
         no_db_save=False,
@@ -515,6 +530,7 @@ def cli_slurm(
 @click.argument("planner", type=str, required=False)
 @click.argument("problem", type=str, required=False)
 @timeout_option
+@timeout_offset_option
 @memout_option
 @click.option(
     "--fs",
@@ -535,6 +551,7 @@ def cli_solve(
     planner: str,
     problem: str,
     timeout: int,
+    timeout_offset: int,
     memout: int,
     fs: bool,
     no_db_save: bool,
@@ -549,6 +566,7 @@ def cli_solve(
         "planner": planner,
         "problem": problem,
         "timeout": timeout,
+        "timeout_offset": timeout_offset,
         "memout": memout,
         "fs": fs,
         "no_db_save": no_db_save,
@@ -576,6 +594,7 @@ def cli_solve(
         jobs=1,
         memout=conf["memout"],
         timeout=conf["timeout"],
+        timeout_offset=conf["timeout_offset"],
         db_only=False,
         no_db_load=True,
         no_db_save=conf["no_db_save"],
