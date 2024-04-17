@@ -44,28 +44,24 @@ class PopfPlanner(TyrPDDLPlanner):
         return Fraction(1, 1000)
 
     def _get_plan(self, proc_out: List[str]) -> str:
-        sol_found = "; Time"
-        sol_idx = -1
-        for idx, line in enumerate(proc_out):
-            if sol_found in line:
-                sol_idx = idx
-        if sol_idx == -1:
-            # No solution
-            plan = []
-        else:
-            # Keep only the plan with the time
-            plan = proc_out[sol_idx:]
-            try:
-                plan = plan[: plan.index("\n")]
-            except ValueError:
-                pass
+        plan: List[str] = []
+        parsing = False
+        for line in proc_out:
+            if line.startswith(self._starting_plan_str()):
+                parsing = True
+                continue
+            if not parsing:
+                continue
+            if line.startswith(self._ending_plan_str()):
+                break
+            plan.append(self._parse_plan_line(line))
         return "\n".join(plan)
 
     def _starting_plan_str(self) -> str:
-        return ";;;; Solution Found"
+        return "; Time"
 
     def _ending_plan_str(self) -> str:
-        return "\n"
+        return "All goal deadlines"
 
     def _parse_plan_line(self, plan_line: str) -> str:
         return plan_line
