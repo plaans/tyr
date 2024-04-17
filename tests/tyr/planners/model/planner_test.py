@@ -73,6 +73,7 @@ class TestPlanner(ModelTest):
             jobs=1,
             memout=4 * 1024 * 1024 * 1024,  # 4GB
             timeout=350,
+            timeout_offset=0,
             db_only=False,
             no_db_load=False,
             no_db_save=True,

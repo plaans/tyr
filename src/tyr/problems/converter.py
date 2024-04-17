@@ -6,14 +6,14 @@ from unified_planning.model.htn import HierarchicalProblem
 from unified_planning.model.scheduling import SchedulingProblem
 from unified_planning.model.types import _IntType
 from unified_planning.shortcuts import (
+    GE,
+    LE,
     DurativeAction,
     EffectKind,
     EndTiming,
     Not,
     Problem,
     StartTiming,
-    LE,
-    GE,
 )
 
 from tyr.problems.model.instance import ProblemInstance
@@ -115,7 +115,7 @@ def goals_to_tasks(
     return hier_pb
 
 
-# pylint: disable = too-many-locals
+# pylint: disable = too-many-locals, too-many-branches
 def scheduling_to_actions(schd_pb: SchedulingProblem) -> Problem:
     """Converts the scheduling problem to a PDDL problem."""
 

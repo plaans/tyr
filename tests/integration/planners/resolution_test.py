@@ -18,6 +18,7 @@ class TestResolution:
             jobs=1,
             memout=4 * 1024**3,
             timeout=10,
+            timeout_offset=0,
             db_only=False,
             no_db_load=True,
             no_db_save=True,

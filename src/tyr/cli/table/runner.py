@@ -38,7 +38,7 @@ def run_table(
     # pylint: disable = duplicate-code
 
     # Create the writter and start the session.
-    solve_config = SolveConfig(1, memout, timeout, True, False, True)
+    solve_config = SolveConfig(1, memout, timeout, 0, True, False, True)
     tw = TableTerminalWritter(
         solve_config,
         ctx.out,
