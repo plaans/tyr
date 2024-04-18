@@ -234,7 +234,9 @@ class Writter:
         self.line(f"database: {TyrPaths().db} -- {db_status}")
 
         # Timeout
-        msg = f"timeout: {self.format_seconds(self._solve_config.timeout)}"
+        timeout = self.format_seconds(self._solve_config.timeout)
+        offset = self.format_seconds(self._solve_config.timeout_offset)
+        msg = f"timeout: {timeout} ± {offset}"
         num_bytes = self._solve_config.memout * 1.0
 
         # Memout
