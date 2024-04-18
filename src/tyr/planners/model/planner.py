@@ -314,19 +314,11 @@ class Planner:
             # An error occured...
             # Disable the timeout alarm.
             signal.alarm(0)
-            # Try to detect a memory allocation failure.
-            memout = False
-            if "log_path" in locals():
-                with open(log_path, "r", encoding="utf-8") as log_file:
-                    for line in log_file:
-                        if line.startswith("memory") and line.endswith("failed\n"):
-                            memout = True
-                            break
             # Save the error in logs.
             log_path = self.get_log_file(problem, "error", running_mode)
             with open(log_path, "w", encoding="utf-8") as log_file:
                 log_file.write(traceback.format_exc())
-            # Return an error or memout result.
+            # Generate the error result.
             computation_time = time.time() - start
             result = PlannerResult.error(
                 problem,
@@ -336,8 +328,10 @@ class Planner:
                 computation_time,
                 traceback.format_exc(),
             )
-            if memout:
-                result = replace(result, status=PlannerResultStatus.MEMOUT)
+            # Check if a special status can be found in the logs.
+            log_path = self.get_log_file(problem, "solve", running_mode)
+            if special_status := self._check_special_status_from_logs(log_path):
+                result = replace(result, status=special_status)
             yield result
             return
 
@@ -416,11 +410,56 @@ class Planner:
             result.status = PlannerResultStatus.SOLVED
         if result.computation_time is None:
             result.computation_time = times[1] - times[0]
+        # Check if a special status can be found in the logs if the result is not solved.
+        log_path = self.get_log_file(problem, "solve", running_mode)
+        if (
+            status := self._check_special_status_from_logs(log_path)
+        ) is not None and result.status != PlannerResultStatus.SOLVED:
+            result = replace(result, status=status)
         return result
 
     @staticmethod
     def _solve_timed_out(signum, frame):
         raise TimeoutError("The planner timed out.")
+
+    # ============================================================================ #
+    #                             Special Planner Cases                            #
+    # ============================================================================ #
+
+    def _check_special_status_from_logs(
+        self, logs: Path
+    ) -> Optional[PlannerResultStatus]:
+        callback = getattr(self, f"_check_special_status_from_logs_{self.name}", None)
+        if callback is None:
+            return None
+
+        with open(logs, "r", encoding="utf-8") as log_file:
+            for line in log_file:
+                if (res := callback(line)) is not None:
+                    return res
+        return None
+
+    # =================================== Aries ================================== #
+
+    def _check_special_status_from_logs_aries(
+        self, line: str
+    ) -> Optional[PlannerResultStatus]:
+        if line.startswith("memory") and line.endswith("failed\n"):
+            return PlannerResultStatus.MEMOUT
+        return None
+
+    # ==================================== LPG =================================== #
+
+    def _check_special_status_from_logs_lpg(
+        self, line: str
+    ) -> Optional[PlannerResultStatus]:
+        if line in ["Max time exceeded.\n", "Error: max cpu-time reached\n"]:
+            return PlannerResultStatus.TIMEOUT
+        return None
+
+    # ============================================================================ #
+    #                            Python's Magic Methods                            #
+    # ============================================================================ #
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Planner):
