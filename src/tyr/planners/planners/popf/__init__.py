@@ -47,12 +47,12 @@ class PopfPlanner(TyrPDDLPlanner):
         plan: List[str] = []
         parsing = False
         for line in proc_out:
-            if line.startswith(self._starting_plan_str()):
+            if self._starting_plan_str() in line:
                 parsing = True
                 continue
             if not parsing:
                 continue
-            if line.startswith(self._ending_plan_str()):
+            if self._ending_plan_str() in line:
                 break
             plan.append(self._parse_plan_line(line))
         return "\n".join(plan)
