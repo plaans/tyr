@@ -69,7 +69,7 @@ class RoversTemporalNumericDomain(AbstractDomain):
                 *((i, f"-{i}") for i in range(1, 9) if i != 7),
             ]:
                 sv = no_div.fluent(f"recharge-duration{suffix}")(x)
-                value = atom * multi
+                value = int(eval(str(atom * multi)))
                 no_div.set_initial_value(sv, value)
 
         # Add all goals.
