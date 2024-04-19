@@ -52,7 +52,7 @@ class PopfPlanner(TyrPDDLPlanner):
                 continue
             if not parsing:
                 continue
-            if self._ending_plan_str() in line:
+            if self._ending_plan_str() == line:
                 break
             plan.append(self._parse_plan_line(line))
         return "\n".join(plan)
@@ -61,7 +61,7 @@ class PopfPlanner(TyrPDDLPlanner):
         return "; Time"
 
     def _ending_plan_str(self) -> str:
-        return "All goal deadlines"
+        return "\n"
 
     def _parse_plan_line(self, plan_line: str) -> str:
         return plan_line
