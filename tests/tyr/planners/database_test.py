@@ -79,11 +79,11 @@ class TestDatabase:
 
         cursor_mock.execute.assert_called_once_with(
             """
-                INSERT INTO "results" (
-                    "planner", "problem", "mode", "status", "computation", "quality",
-                    "error msg", "jobs", "memout", "timeout", "creation"
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-                """,
+                    INSERT INTO "results" (
+                        "planner", "problem", "mode", "status", "computation", "quality",
+                        "error msg", "jobs", "memout", "timeout", "creation"
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                    """,
             (
                 result_mock.planner_name,
                 result_mock.problem.name,
