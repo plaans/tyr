@@ -54,7 +54,7 @@ def _parse(filepath: Path, num_operators: int) -> SchedulingProblem:
 
 
 FOLDER = Path(__file__).parent.resolve() / "base"
-OPERATORS = [1, 3, 5]
+OPERATORS = [3, 5]
 
 
 class JobshopSchedulingDomain(AbstractDomain):
