@@ -21,7 +21,10 @@ class QualityScoreMetric(Metric):
         total = self.min_value()
         for result in results:
             same_instances = [r for r in all_results if r.problem == result.problem]
-            best_quality = min(r.plan_quality or float("inf") for r in same_instances)
+            best_quality = min(
+                float("inf") if r.plan_quality is None else r.plan_quality
+                for r in same_instances
+            )
             quality = result.plan_quality
             if result.status != PlannerResultStatus.SOLVED:
                 total += 0

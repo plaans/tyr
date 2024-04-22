@@ -60,6 +60,11 @@ class TestAgileScoreMetric:
         expected = sum([1, 0.75, 0.6, 0.5]) / 4
         assert result == f"{expected*100:.2f}"
 
+    def test_quality_score_best_is_zero(self):
+        results = [planner_result("solved", 0)]
+        result = QualityScoreMetric().evaluate(results, results)
+        assert result == "100"
+
     def test_quality_score_empty_results(self):
         results = []
         result = QualityScoreMetric().evaluate(results, results)
