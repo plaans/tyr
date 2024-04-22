@@ -114,9 +114,12 @@ class SlurmTerminalWritter(Writter):
         self.line("\necho \"==> Running '$PLANNER' on '$DOMAIN'\"")
         self.line(
             " ".join(
-                f"""srun tyr.sif bench -p $PLANNER -d $DOMAIN --logs-path logs/
---db-path db.sqlite3 --timeout {self._solve_config.timeout} --memout {self._solve_config.memout}
---verbose{running_options}""".splitlines()
+                "srun tyr.sif bench -p $PLANNER -d $DOMAIN --logs-path logs/ "
+                "--db-path db-${SLURM_ARRAY_TASK_ID}.sqlite3 "
+                f"--timeout {self._solve_config.timeout} "
+                f"--memout {self._solve_config.memout} "
+                f"--verbose{running_options}"
+                "".splitlines()
             )
         )
 
