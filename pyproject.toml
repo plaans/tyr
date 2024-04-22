@@ -625,4 +625,7 @@ redefining-builtins-modules = ["six.moves", "past.builtins", "future.builtins", 
 
 
 [tool.pytest.ini_options]
+filterwarnings = [
+    'ignore:pkg_resources is deprecated as an API'
+]
 markers = "slow: mark a test as slow"
