@@ -1,4 +1,5 @@
 import datetime
+import multiprocessing
 import random
 import sqlite3
 import time
@@ -57,7 +58,7 @@ class Database(Singleton):
             )
             conn.commit()
 
-    def save_planner_result(self, result: "PlannerResult", max_retry: int = 10):
+    def save_planner_result(self, result: "PlannerResult"):
         """Saves the given result into the database.
 
         Args:
@@ -65,37 +66,46 @@ class Database(Singleton):
         """
         if result.from_database is True:
             return
+        p = multiprocessing.Process(
+            target=self._save_planner_result_safe,
+            args=(result,),
+        )
+        p.start()
 
+    def _save_planner_result_safe(self, result: "PlannerResult", max_retries: int = 10):
         try:
-            with self.database() as conn:
-                conn.cursor().execute(
-                    """
-                    INSERT INTO "results" (
-                        "planner", "problem", "mode", "status", "computation", "quality",
-                        "error msg", "jobs", "memout", "timeout", "creation"
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-                    """,
-                    (
-                        result.planner_name,
-                        result.problem.name,
-                        result.running_mode.name,
-                        result.status.name,
-                        result.computation_time,
-                        result.plan_quality,
-                        result.error_message,
-                        result.config.jobs,
-                        result.config.memout,
-                        result.config.timeout,
-                        datetime.datetime.now().isoformat(),
-                    ),
-                )
-                conn.commit()
+            self._save_planner_result(result)
         except sqlite3.OperationalError as e:
             time.sleep(random.randint(10, 1000) / 1000)
-            if max_retry > 0:
-                self.save_planner_result(result, max_retry - 1)
+            if max_retries > 0:
+                self._save_planner_result_safe(result, max_retries - 1)
             else:
                 raise e from e
+
+    def _save_planner_result(self, result: "PlannerResult"):
+        with self.database() as conn:
+            conn.cursor().execute(
+                """
+                INSERT INTO "results" (
+                    "planner", "problem", "mode", "status", "computation", "quality",
+                    "error msg", "jobs", "memout", "timeout", "creation"
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                """,
+                (
+                    result.planner_name,
+                    result.problem.name,
+                    result.running_mode.name,
+                    result.status.name,
+                    result.computation_time,
+                    result.plan_quality,
+                    result.error_message,
+                    result.config.jobs,
+                    result.config.memout,
+                    result.config.timeout,
+                    datetime.datetime.now().isoformat(),
+                ),
+            )
+            conn.commit()
 
     # pylint: disable = too-many-arguments
     def load_planner_result(

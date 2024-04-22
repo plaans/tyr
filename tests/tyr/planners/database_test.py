@@ -1,5 +1,5 @@
 import sqlite3
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 
@@ -8,8 +8,9 @@ from tyr.planners.model.config import RunningMode
 from tyr.planners.model.result import PlannerResult, PlannerResultStatus
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def database():
+    Database.clear_singleton()
     return Database()
 
 
@@ -65,9 +66,40 @@ class TestDatabase:
         )
         conn_mock.commit.assert_called_once()
 
+    def test_save_planner_result(self, database, result_mock):
+        with patch("multiprocessing.Process") as mock_process:
+            database._save_planner_result_safe = MagicMock()
+            database.save_planner_result(result_mock)
+            mock_process.assert_called_once_with(
+                target=database._save_planner_result_safe,
+                args=(result_mock,),
+            )
+            mock_process.return_value.start.assert_called_once()
+
+    def test_save_planner_result_safe_without_errors(self, database, result_mock):
+        database._save_planner_result = MagicMock()
+        database._save_planner_result_safe(result_mock)
+        database._save_planner_result.assert_called_once_with(result_mock)
+
+    @pytest.mark.slow
+    @pytest.mark.timeout(3)
+    def test_save_planner_result_safe_with_finite_errors(self, database, result_mock):
+        database._save_planner_result = MagicMock()
+        database._save_planner_result.side_effect = [sqlite3.OperationalError(), None]
+        database._save_planner_result_safe(result_mock)
+        database._save_planner_result.assert_has_calls([call(result_mock)] * 2)
+
+    @pytest.mark.slow
+    @pytest.mark.timeout(4)
+    def test_save_planner_result_safe_with_infinite_errors(self, database, result_mock):
+        database._save_planner_result = MagicMock()
+        database._save_planner_result.side_effect = sqlite3.OperationalError()
+        with pytest.raises(sqlite3.OperationalError):
+            database._save_planner_result_safe(result_mock, max_retries=3)
+
     @patch("tyr.planners.database.sqlite3.connect")
     @patch("tyr.planners.database.datetime")
-    def test_save_planner_result(
+    def test_internal_save_planner_result(
         self, datetime_mock, connect_mock, database, conn_mock, cursor_mock, result_mock
     ):
         connect_mock.return_value = conn_mock
@@ -75,15 +107,15 @@ class TestDatabase:
         now = "2021-01-01T00:00:00"
         datetime_mock.datetime.now.return_value.isoformat.return_value = now
 
-        database.save_planner_result(result_mock)
+        database._save_planner_result(result_mock)
 
         cursor_mock.execute.assert_called_once_with(
             """
-                    INSERT INTO "results" (
-                        "planner", "problem", "mode", "status", "computation", "quality",
-                        "error msg", "jobs", "memout", "timeout", "creation"
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-                    """,
+                INSERT INTO "results" (
+                    "planner", "problem", "mode", "status", "computation", "quality",
+                    "error msg", "jobs", "memout", "timeout", "creation"
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                """,
             (
                 result_mock.planner_name,
                 result_mock.problem.name,
