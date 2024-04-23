@@ -43,6 +43,8 @@ class TestPlanner(ModelTest):
     def config(self) -> PlannerConfig:
         return PlannerConfig(
             name="mock-config",
+            anytime_name="mock-anytime",
+            oneshot_name="mock-oneshot",
             problems={"mockdomain": "base"},
             env={"MY_VARIABLE": "new_value", "MY_BOOL": "True"},
         )
@@ -99,7 +101,7 @@ class TestPlanner(ModelTest):
 
     @pytest.mark.parametrize("name", ["name1", "name2"])
     def test_oneshot_name_default(self, name: str):
-        config = replace(self.config(), name=name)
+        config = replace(self.config(), name=name, oneshot_name=None)
         planner = Planner(config)
         assert planner.oneshot_name == name
 
@@ -111,7 +113,7 @@ class TestPlanner(ModelTest):
 
     @pytest.mark.parametrize("name", ["name1", "name2"])
     def test_anytime_name_default(self, name: str):
-        config = replace(self.config(), name=name)
+        config = replace(self.config(), name=name, anytime_name=None)
         planner = Planner(config)
         assert planner.anytime_name == name
 
@@ -354,10 +356,11 @@ class TestPlanner(ModelTest):
         _, version = planner.get_version(problem)
 
         try:
-            list(planner.solve(problem, solve_config, RunningMode.ONESHOT))[-1]
+            res = list(planner.solve(problem, solve_config, RunningMode.ONESHOT))[-1]
         except Exception:  # nosec: B110
             pass
 
+        assert res.planner_name == planner.name
         mocked_oneshot_planner.assert_called_once_with(name=planner.oneshot_name)
         mocked_planner.solve.assert_called_once()
         solve_args, solve_kwargs = mocked_planner.solve.call_args
@@ -384,10 +387,11 @@ class TestPlanner(ModelTest):
         _, version = planner.get_version(problem)
 
         try:
-            list(planner.solve(problem, solve_config, RunningMode.ANYTIME))
+            res = list(planner.solve(problem, solve_config, RunningMode.ANYTIME))
         except Exception:  # nosec: B110
             pass
 
+        assert all(r.planner_name == planner.name for r in res)
         mocked_anytime_planner.assert_called_once_with(name=planner.anytime_name)
         mocked_planner.get_solutions.assert_called_once()
         solve_args, solve_kwargs = mocked_planner.get_solutions.call_args

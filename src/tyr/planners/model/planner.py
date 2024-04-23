@@ -194,15 +194,15 @@ class Planner:
         # Get the planner based on the running mode.
         if running_mode == RunningMode.ONESHOT:
             builder = upf.OneshotPlanner
-            planner_name = self.oneshot_name
+            upf_planner_name = self.oneshot_name
         else:
             builder = upf.AnytimePlanner
-            planner_name = self.anytime_name
+            upf_planner_name = self.anytime_name
 
         # Check the database.
         if config.no_db_load is False:
             db = Database().load_planner_result(
-                planner_name,
+                self.name,
                 problem,
                 config,
                 running_mode,
@@ -236,7 +236,7 @@ class Planner:
         try:
             # Disable credits.
             get_environment().credits_stream = None
-            with builder(name=planner_name) as planner:
+            with builder(name=upf_planner_name) as planner:
                 # Disable compatibility checking.
                 planner.skip_checks = True
                 # Get the log file.
@@ -266,7 +266,7 @@ class Planner:
                                 self._last_upf_result, start, end = result, s, e
                                 yield self._handle_upf_result(
                                     result,
-                                    planner_name,
+                                    self.name,
                                     problem,
                                     version_name,
                                     running_mode,
@@ -295,7 +295,7 @@ class Planner:
 
             yield self._handle_upf_result(
                 self.last_upf_result,
-                planner_name,
+                self.name,
                 problem,
                 version_name,
                 running_mode,
