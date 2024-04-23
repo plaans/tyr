@@ -43,6 +43,13 @@ class PopfPlanner(TyrPDDLPlanner):
     def _get_engine_epsilon(self) -> Optional[Fraction]:
         return Fraction(1, 1000)
 
+    def _get_computation_time(self, logs: List[LogMessage]) -> Optional[float]:
+        for log in logs:
+            for line in log.message.splitlines():
+                if line.startswith("; Time"):
+                    return float(line.split()[2])
+        return None
+
     def _get_plan(self, proc_out: List[str]) -> str:
         plan: List[str] = []
         parsing = False
