@@ -134,15 +134,9 @@ class Planner:
         """
         start = time.time()
         try:
-            first_result = running_mode == RunningMode.ANYTIME
             for result in self._solve(problem, config, running_mode):
                 if config.no_db_save is False:
                     Database().save_planner_result(result)
-                    if first_result:
-                        first_result = False
-                        Database().save_planner_result(
-                            replace(result, running_mode=RunningMode.ONESHOT)
-                        )
                 yield result
         except Exception:  # pylint: disable=broad-exception-caught
             # Save the error in logs.
