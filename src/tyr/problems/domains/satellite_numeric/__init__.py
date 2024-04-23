@@ -2,7 +2,7 @@ from math import ceil
 from pathlib import Path
 from typing import Optional
 
-from unified_planning.plans import Plan, PlanKind
+from unified_planning.plans import Plan, PlanKind, SequentialPlan
 from unified_planning.shortcuts import AbstractProblem, Problem
 
 from tyr.problems.converter import reduce_version
@@ -25,6 +25,9 @@ class SatelliteNumericDomain(AbstractDomain):
                 val = version.initial_value(slew_time(*action.actual_parameters[1:]))
                 quality += val.constant_value()
             return quality
+        if plan.kind == PlanKind.TIME_TRIGGERED_PLAN:
+            seq_plan = SequentialPlan(list(a for (_, a, _) in plan.timed_actions))
+            return self.get_quality_of_plan(seq_plan, version)
         if plan.kind == PlanKind.HIERARCHICAL_PLAN:
             return self.get_quality_of_plan(plan.action_plan, version)
         raise ValueError(f"Plan kind {plan.kind} is not supported.")
