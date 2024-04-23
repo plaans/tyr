@@ -85,7 +85,7 @@ class PopfPlanner(TyrPDDLPlanner):
         retval: int,
         log_messages: Optional[List[LogMessage]] = None,
     ) -> PlanGenerationResultStatus:
-        if plan is not None:
+        if plan is not None and len(plan.timed_actions) > 0:
             return PlanGenerationResultStatus.SOLVED_SATISFICING
         if retval == 0:
             return PlanGenerationResultStatus.UNSOLVABLE_INCOMPLETELY
