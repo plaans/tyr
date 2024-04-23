@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Optional
 
+from unified_planning.plans import Plan
 from unified_planning.shortcuts import AbstractProblem
 
 from tyr.problems.converter import goals_to_tasks
@@ -11,6 +12,9 @@ from tyr.problems.model import AbstractDomain, ProblemInstance
 class RoversHierarchicalNumericDomain(AbstractDomain):
     def get_num_problems(self) -> int:
         return RoversNumericDomain().get_num_problems()
+
+    def get_quality_of_plan(self, plan: Plan) -> Optional[float]:
+        return RoversNumericDomain().get_quality_of_plan(plan)
 
     def _build_problem_base(
         self, problem: ProblemInstance, version: str
