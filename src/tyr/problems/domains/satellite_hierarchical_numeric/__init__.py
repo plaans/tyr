@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Optional
 
+from unified_planning.plans import Plan
 from unified_planning.shortcuts import AbstractProblem
 
 from tyr.problems.converter import goals_to_tasks
@@ -11,6 +12,11 @@ from tyr.problems.model import AbstractDomain, ProblemInstance
 class SatelliteHierarchicalNumericDomain(AbstractDomain):
     def get_num_problems(self) -> int:
         return SatelliteNumericDomain().get_num_problems()
+
+    def get_quality_of_plan(
+        self, plan: Plan, version: AbstractProblem
+    ) -> Optional[float]:
+        return SatelliteNumericDomain().get_quality_of_plan(plan, version)
 
     def _build_problem(
         self, problem: ProblemInstance, version: str

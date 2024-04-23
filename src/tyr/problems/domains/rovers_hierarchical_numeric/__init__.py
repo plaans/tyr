@@ -13,8 +13,10 @@ class RoversHierarchicalNumericDomain(AbstractDomain):
     def get_num_problems(self) -> int:
         return RoversNumericDomain().get_num_problems()
 
-    def get_quality_of_plan(self, plan: Plan) -> Optional[float]:
-        return RoversNumericDomain().get_quality_of_plan(plan)
+    def get_quality_of_plan(
+        self, plan: Plan, version: AbstractProblem
+    ) -> Optional[float]:
+        return RoversNumericDomain().get_quality_of_plan(plan, version)
 
     def _build_problem_base(
         self, problem: ProblemInstance, version: str

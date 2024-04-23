@@ -96,7 +96,7 @@ class ProblemInstance:
         metric = version.quality_metrics[0]
         if metric.is_minimize_makespan():
             return self._get_makespan_of_plan(plan)
-        return self.domain.get_quality_of_plan(plan)
+        return self.domain.get_quality_of_plan(plan, version)
 
     def _get_makespan_of_plan(self, plan: Plan) -> Optional[float]:
         if plan.kind == PlanKind.TIME_TRIGGERED_PLAN:

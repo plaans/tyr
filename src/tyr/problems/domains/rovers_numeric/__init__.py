@@ -14,11 +14,13 @@ class RoversNumericDomain(AbstractDomain):
     def get_num_problems(self) -> int:
         return len([f for f in FOLDER.iterdir() if "instance" in f.name])
 
-    def get_quality_of_plan(self, plan: Plan) -> Optional[float]:
+    def get_quality_of_plan(
+        self, plan: Plan, version: AbstractProblem
+    ) -> Optional[float]:
         if plan.kind == PlanKind.SEQUENTIAL_PLAN:
             return len(list(a for a in plan.actions if a.action.name == "recharge"))
         if plan.kind == PlanKind.HIERARCHICAL_PLAN:
-            return self.get_quality_of_plan(plan.action_plan)
+            return self.get_quality_of_plan(plan.action_plan, version)
         raise ValueError(f"Plan kind {plan.kind} is not supported.")
 
     def build_problem_base(self, problem: ProblemInstance) -> Optional[AbstractProblem]:
