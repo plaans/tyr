@@ -11,7 +11,11 @@ from tyr.planners.model.pddl_planner import TyrPDDLPlanner
 
 
 class OpticPlanner(TyrPDDLPlanner):
-    """The Optic planner wrapped into local PDDL planner."""
+    """
+    The Optic planner wrapped into local PDDL planner.
+
+    NOTE: In Anytime mode, the planner will only return the last plan found.
+    """
 
     def _get_cmd(
         self,
@@ -39,7 +43,7 @@ class OpticPlanner(TyrPDDLPlanner):
 
     def _get_computation_time(self, logs: List[LogMessage]) -> Optional[float]:
         for log in logs:
-            for line in log.message.splitlines():
+            for line in reversed(log.message.splitlines()):
                 if line.startswith("; Time"):
                     return float(line.split()[2])
         return None
@@ -50,11 +54,12 @@ class OpticPlanner(TyrPDDLPlanner):
         for line in proc_out:
             if self._starting_plan_str() in line:
                 parsing = True
+                plan = []  # Clear the plan to keep only the last one
                 continue
             if not parsing:
                 continue
             if self._ending_plan_str() == line:
-                break
+                parsing = False
             plan.append(self._parse_plan_line(line))
         return "\n".join(plan)
 
