@@ -395,15 +395,22 @@ class Planner:
             config,
             running_mode,
         )
+        if result.computation_time is None:
+            result.computation_time = times[1] - times[0]
+
+        if upf_result is not None and upf_result.plan is not None:
+            splitted = str(upf_result.plan).strip().split("\n")
+            has_plan = len(splitted) > 1
+        else:
+            has_plan = False
         if (
-            upf_result is not None
-            and upf_result.plan is not None
+            has_plan
             and upf_result.status == PlanGenerationResultStatus.TIMEOUT
+            and running_mode == RunningMode.ANYTIME
         ):
             # On anytime mode, last result can be timeout even if an intermediate was solved.
             result.status = PlannerResultStatus.SOLVED
-        if result.computation_time is None:
-            result.computation_time = times[1] - times[0]
+
         # Check if a special status can be found in the logs if the result is not solved.
         log_path = self.get_log_file(problem, "solve", running_mode)
         if (
