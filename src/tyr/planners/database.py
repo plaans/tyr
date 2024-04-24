@@ -115,6 +115,7 @@ class Database(Singleton):
         config: "SolveConfig",
         running_mode: "RunningMode",
         keep_unsupported: bool = False,
+        force_before_timeout: bool = False,
     ) -> Optional["PlannerResult"]:
         """Loads the planner result matching the given attributes if any.
 
@@ -124,6 +125,7 @@ class Database(Singleton):
             config (SolveConfig): The configuration used to solve the problem.
             running_mode (RunningMode): The running mode for the planner resolution.
             keep_unsupported (bool): Whether to keep unsupported results.
+            force_before_timeout (bool): Whether to force the result to compute before the timeout.
 
         Returns:
             Optional[PlannerResult]: The planner result if present, otherwise None.
@@ -132,20 +134,19 @@ class Database(Singleton):
         # pylint: disable = import-outside-toplevel
         from tyr.planners.model.result import PlannerResult, PlannerResultStatus
 
-        with self.database() as conn:
-            resp = (
-                conn.cursor()
-                .execute(
-                    """
+        request = """
                     SELECT * FROM "results"
                     WHERE "planner"=? AND "problem"=? AND "mode"=? AND "memout"=?
                     ORDER BY "creation" DESC
                     LIMIT 1;
-                    """,
-                    (planner_name, problem.name, running_mode.name, config.memout),
-                )
-                .fetchone()
-            )
+                    """
+        params = [planner_name, problem.name, running_mode.name, config.memout]
+        if force_before_timeout:
+            request = request.replace('"memout"=?', '"memout"=? AND "computation"<=?')
+            params.append(config.timeout)
+
+        with self.database() as conn:
+            resp = conn.cursor().execute(request, params).fetchone()
 
         if (
             resp is None
@@ -158,6 +159,17 @@ class Database(Singleton):
             return None
 
         if resp[5] is not None and resp[5] > config.timeout:
+            if running_mode.name == "ANYTIME" and not force_before_timeout:
+                result_before_timeout = self.load_planner_result(
+                    planner_name,
+                    problem,
+                    config,
+                    running_mode,
+                    keep_unsupported,
+                    force_before_timeout=True,
+                )
+                if result_before_timeout is not None:
+                    return result_before_timeout
             result = PlannerResult.timeout(problem, planner_name, config, running_mode)
             return replace(result, from_database=True)
 

@@ -196,12 +196,12 @@ class TestDatabase:
                     ORDER BY "creation" DESC
                     LIMIT 1;
                     """,
-            (
+            [
                 result_mock.planner_name,
                 result_mock.problem.name,
                 result_mock.running_mode.name,
                 result_mock.config.memout,
-            ),
+            ],
         )
         conn_mock.commit.assert_not_called()
 
@@ -264,7 +264,7 @@ class TestDatabase:
         assert result is None
 
     @patch("tyr.planners.database.sqlite3.connect")
-    def test_load_planner_result_after_config_timeout(
+    def test_load_planner_result_after_config_timeout_oneshot(
         self,
         connect_mock,
         database,
@@ -308,6 +308,69 @@ class TestDatabase:
             "",
             True,
         )
+
+    @patch("tyr.planners.database.sqlite3.connect")
+    def test_load_planner_result_after_config_timeout_anytime(
+        self,
+        connect_mock,
+        database,
+        conn_mock,
+        cursor_mock,
+        result_mock,
+    ):
+        connect_mock.return_value = conn_mock
+        conn_mock.cursor.return_value = cursor_mock
+        now = "2021-01-01T00:00:00"
+        cursor_mock.execute.return_value.fetchone.side_effect = [
+            (
+                1,
+                result_mock.planner_name,
+                result_mock.problem.name,
+                "ANYTIME",
+                "SOLVED",
+                50,
+                result_mock.plan_quality,
+                result_mock.error_message,
+                result_mock.config.jobs,
+                result_mock.config.memout,
+                result_mock.config.timeout,
+                now,
+            ),
+            (
+                2,
+                result_mock.planner_name,
+                result_mock.problem.name,
+                "ANYTIME",
+                "SOLVED",
+                2,
+                result_mock.plan_quality,
+                result_mock.error_message,
+                result_mock.config.jobs,
+                result_mock.config.memout,
+                result_mock.config.timeout,
+                now,
+            ),
+        ]
+
+        result = database.load_planner_result(
+            result_mock.planner_name,
+            result_mock.problem,
+            result_mock.config,
+            RunningMode.ANYTIME,
+        )
+
+        assert result == PlannerResult(
+            result_mock.planner_name,
+            result_mock.problem,
+            RunningMode.ANYTIME,
+            PlannerResultStatus.SOLVED,
+            result_mock.config,
+            2,
+            result_mock.plan_quality,
+            result_mock.error_message,
+            True,
+        )
+        assert cursor_mock.execute.return_value.fetchone.call_count == 2
 
     @patch("tyr.planners.database.sqlite3.connect")
     def test_load_planner_result_bigger_timeout(
