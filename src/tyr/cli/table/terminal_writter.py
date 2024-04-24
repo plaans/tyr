@@ -326,10 +326,17 @@ class TableTerminalWritter(Writter):
             v_span = len(flat_col_headers) * (1 if i == 0 else -1)
             empty = Cell("", Adjust.CENTER, len(flat_row_headers), v_span=v_span)
             table.append(CellRow([Sep.DOUBLE, empty, Sep.DOUBLE]))
+            # XXX: This assums that each "planner" has the same number of "metrics".
             col_modulo = int(len(col_headers) / len(flat_col_headers[-2]))
             for j, col_header in enumerate(col_headers):
-                # XXX: This assums that each header has the same number of subheaders.
-                span = int(len(flat_col_headers[-1]) / len(col_headers))
+                span = sum(
+                    1
+                    for col_subheader in flat_col_headers[-1]
+                    if all(
+                        col_header[k] == col_subheader[k]
+                        for k in range(len(col_header))
+                    )
+                )
                 table[-1].append(Cell(col_header[-1], Adjust.CENTER, span))
                 if span == 1 and j % col_modulo < col_modulo - 1:
                     table[-1].append(Sep.SIMPLE)
@@ -338,21 +345,22 @@ class TableTerminalWritter(Writter):
             table.append(Sep.DOUBLE)
 
         # Create the cells.
-        # XXX: This assums that each header has the same number of subheaders.
-        row_modulo = (
-            int(len(flat_row_headers[-1]) / len(flat_row_headers[-2]))
-            if len(flat_row_headers) > 1
-            else 1
-        )
         for i, row_header in enumerate(flat_row_headers[-1]):
             table.append(CellRow([Sep.DOUBLE]))
             for k, v in enumerate(row_header):
-                to_print = v if k == len(row_header) - 1 or i % row_modulo == 0 else ""
-                v_span = (
-                    1
-                    if k == len(row_header) - 1
-                    else row_modulo * (1 if to_print else -1)
+                is_first_header = (
+                    i == 0
+                    or flat_row_headers[-1][i - 1][: k + 1] != row_header[: k + 1]
                 )
+                to_print = v if is_first_header else ""
+                v_span, j = 0, 0
+                while (
+                    i + j < len(flat_row_headers[-1])
+                    and flat_row_headers[-1][i + j][: k + 1] == row_header[: k + 1]
+                ):
+                    v_span += 1
+                    j += 1
+                v_span = v_span * (1 if to_print else -1)
                 table[-1].append(Cell(to_print, Adjust.RIGHT, v_span=v_span))
                 table[-1].append(Sep.SIMPLE)
             table[-1].pop()
@@ -396,15 +404,19 @@ class TableTerminalWritter(Writter):
                     value = m.evaluate(results, self._results)
 
                 table[-1].append(Cell(value, Adjust.RIGHT))
-                # XXX: This assums that each header has the same number of subheaders.
+                # XXX: This assums that each "planner" has the same number of "metrics".
                 if j % col_modulo < col_modulo - 1:
                     table[-1].append(Sep.SIMPLE)
                 else:
                     table[-1].append(Sep.DOUBLE)
-            if i % row_modulo < row_modulo - 1 or row_modulo == 1:
-                table.append(Sep.SIMPLE)
-            else:
+            is_last_header = (
+                i == len(flat_row_headers[-1]) - 1
+                or flat_row_headers[-1][i + 1][0] != row_header[0]
+            )
+            if is_last_header:
                 table.append(Sep.DOUBLE)
+            else:
+                table.append(Sep.SIMPLE)
         table.pop()
         table.append(Sep.DOUBLE)
 
