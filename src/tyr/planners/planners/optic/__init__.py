@@ -1,11 +1,14 @@
-import sys
 from fractions import Fraction
 from pathlib import Path
 from typing import Any, List, Optional
 
-from unified_planning.engines.results import LogMessage, PlanGenerationResultStatus
-from unified_planning.plans import Plan
-from unified_planning.shortcuts import AbstractProblem, Problem
+from unified_planning.engines.results import (
+    LogMessage,
+    PlanGenerationResultStatus,
+    PlanGenerationResult,
+)
+from unified_planning.io import PDDLWriter
+from unified_planning.shortcuts import Problem
 
 from tyr.planners.model.pddl_planner import TyrPDDLPlanner
 
@@ -37,6 +40,27 @@ class OpticPlanner(TyrPDDLPlanner):
             .replace("-N", "-n")
             .split()
         )
+
+    def _parse_planner_output(self, writer, planner_output):
+        assert isinstance(self._writer, PDDLWriter)
+        for l in planner_output.splitlines():
+            if self._starting_plan_str() in l:
+                writer.storing = True
+            elif writer.storing and "" == l:
+                plan_str = "\n".join(writer.current_plan)
+                plan = self._plan_from_str(
+                    writer.problem, plan_str, self._writer.get_item_named
+                )
+                res = PlanGenerationResult(
+                    PlanGenerationResultStatus.INTERMEDIATE,
+                    plan=plan,
+                    engine_name=self.name,
+                )
+                writer.res_queue.put(res)
+                writer.current_plan = []
+                writer.storing = False
+            elif writer.storing and l:
+                writer.current_plan.append(self._parse_plan_line(l))
 
     def _get_engine_epsilon(self) -> Optional[Fraction]:
         return Fraction(1, 1000)
