@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum, auto
 from typing import TYPE_CHECKING, Optional, Union
 
@@ -103,6 +103,41 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             computation_time,
             plan_quality,
         )
+
+    def merge(self, other: "PlannerResult") -> "PlannerResult":
+        """Merges two results into one.
+
+        Args:
+            other (PlannerResult): The other result to merge.
+
+        Returns:
+            PlannerResult: The merged result.
+        """
+        if self.config != other.config:
+            raise ValueError("Cannot merge results with different configurations.")
+        if self.planner_name != other.planner_name:
+            raise ValueError("Cannot merge results from different planners.")
+        if self.problem != other.problem:
+            raise ValueError("Cannot merge results from different problems.")
+
+        computation = min(
+            (
+                x.computation_time
+                for x in (self, other)
+                if x.computation_time is not None
+            ),
+            default=None,
+        )
+        quality = min(
+            (x.plan_quality for x in (self, other) if x.plan_quality is not None),
+            default=None,
+        )
+
+        if other.status != PlannerResultStatus.SOLVED:
+            return replace(self, plan_quality=quality)
+        if self.status != PlannerResultStatus.SOLVED:
+            return replace(other, plan_quality=quality)
+        return replace(self, computation_time=computation, plan_quality=quality)
 
     @staticmethod
     def error(  # pylint: disable = too-many-arguments
