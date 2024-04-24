@@ -182,13 +182,6 @@ class Database(Singleton):
                         ORDER BY "creation" DESC
                         LIMIT 1;
                         """
-            print(
-                resp[11],
-                (
-                    datetime.datetime.fromisoformat(resp[11])
-                    - datetime.timedelta(seconds=config.timeout)
-                ).isoformat(),
-            )
             params = [
                 planner_name,
                 problem.name,
