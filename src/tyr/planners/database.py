@@ -173,6 +173,39 @@ class Database(Singleton):
             result = PlannerResult.timeout(problem, planner_name, config, running_mode)
             return replace(result, from_database=True)
 
+        if resp[4] != "SOLVED" and running_mode.name == "ANYTIME":
+            request = """
+                        SELECT * FROM "results"
+                        WHERE "planner"=? AND "problem"=? AND "mode"=? AND "memout"=?
+                        AND "computation"<=? AND "creation"<=? AND "creation">=?
+                        AND "status"="SOLVED"
+                        ORDER BY "creation" DESC
+                        LIMIT 1;
+                        """
+            print(
+                resp[11],
+                (
+                    datetime.datetime.fromisoformat(resp[11])
+                    - datetime.timedelta(seconds=config.timeout)
+                ).isoformat(),
+            )
+            params = [
+                planner_name,
+                problem.name,
+                running_mode.name,
+                config.memout,
+                config.timeout,
+                resp[11],
+                (
+                    datetime.datetime.fromisoformat(resp[11])
+                    - datetime.timedelta(seconds=config.timeout)
+                ).isoformat(),
+            ]
+            with self.database() as conn:
+                resp_solved = conn.cursor().execute(request, params).fetchone()
+            if resp_solved is not None:
+                resp = resp_solved
+
         return PlannerResult(
             planner_name,
             problem,
