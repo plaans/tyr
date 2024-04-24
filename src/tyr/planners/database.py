@@ -107,7 +107,7 @@ class Database(Singleton):
             )
             conn.commit()
 
-    # pylint: disable = too-many-arguments
+    # pylint: disable = too-many-arguments, too-many-locals
     def load_planner_result(
         self,
         planner_name: str,
