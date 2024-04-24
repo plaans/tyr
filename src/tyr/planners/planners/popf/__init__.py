@@ -85,8 +85,15 @@ class PopfPlanner(TyrPDDLPlanner):
         retval: int,
         log_messages: Optional[List[LogMessage]] = None,
     ) -> PlanGenerationResultStatus:
-        if plan is not None and len(plan.timed_actions) > 0:
+        if plan is not None:
+            splitted = str(plan).strip().split("\n")
+            has_plan = len(splitted) > 1
+        else:
+            has_plan = False
+
+        if has_plan:
             return PlanGenerationResultStatus.SOLVED_SATISFICING
+        print(retval)
         if retval == 0:
             return PlanGenerationResultStatus.UNSOLVABLE_INCOMPLETELY
         return PlanGenerationResultStatus.INTERNAL_ERROR
