@@ -76,7 +76,7 @@ class Database(Singleton):
         try:
             self._save_planner_result(result)
         except sqlite3.OperationalError as e:
-            time.sleep(random.randint(10, 1000) / 1000)
+            time.sleep(random.randint(10, 1000) / 1000)  # nosec: B311
             if max_retries > 0:
                 self._save_planner_result_safe(result, max_retries - 1)
             else:
