@@ -86,3 +86,61 @@ class RoversTemporalNumericDomain(AbstractDomain):
         self, problem: ProblemInstance
     ) -> Optional[AbstractProblem]:
         return reduce_version(problem, "no_div", int(problem.uid) % 5 + 1)
+
+    def build_problem_base_hier(
+        self, problem: ProblemInstance
+    ) -> Optional[AbstractProblem]:
+        from tyr.problems.domains.rovers_hierarchical_temporal_numeric import (
+            RoversHierarchicalTemporalNumericDomain,
+        )
+
+        return RoversHierarchicalTemporalNumericDomain().build_problem_base(problem)
+
+    def build_problem_red_hier(
+        self, problem: ProblemInstance
+    ) -> Optional[AbstractProblem]:
+        from tyr.problems.domains.rovers_hierarchical_temporal_numeric import (
+            RoversHierarchicalTemporalNumericDomain,
+        )
+
+        return RoversHierarchicalTemporalNumericDomain().build_problem_red(problem)
+
+    def build_problem_fix_dur_hier(
+        self, problem: ProblemInstance
+    ) -> Optional[AbstractProblem]:
+        from tyr.problems.domains.rovers_hierarchical_temporal_numeric import (
+            RoversHierarchicalTemporalNumericDomain,
+        )
+
+        return RoversHierarchicalTemporalNumericDomain().build_problem_fix_dur(problem)
+
+    def build_problem_red_fix_dur_hier(
+        self, problem: ProblemInstance
+    ) -> Optional[AbstractProblem]:
+        from tyr.problems.domains.rovers_hierarchical_temporal_numeric import (
+            RoversHierarchicalTemporalNumericDomain,
+        )
+
+        return RoversHierarchicalTemporalNumericDomain().build_problem_red_fix_dur(
+            problem
+        )
+
+    def build_problem_no_div_hier(
+        self, problem: ProblemInstance
+    ) -> Optional[AbstractProblem]:
+        from tyr.problems.domains.rovers_hierarchical_temporal_numeric import (
+            RoversHierarchicalTemporalNumericDomain,
+        )
+
+        return RoversHierarchicalTemporalNumericDomain().build_problem_no_div(problem)
+
+    def build_problem_red_no_div_hier(
+        self, problem: ProblemInstance
+    ) -> Optional[AbstractProblem]:
+        from tyr.problems.domains.rovers_hierarchical_temporal_numeric import (
+            RoversHierarchicalTemporalNumericDomain,
+        )
+
+        return RoversHierarchicalTemporalNumericDomain().build_problem_red_no_div(
+            problem
+        )

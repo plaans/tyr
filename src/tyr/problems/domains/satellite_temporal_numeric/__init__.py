@@ -39,3 +39,43 @@ class SatelliteTemporalNumericDomain(AbstractDomain):
         self, problem: ProblemInstance
     ) -> Optional[AbstractProblem]:
         return reduce_version(problem, "no_float", int(problem.uid) % 5 + 1)
+
+    def build_problem_base_hier(
+        self, problem: ProblemInstance
+    ) -> Optional[AbstractProblem]:
+        from tyr.problems.domains.satellite_hierarchical_temporal_numeric import (
+            SatelliteHierarchicalTemporalNumericDomain,
+        )
+
+        return SatelliteHierarchicalTemporalNumericDomain().build_problem_base(problem)
+
+    def build_problem_red_hier(
+        self, problem: ProblemInstance
+    ) -> Optional[AbstractProblem]:
+        from tyr.problems.domains.satellite_hierarchical_temporal_numeric import (
+            SatelliteHierarchicalTemporalNumericDomain,
+        )
+
+        return SatelliteHierarchicalTemporalNumericDomain().build_problem_red(problem)
+
+    def build_problem_no_float_hier(
+        self, problem: ProblemInstance
+    ) -> Optional[AbstractProblem]:
+        from tyr.problems.domains.satellite_hierarchical_temporal_numeric import (
+            SatelliteHierarchicalTemporalNumericDomain,
+        )
+
+        return SatelliteHierarchicalTemporalNumericDomain().build_problem_no_float(
+            problem
+        )
+
+    def build_problem_red_no_float_hier(
+        self, problem: ProblemInstance
+    ) -> Optional[AbstractProblem]:
+        from tyr.problems.domains.satellite_hierarchical_temporal_numeric import (
+            SatelliteHierarchicalTemporalNumericDomain,
+        )
+
+        return SatelliteHierarchicalTemporalNumericDomain().build_problem_red_no_float(
+            problem
+        )

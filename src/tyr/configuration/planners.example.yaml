@@ -33,6 +33,20 @@
     ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
   upf_engine: tyr.planners.planners.aries.planning.unified.plugin.up_aries.Aries
 
+- name: aries-hier
+  problems:
+    depots-numeric: red_hier
+    depots-temporal-numeric: red_no_div_hier
+    jobshop-temporal-numeric: base_hier
+    rcpsp-temporal-numeric: base_hier
+    rovers-numeric: red_hier
+    rovers-temporal-numeric: red_no_div_hier
+    satellite-numeric: red_no_float_hier
+    satellite-temporal-numeric: red_no_float_hier
+  env:
+    ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
+  upf_engine: tyr.planners.planners.aries.planning.unified.plugin.up_aries.Aries
+
 - name: aries-exponential
   problems:
     factories-simple-hierarchical: exponential

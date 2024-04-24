@@ -18,3 +18,21 @@ class DepotsNumericDomain(AbstractDomain):
 
     def build_problem_red(self, problem: ProblemInstance) -> Optional[AbstractProblem]:
         return reduce_version(problem, "base", int(problem.uid) % 5 + 1)
+
+    def build_problem_base_hier(
+        self, problem: ProblemInstance
+    ) -> Optional[AbstractProblem]:
+        from tyr.problems.domains.depots_hierarchical_numeric import (
+            DepotsHierarchicalNumericDomain,
+        )
+
+        return DepotsHierarchicalNumericDomain().build_problem_base(problem)
+
+    def build_problem_red_hier(
+        self, problem: ProblemInstance
+    ) -> Optional[AbstractProblem]:
+        from tyr.problems.domains.depots_hierarchical_numeric import (
+            DepotsHierarchicalNumericDomain,
+        )
+
+        return DepotsHierarchicalNumericDomain().build_problem_red(problem)
