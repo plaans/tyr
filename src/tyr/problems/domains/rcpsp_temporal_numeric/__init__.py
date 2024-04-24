@@ -33,8 +33,6 @@ class RcpspTemporalNumericDomain(AbstractDomain):
     def build_problem_base_hier(
         self, problem: ProblemInstance
     ) -> Optional[AbstractProblem]:
-        from tyr.problems.domains.rcpsp_scheduling import (
-            RcpspSchedulingDomain,
-        )
+        from tyr.problems.domains.rcpsp_scheduling import RcpspSchedulingDomain
 
         return RcpspSchedulingDomain().build_problem_base(problem)

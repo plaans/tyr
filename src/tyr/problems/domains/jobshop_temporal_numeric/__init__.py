@@ -33,8 +33,6 @@ class JobshopTemporalNumericDomain(AbstractDomain):
     def build_problem_base_hier(
         self, problem: ProblemInstance
     ) -> Optional[AbstractProblem]:
-        from tyr.problems.domains.jobshop_scheduling import (
-            JobshopSchedulingDomain,
-        )
+        from tyr.problems.domains.jobshop_scheduling import JobshopSchedulingDomain
 
         return JobshopSchedulingDomain().build_problem_base(problem)
