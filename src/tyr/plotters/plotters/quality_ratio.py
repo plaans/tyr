@@ -3,6 +3,7 @@ from typing import List, Tuple
 
 import plotly.graph_objects as go
 
+from tyr.planners.model.config import RunningMode
 from tyr.planners.model.result import PlannerResult
 from tyr.plotters.plotter import Plotter
 
@@ -24,7 +25,7 @@ class QualityRatioPlotter(Plotter):
         return {"title": "Instances"}
 
     def _yaxis(self) -> dict:
-        return {"title": "Ratio"}
+        return {"title": "Improvement Ratio"}
 
     def _data(self, data: List[PlannerResult]) -> Tuple[List[float], List[float]]:
         """Extract the data to plot."""
@@ -36,7 +37,11 @@ class QualityRatioPlotter(Plotter):
         # Sort results by planner name
         planner_results = [
             sorted(
-                [r for r in data if r.planner_name == name],
+                [
+                    r
+                    for r in data
+                    if r.planner_name == name and r.running_mode == RunningMode.ANYTIME
+                ],
                 key=lambda r: r.problem.name,
             )
             for name in self._planner_names
@@ -58,9 +63,7 @@ class QualityRatioPlotter(Plotter):
             if q1 is None or q2 is None:
                 raw_data.append(Point(timeout=q1 is None, value=None))
             else:
-                q1 += 1  # Avoid division by zero
-                q2 += 1  # Avoid division by zero
-                value = 0 if q1 == q2 else -q1 / q2 if q1 > q2 else q2 / q1
+                value = 0 if q1 == q2 else -q1 / q2 + 1 if q1 > q2 else q2 / q1 - 1
                 raw_data.append(Point(timeout=None, value=value))
 
         # Compute the unsolved values
