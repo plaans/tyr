@@ -168,8 +168,10 @@ class TableTerminalWritter(Writter):
         best_column: bool = False,
         best_row: bool = False,
         latex: bool = False,
+        latex_array_stretch: float = 1.2,
         latex_caption: str = "",
         latex_font_size: str = "normalsize",
+        latex_horizontal_space: float = 0.35,
         latex_star: bool = False,
     ) -> None:
         super().__init__(solve_config, out, verbosity, config)
@@ -180,8 +182,10 @@ class TableTerminalWritter(Writter):
         self._best_column = best_column
         self._best_row = best_row
         self._latex = latex
+        self._latex_array_stretch = latex_array_stretch
         self._latex_caption = latex_caption
         self._latex_font_size = latex_font_size
+        self._latex_horizontal_space = latex_horizontal_space
         self._latex_star = latex_star
 
     # =============================== Manipulation =============================== #
@@ -518,8 +522,8 @@ class TableTerminalWritter(Writter):
         self.line(f"\\begin{{{env}}}[htb]")
         self.line("\\centering")
         self.line(f"\\{self._latex_font_size}")
-        self.line("\\renewcommand{\\arraystretch}{1.2}")
-        self.line("\\def\\hs{\\hspace{0.35cm}}")
+        self.line(f"\\renewcommand{{\\arraystretch}}{{{self._latex_array_stretch}}}")
+        self.line(f"\\def\\hs{{\\hspace{{{self._latex_horizontal_space}cm}}}}")
         num_col = max(col_length) + 1 + len([i for i in table[-2] if i is Sep.DOUBLE])
         self.line("\\begin{tabular}{" + "@{\\hs}c" * num_col + "@{}}")
         self.line("\\toprule")

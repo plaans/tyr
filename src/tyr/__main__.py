@@ -32,8 +32,10 @@ DEFAULT_CONFIG = {
     "fs": False,
     "jobs": 1,
     "latex": False,
+    "latex_array_stretch": 1.2,
     "latex_caption": "Table of metrics.",
     "latex_fontsize": "normalsize",
+    "latex_horizontal_space": 0.35,
     "latex_star": False,
     "logs_path": "",
     "memout": 4 * 1024**3,
@@ -628,8 +630,29 @@ def cli_solve(
 # @click.option("--best-col", is_flag=True, help="Print the best metrics on the right.")
 # @click.option("--best-row", is_flag=True, help="Print the best metrics on the bottom.")
 @latex_option
-@click.option("--latex-caption", type=str, help="Caption for the LaTeX table.")
-@click.option("--latex-font-size", type=str, help="Font size for the LaTeX table.")
+@click.option(
+    "--latex-array-stretch",
+    type=float,
+    help="Stretch the LaTeX table vertically. "
+    f"Default: {DEFAULT_CONFIG['latex_array_stretch']}",
+)
+@click.option(
+    "--latex-caption",
+    type=str,
+    help=f"Caption for the LaTeX table. Default: {DEFAULT_CONFIG['latex_caption']}",
+)
+@click.option(
+    "--latex-font-size",
+    type=str,
+    help="Font size for the LaTeX table. "
+    f"Default: {DEFAULT_CONFIG['latex_fontsize']}",
+)
+@click.option(
+    "--latex-horizontal-space",
+    type=float,
+    help="Horizontal space between columns for the LaTeX table in cm. "
+    f"Default: {DEFAULT_CONFIG['latex_horizontal_space']}cm",
+)
 @click.option(
     "--latex-star",
     is_flag=True,
@@ -652,8 +675,10 @@ def cli_table(
     # best_col: bool,
     # best_row: bool,
     latex: bool,
+    latex_array_stretch: float,
     latex_caption: str,
     latex_font_size: str,
+    latex_horizontal_space: float,
     latex_star: bool,
 ):
     config = config or ctx.config
@@ -671,8 +696,10 @@ def cli_table(
         # "best_column": best_col,
         # "best_row": best_row,
         "latex": latex,
+        "latex_array_stretch": latex_array_stretch,
         "latex_caption": latex_caption,
         "latex_font_size": latex_font_size,
+        "latex_horizontal_space": latex_horizontal_space,
         "latex_star": latex_star,
     }
     conf = merge_configs(cli_config, yaml_config(config, "table"), DEFAULT_CONFIG)
@@ -698,8 +725,10 @@ def cli_table(
         False,
         False,
         conf["latex"],
+        conf["latex_array_stretch"],
         conf["latex_caption"],
         conf["latex_font_size"],
+        conf["latex_horizontal_space"],
         conf["latex_star"],
     )
 
