@@ -1,3 +1,4 @@
+import datetime
 from pathlib import Path
 from typing import List, Optional, TextIO, Union
 
@@ -112,10 +113,11 @@ class SlurmTerminalWritter(Writter):
         if RunningMode.ONESHOT in running_modes:
             running_options += " --oneshot"
         self.line("\necho \"==> Running '$PLANNER' on '$DOMAIN'\"")
+        uid = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         self.line(
             " ".join(
-                "srun tyr.sif bench -p $PLANNER -d $DOMAIN --logs-path logs/ "
-                "--db-path db-${SLURM_ARRAY_TASK_ID}.sqlite3 "
+                f"srun tyr.sif bench -p $PLANNER -d $DOMAIN --logs-path logs-{uid}/ "
+                f"--db-path db-{uid}-${{SLURM_ARRAY_TASK_ID}}.sqlite3 "
                 f"--timeout {self._solve_config.timeout} "
                 f"--memout {self._solve_config.memout} "
                 f"--verbose{running_options}"
