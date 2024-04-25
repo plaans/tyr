@@ -59,7 +59,7 @@ class Metric(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         all_results: List[PlannerResult],
     ) -> str:
         """
-        Evaluate the performance of a planner.
+        Evaluate the performance of a planner and format it in string.
 
         Args:
             results: The results to evaluate.
@@ -68,10 +68,25 @@ class Metric(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         results, all_results = tuple(map(self._filter_results, (results, all_results)))
         if len(results) == 0:
             return "-"
-        value = self._evaluate(results, all_results)
+        value = self.evaluate_raw(results, all_results)
         if value == self.max_value():
             return str(int(value))
         return f"{value:.2f}"
+
+    def evaluate_raw(
+        self,
+        results: List[PlannerResult],
+        all_results: List[PlannerResult],
+    ) -> float:
+        """
+        Evaluate the performance of a planner.
+
+        Args:
+            results: The results to evaluate.
+            all_results: All the results containing the other planners and domains.
+        """
+        results, all_results = tuple(map(self._filter_results, (results, all_results)))
+        return self._evaluate(results, all_results)
 
 
 __all__ = ["Metric"]

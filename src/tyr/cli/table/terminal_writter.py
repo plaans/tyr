@@ -271,6 +271,8 @@ class TableTerminalWritter(Writter):
             conf_row_headers = [
                 {"mapping": "lambda d, p, m: d.name"},
             ]
+        final_column = conf.get("final_column", None)
+        final_row = conf.get("final_row", None)
 
         # Get all domains.
         domains = {p.domain for p in self._problems}
@@ -347,8 +349,9 @@ class TableTerminalWritter(Writter):
         # Create the column headers.
         for i, col_headers in enumerate(flat_col_headers):
             v_span = len(flat_col_headers) * (1 if i == 0 else -1)
-            empty = Cell("", Adjust.CENTER, len(flat_row_headers), v_span=v_span)
-            table.append(CellRow([Sep.DOUBLE, empty, Sep.DOUBLE]))
+            head_empty = Cell("", Adjust.CENTER, len(flat_row_headers), v_span)
+            tail_empty = Cell("", Adjust.CENTER, v_span=v_span)
+            table.append(CellRow([Sep.DOUBLE, head_empty, Sep.DOUBLE]))
             # XXX: This assums that each "planner" has the same number of "metrics".
             col_modulo = int(len(col_headers) / len(flat_col_headers[-2]))
             for j, col_header in enumerate(col_headers):
@@ -365,10 +368,19 @@ class TableTerminalWritter(Writter):
                     table[-1].append(Sep.SIMPLE)
                 else:
                     table[-1].append(Sep.DOUBLE)
+            if final_column is not None:
+                if i == 0:
+                    name = final_column["name"]
+                    table[-1].append(Cell(name, Adjust.CENTER, v_span=v_span))
+                else:
+                    table[-1].append(tail_empty)
+                table[-1].append(Sep.DOUBLE)
             table.append(Sep.DOUBLE)
 
         # Create the cells.
+        col_values: List[List[float]] = [[] for _ in range(len(flat_col_headers[-1]))]
         for i, row_header in enumerate(flat_row_headers[-1]):
+            row_values = []
             table.append(CellRow([Sep.DOUBLE]))
             for k, v in enumerate(row_header):
                 is_first_header = (
@@ -425,6 +437,9 @@ class TableTerminalWritter(Writter):
                         if result.problem.domain == d and result.planner_name == p.name
                     ]
                     value = m.evaluate(results, self._results)
+                    raw_value = m.evaluate_raw(results, self._results)
+                    row_values.append(raw_value)
+                    col_values[j].append(raw_value)
 
                 table[-1].append(Cell(value, Adjust.RIGHT))
                 # XXX: This assums that each "planner" has the same number of "metrics".
@@ -432,6 +447,10 @@ class TableTerminalWritter(Writter):
                     table[-1].append(Sep.SIMPLE)
                 else:
                     table[-1].append(Sep.DOUBLE)
+            if final_column is not None:
+                final_row_val = eval(final_column["value"])(row_values)  # nosec: B307
+                table[-1].append(Cell(f"{final_row_val:.2f}", Adjust.RIGHT))
+                table[-1].append(Sep.DOUBLE)
             is_last_header = i == len(flat_row_headers[-1]) - 1 or any(
                 flat_row_headers[-1][i + 1][k] != row_header[k]
                 for k in range(len(row_header) - 1)
@@ -442,6 +461,19 @@ class TableTerminalWritter(Writter):
                 table.append(Sep.SIMPLE)
         table.pop()
         table.append(Sep.DOUBLE)
+        if final_row is not None:
+            table.append(CellRow([Sep.DOUBLE]))
+            name = final_row["name"]
+            table[-1].append(Cell(name, Adjust.CENTER, len(flat_row_headers[-1][-1])))
+            table[-1].append(Sep.DOUBLE)
+            for col_vals in col_values:
+                final_row_val = eval(final_row["value"])(col_vals)  # nosec: B307
+                table[-1].append(Cell(f"{final_row_val:.2f}", Adjust.RIGHT))
+                table[-1].append(Sep.DOUBLE)
+            if final_column is not None:
+                table[-1].append(Cell("", Adjust.CENTER))
+                table[-1].append(Sep.DOUBLE)
+            table.append(Sep.DOUBLE)
 
         # Add the padding to the cells.
         for line in table.lines:
@@ -613,7 +645,10 @@ class TableTerminalWritter(Writter):
 
         else:
             if next_line.num_columns != prev_line.num_columns:
-                raise ValueError("The two lines must have the same number of columns.")
+                raise ValueError(
+                    "The two lines must have the same number of columns."
+                    + f" {next_line.num_columns} != {prev_line.num_columns}"
+                )
             self.horizontal_separator_middle(prev_line, next_line, col_length, sep)
 
         self.line()
