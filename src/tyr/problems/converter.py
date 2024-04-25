@@ -162,20 +162,17 @@ def scheduling_to_actions(schd_pb: SchedulingProblem) -> Problem:
                     effect.forall,
                 )
 
-                # Create a condition to check the new value of the fluent is within its bounds
+                # Create a condition to check the fluent is within its bounds before each effect.
+                # Additional check is made in the goal to ensure it is within bounds at the end.
                 if effect.is_increase() or effect.is_decrease():
                     if not isinstance(effect.fluent.type, _IntType):
                         raise ValueError(
                             "Only integer fluents are supported for increases."
                         )
-                    if effect.is_increase():
-                        val = effect.fluent + effect.value
-                    else:
-                        val = effect.fluent - effect.value
                     if (lb := effect.fluent.type.lower_bound) is not None:
-                        action.add_condition(timing, GE(val, lb))
+                        action.add_condition(timing, GE(effect.fluent, lb))
                     if (ub := effect.fluent.type.upper_bound) is not None:
-                        action.add_condition(timing, LE(val, ub))
+                        action.add_condition(timing, LE(effect.fluent, ub))
 
         # Add a fluent to force the presence of the action (all activities must be present)
         fluent = pddl_pb.add_fluent(f"{action.name}_pres", default_initial_value=False)
@@ -187,7 +184,7 @@ def scheduling_to_actions(schd_pb: SchedulingProblem) -> Problem:
         pddl_pb.add_action(action)
 
     # Add constraints between the actions
-    for constraint in schd_pb.base_constraints:
+    for (constraint, _act) in schd_pb.all_constraints():
         # Only support `<=` constraints
         assert constraint.is_le()  # nosec: B101
 
