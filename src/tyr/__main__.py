@@ -34,7 +34,7 @@ DEFAULT_CONFIG = {
     "latex": False,
     "latex_array_stretch": 1.2,
     "latex_caption": "Table of metrics.",
-    "latex_fontsize": "normalsize",
+    "latex_font_size": "footnotesize",
     "latex_horizontal_space": 0.35,
     "latex_pos": "htb",
     "latex_star": False,
@@ -627,9 +627,6 @@ def cli_solve(
 @planners_filter
 @domains_filter
 @metrics_filter
-# NOTE: The following options are deprecrated for the moment and not implemented.
-# @click.option("--best-col", is_flag=True, help="Print the best metrics on the right.")
-# @click.option("--best-row", is_flag=True, help="Print the best metrics on the bottom.")
 @latex_option
 @click.option(
     "--latex-array-stretch",
@@ -646,7 +643,7 @@ def cli_solve(
     "--latex-font-size",
     type=str,
     help="Font size for the LaTeX table. "
-    f"Default: {DEFAULT_CONFIG['latex_fontsize']}",
+    f"Default: {DEFAULT_CONFIG['latex_font_size']}",
 )
 @click.option(
     "--latex-horizontal-space",
@@ -678,8 +675,6 @@ def cli_table(
     planners: List[str],
     domains: List[str],
     metrics: List[str],
-    # best_col: bool,
-    # best_row: bool,
     latex: bool,
     latex_array_stretch: float,
     latex_caption: str,
@@ -700,8 +695,6 @@ def cli_table(
         "planners": planners,
         "domains": domains,
         "metrics": metrics,
-        # "best_column": best_col,
-        # "best_row": best_row,
         "latex": latex,
         "latex_array_stretch": latex_array_stretch,
         "latex_caption": latex_caption,
@@ -728,10 +721,6 @@ def cli_table(
         conf["planners"],
         conf["domains"],
         conf["metrics"],
-        # conf["best_column"],
-        # conf["best_row"],
-        False,
-        False,
         conf["latex"],
         conf["latex_array_stretch"],
         conf["latex_caption"],

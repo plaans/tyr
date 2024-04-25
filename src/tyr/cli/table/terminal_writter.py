@@ -165,12 +165,10 @@ class TableTerminalWritter(Writter):
         out: Union[Optional[TextIO], List[TextIO]] = None,
         verbosity: int = 0,
         config: Optional[Path] = None,
-        best_column: bool = False,
-        best_row: bool = False,
         latex: bool = False,
         latex_array_stretch: float = 1.2,
         latex_caption: str = "",
-        latex_font_size: str = "normalsize",
+        latex_font_size: str = "footnotesize",
         latex_horizontal_space: float = 0.35,
         latex_pos: str = "htb",
         latex_star: bool = False,
@@ -180,8 +178,6 @@ class TableTerminalWritter(Writter):
         self._planners: List[Planner] = []
         self._problems: List[ProblemInstance] = []
         self._metrics: List[Metric] = []
-        self._best_column = best_column
-        self._best_row = best_row
         self._latex = latex
         self._latex_array_stretch = latex_array_stretch
         self._latex_caption = latex_caption
@@ -278,10 +274,6 @@ class TableTerminalWritter(Writter):
 
         # Get all domains.
         domains = {p.domain for p in self._problems}
-
-        # Add the best row entry in the domains.
-        if self._best_row:
-            domains.add(None)  # type: ignore
 
         # Get all headers.
         raw_col_headers: Dict[

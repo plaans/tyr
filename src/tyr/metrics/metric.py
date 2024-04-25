@@ -73,49 +73,5 @@ class Metric(Abstract, Singleton, metaclass=AbstractSingletonMeta):
             return str(int(value))
         return f"{value:.2f}"
 
-    def best_across_domains(
-        self,
-        results: List[PlannerResult],
-        all_results: List[PlannerResult],
-    ) -> str:
-        """Return the best performance across the domains for a planner."""
-        domains = set(r.problem.domain.name for r in results)
-        best = self.min_value()
-        for domain in domains:
-            dom_results = [r for r in results if r.problem.domain.name == domain]
-            value = self.evaluate(dom_results, all_results)
-            best = max(best, float(value) if value != "-" else self.min_value())
-            if best == self.max_value():
-                break
-        return (
-            "-"
-            if best == self.min_value()
-            else f"{best:.2f}"
-            if best != self.max_value()
-            else str(int(best))
-        )
-
-    def best_across_planners(
-        self,
-        results: List[PlannerResult],
-        all_results: List[PlannerResult],
-    ) -> str:
-        """Return the best performance across the planners for a domain."""
-        planners = set(r.planner_name for r in results)
-        best = self.min_value()
-        for planner in planners:
-            planner_results = [r for r in results if r.planner_name == planner]
-            value = self.evaluate(planner_results, all_results)
-            best = max(best, float(value) if value != "-" else self.min_value())
-            if best == self.max_value():
-                break
-        return (
-            "-"
-            if best == self.min_value()
-            else f"{best:.2f}"
-            if best != self.max_value()
-            else str(int(best))
-        )
-
 
 __all__ = ["Metric"]
