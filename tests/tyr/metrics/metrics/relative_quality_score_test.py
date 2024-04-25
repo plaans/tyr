@@ -15,7 +15,7 @@ class TestRelativeQualityScoreMetric:
 
     @pytest.mark.parametrize(
         "cov, qs, expected",
-        [(0, 50, 0), (30, 30, 100), (80, 40, 50)],
+        [(0, 50, 100), (30, 30, 0), (80, 40, 50), (20, 15, 25)],
     )
     def test_evaluate(self, cov, qs, expected):
         results = [MagicMock(spec=PlannerResult), MagicMock(spec=PlannerResult)]

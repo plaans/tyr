@@ -18,6 +18,6 @@ class RelativeQualityScoreMetric(Metric):
     ) -> float:
         cov = CoverageMetric()._evaluate(results, all_results)
         if cov == 0:
-            return 0
+            return self.max_value()
         qs = QualityScoreMetric()._evaluate(results, all_results)
-        return qs / cov * 100
+        return (1 - qs / cov) * 100
