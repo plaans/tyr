@@ -172,6 +172,7 @@ class TableTerminalWritter(Writter):
         latex_caption: str = "",
         latex_font_size: str = "normalsize",
         latex_horizontal_space: float = 0.35,
+        latex_pos: str = "htb",
         latex_star: bool = False,
     ) -> None:
         super().__init__(solve_config, out, verbosity, config)
@@ -186,6 +187,7 @@ class TableTerminalWritter(Writter):
         self._latex_caption = latex_caption
         self._latex_font_size = latex_font_size
         self._latex_horizontal_space = latex_horizontal_space
+        self._latex_pos = latex_pos
         self._latex_star = latex_star
 
     # =============================== Manipulation =============================== #
@@ -519,7 +521,7 @@ class TableTerminalWritter(Writter):
     ) -> None:
         """Prints a table of cells in LaTeX."""
         env = "table*" if self._latex_star else "table"
-        self.line(f"\\begin{{{env}}}[htb]")
+        self.line(f"\\begin{{{env}}}[{self._latex_pos}]")
         self.line("\\centering")
         self.line(f"\\{self._latex_font_size}")
         self.line(f"\\renewcommand{{\\arraystretch}}{{{self._latex_array_stretch}}}")

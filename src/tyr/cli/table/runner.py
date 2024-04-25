@@ -23,6 +23,7 @@ def run_table(
     latex_caption: str,
     latex_font_size: str,
     latex_horizontal_space: float,
+    latex_pos: str,
     latex_star: bool,
 ):
     """Analyse the planners over the domains based on the database content.
@@ -41,6 +42,7 @@ def run_table(
         latex_caption (str): The caption to use for the LaTeX table.
         latex_font_size (str): The font size to use for the LaTeX table.
         latex_horizontal_space (float): The horizontal space for the LaTeX table in cm.
+        latex_pos (str): The position to use for the LaTeX table.
         latex_star (bool): Whether to use a table* environment in LaTeX rather than a table one.
     """
     # pylint: disable = duplicate-code
@@ -59,6 +61,7 @@ def run_table(
         latex_caption,
         latex_font_size,
         latex_horizontal_space,
+        latex_pos,
         latex_star,
     )
     tw.session_starts()

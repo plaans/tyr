@@ -36,6 +36,7 @@ DEFAULT_CONFIG = {
     "latex_caption": "Table of metrics.",
     "latex_fontsize": "normalsize",
     "latex_horizontal_space": 0.35,
+    "latex_pos": "htb",
     "latex_star": False,
     "logs_path": "",
     "memout": 4 * 1024**3,
@@ -654,6 +655,11 @@ def cli_solve(
     f"Default: {DEFAULT_CONFIG['latex_horizontal_space']}cm",
 )
 @click.option(
+    "--latex-pos",
+    type=str,
+    help=f"Position of the LaTeX table. Default: {DEFAULT_CONFIG['latex_pos']}",
+)
+@click.option(
     "--latex-star",
     is_flag=True,
     help="Use a table* environment in LaTeX. Default: table.",
@@ -679,6 +685,7 @@ def cli_table(
     latex_caption: str,
     latex_font_size: str,
     latex_horizontal_space: float,
+    latex_pos: str,
     latex_star: bool,
 ):
     config = config or ctx.config
@@ -700,6 +707,7 @@ def cli_table(
         "latex_caption": latex_caption,
         "latex_font_size": latex_font_size,
         "latex_horizontal_space": latex_horizontal_space,
+        "latex_pos": latex_pos,
         "latex_star": latex_star,
     }
     conf = merge_configs(cli_config, yaml_config(config, "table"), DEFAULT_CONFIG)
@@ -729,6 +737,7 @@ def cli_table(
         conf["latex_caption"],
         conf["latex_font_size"],
         conf["latex_horizontal_space"],
+        conf["latex_pos"],
         conf["latex_star"],
     )
 
