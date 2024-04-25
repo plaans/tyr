@@ -476,7 +476,7 @@ class TableTerminalWritter(Writter):
 
         # Print the table.
         if self._latex:
-            self.latex_print(table, col_length, flat_row_headers)
+            self.latex_print(table, col_length, flat_col_headers)
         else:
             self.term_print(table, col_length)
 
