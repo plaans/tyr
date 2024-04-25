@@ -712,10 +712,16 @@ class TableTerminalWritter(Writter):
                 if prev_sep != next_sep:
                     raise ValueError("The two lines must have with the same separator.")
                 if next_cell.v_span < 0:
-                    if prev_sep is Sep.SIMPLE:
-                        self.write("├" if line_sep is Sep.SIMPLE else "╞")
+                    if next_line[next_cell_idx + 2].v_span < 0:
+                        if prev_sep is Sep.SIMPLE:
+                            self.write("│")
+                        else:
+                            self.write("║")
                     else:
-                        self.write("╟" if line_sep is Sep.SIMPLE else "╠")
+                        if prev_sep is Sep.SIMPLE:
+                            self.write("├" if line_sep is Sep.SIMPLE else "╞")
+                        else:
+                            self.write("╟" if line_sep is Sep.SIMPLE else "╠")
                 else:
                     if prev_sep is Sep.SIMPLE:
                         self.write("┼" if line_sep is Sep.SIMPLE else "╪")
