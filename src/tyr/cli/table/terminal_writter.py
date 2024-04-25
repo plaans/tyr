@@ -440,9 +440,9 @@ class TableTerminalWritter(Writter):
                     table[-1].append(Sep.SIMPLE)
                 else:
                     table[-1].append(Sep.DOUBLE)
-            is_last_header = (
-                i == len(flat_row_headers[-1]) - 1
-                or flat_row_headers[-1][i + 1][0] != row_header[0]
+            is_last_header = i == len(flat_row_headers[-1]) - 1 or any(
+                flat_row_headers[-1][i + 1][k] != row_header[k]
+                for k in range(len(row_header) - 1)
             )
             if is_last_header:
                 table.append(Sep.DOUBLE)
@@ -559,7 +559,14 @@ class TableTerminalWritter(Writter):
                         start = crt_col + 1
                     self.line()
                 elif line_idx < len(table) - 2:
-                    self.line("\\\\\\hdashline")
+                    next_line: CellRow = table[line_idx + 2]
+                    start = 1
+                    for cell in next_line.cells:
+                        if cell.value.strip() == "":
+                            start += 1
+                        else:
+                            break
+                    self.line(f"\\\\\\cdashline{{{start}-{crt_col-1}}}")
             else:
                 self.line("\\\\")
         self.line("\\\\\\bottomrule")
