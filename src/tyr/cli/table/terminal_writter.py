@@ -210,9 +210,10 @@ class TableTerminalWritter(Writter):
         merged = self._merge_results(results)
         self._results = merged
 
-        total = len(merged)
-        msg = f"collected {total} result" + ("" if total <= 1 else "s")
-        self.line(msg, bold=True)
+        if not self.quiet:
+            total = len(merged)
+            msg = f"collected {total} result" + ("" if total <= 1 else "s")
+            self.line(msg, bold=True)
 
     # ================================== Report ================================== #
 

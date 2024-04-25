@@ -31,6 +31,8 @@ class PlotTerminalWritter(Writter):
 
     def report_results(self, results: List[PlannerResult]):
         """Prints a report about the collected results."""
+        if self.quiet:
+            return
         total = len(results)
         msg = f"collected {total} result" + ("" if total <= 1 else "s")
         self.line(msg, bold=True)
