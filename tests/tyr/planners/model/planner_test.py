@@ -1,8 +1,8 @@
 import os
 import resource
 import time
-from dataclasses import replace
 import traceback
+from dataclasses import replace
 from typing import Any, Dict
 from unittest.mock import MagicMock, Mock, call, patch
 
