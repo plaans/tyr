@@ -195,9 +195,11 @@ class Planner:
         if running_mode == RunningMode.ONESHOT:
             builder = upf.OneshotPlanner
             upf_planner_name = self.oneshot_name
-        else:
+        elif running_mode == RunningMode.ANYTIME:
             builder = upf.AnytimePlanner
             upf_planner_name = self.anytime_name
+        else:
+            raise NotImplementedError(f"Running mode {running_mode} is not supported.")
 
         # Check the database.
         if config.no_db_load is False:

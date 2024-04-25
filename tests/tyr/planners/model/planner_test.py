@@ -2,6 +2,7 @@ import os
 import resource
 import time
 from dataclasses import replace
+import traceback
 from typing import Any, Dict
 from unittest.mock import MagicMock, Mock, call, patch
 
@@ -310,19 +311,30 @@ class TestPlanner(ModelTest):
 
     # =================================== Solve ================================== #
 
+    @pytest.mark.parametrize(
+        "running_mode",
+        [
+            pytest.param(
+                r,
+                marks=[pytest.mark.xfail] if r == RunningMode.MERGED else [],
+            )
+            for r in RunningMode
+        ],
+    )
     def test_solve_get_version_if_db_has_nothing(
         self,
         mock_planner: Planner,
         problem: ProblemInstance,
         solve_config: SolveConfig,
+        running_mode: RunningMode,
     ):
         solve_config = replace(solve_config, no_db_load=True)
         mock_planner.solve = lambda x, y, z: list(Planner.solve(mock_planner, x, y, z))
         mock_planner._solve = lambda x, y, z: Planner._solve(mock_planner, x, y, z)
         try:
-            mock_planner.solve(problem, solve_config, True)
-        except Exception as err:  # nosec: B110
-            print(err)
+            mock_planner.solve(problem, solve_config, running_mode)
+        except Exception:  # nosec: B110
+            print(traceback.format_exc())
         mock_planner.get_version.assert_called_once_with(problem)
 
     def test_solve_no_available_version(

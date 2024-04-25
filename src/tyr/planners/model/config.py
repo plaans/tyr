@@ -36,6 +36,7 @@ class RunningMode(Enum):
 
     ANYTIME = auto()
     ONESHOT = auto()
+    MERGED = auto()
 
 
 __all__ = ["PlannerConfig", "SolveConfig", "RunningMode"]

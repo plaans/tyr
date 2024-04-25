@@ -1,3 +1,4 @@
+from dataclasses import replace
 from typing import Optional
 from unittest.mock import MagicMock, Mock
 
@@ -274,7 +275,7 @@ class TestPlannerResult:
             running_mode=RunningMode.ONESHOT,
         )
         merged_result = result1.merge(result2)
-        assert merged_result == result1
+        assert merged_result == replace(result1, running_mode=RunningMode.MERGED)
 
     def test_merge_self_result_not_solved(self):
         result1 = PlannerResult(
@@ -296,7 +297,7 @@ class TestPlannerResult:
             running_mode=RunningMode.ONESHOT,
         )
         merged_result = result1.merge(result2)
-        assert merged_result == result2
+        assert merged_result == replace(result2, running_mode=RunningMode.MERGED)
 
     # =================================== Error ================================== #
 

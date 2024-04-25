@@ -133,11 +133,12 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             default=None,
         )
 
+        args = {"running_mode": RunningMode.MERGED, "plan_quality": quality}
         if other.status != PlannerResultStatus.SOLVED:
-            return replace(self, plan_quality=quality)
+            return replace(self, **args)  # type: ignore
         if self.status != PlannerResultStatus.SOLVED:
-            return replace(other, plan_quality=quality)
-        return replace(self, computation_time=computation, plan_quality=quality)
+            return replace(other, **args)  # type: ignore
+        return replace(self, computation_time=computation, **args)  # type: ignore
 
     @staticmethod
     def error(  # pylint: disable = too-many-arguments
