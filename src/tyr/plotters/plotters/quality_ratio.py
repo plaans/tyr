@@ -37,11 +37,7 @@ class QualityRatioPlotter(Plotter):
         # Sort results by planner name
         planner_results = [
             sorted(
-                [
-                    r
-                    for r in data
-                    if r.planner_name == name and r.running_mode == RunningMode.ANYTIME
-                ],
+                PlannerResult.merge_all([r for r in data if r.planner_name == name]),
                 key=lambda r: r.problem.name,
             )
             for name in self._planner_names
@@ -53,6 +49,10 @@ class QualityRatioPlotter(Plotter):
         for res1, res2 in zip(planner_results[0], planner_results[1]):
             if res1.problem.name != res2.problem.name:
                 raise ValueError("Quality Ratio plot needs the same instances.")
+            if res1.running_mode not in (RunningMode.ANYTIME, RunningMode.MERGED):
+                continue
+            if res2.running_mode not in (RunningMode.ANYTIME, RunningMode.MERGED):
+                continue
             q1, q2 = res1.plan_quality, res2.plan_quality
 
             # Plot only if at least one has solved the instance
@@ -63,6 +63,8 @@ class QualityRatioPlotter(Plotter):
             if q1 is None or q2 is None:
                 raw_data.append(Point(timeout=q1 is None, value=None))
             else:
+                q1 += 1  # Avoid division by zero
+                q2 += 1  # Avoid division by zero
                 value = 0 if q1 == q2 else -q1 / q2 + 1 if q1 > q2 else q2 / q1 - 1
                 raw_data.append(Point(timeout=None, value=value))
 
