@@ -474,6 +474,29 @@ class TableTerminalWritter(Writter):
                     col_length[line.column_of(cell) + i] for i in range(cell.h_span)
                 ) + (cell.h_span - 1)
 
+        # Update the horizontal span of cells for LaTeX.
+        if self._latex:
+            lines = list(table.lines)
+            for i, line in enumerate(lines):
+                if i == len(lines) - 1:
+                    break
+                next_line = lines[i + 1]
+                for cell in line.cells:
+                    cell_start = line.column_of(cell)
+                    cell_end = cell_start + cell.h_span
+                    is_sub_item = False
+                    for item in next_line:
+                        if isinstance(item, Cell):
+                            item_start = next_line.column_of(item)
+                            item_end = item_start + item.h_span
+                            if cell_start <= item_start:
+                                is_sub_item = True
+                            if item_end >= cell_end:
+                                break
+                        else:
+                            if item is Sep.DOUBLE and is_sub_item:
+                                cell.h_span += 1
+
         # Print the table.
         if self._latex:
             self.latex_print(table, col_length, flat_col_headers)
@@ -498,37 +521,36 @@ class TableTerminalWritter(Writter):
         self.line("\\begin{tabular}{" + "@{\\hs}c" * num_col + "@{}}")
         self.line("\\toprule")
 
-        for line_idx in range(1, len(table), 2):
-            line, sep = table[line_idx], table[line_idx - 1]
-            if line_idx not in [1, len(table) - 1]:
-                if sep is Sep.DOUBLE:
-                    if line_idx // 2 == len(col_headers):
-                        self.line("\\\\\\midrule")
-                    elif line_idx // 2 < len(col_headers):
-                        self.write("\\\\")
-                        next_line = table[line_idx + 2]
-                        start = next_line.index(Sep.DOUBLE, 1) // 2 + 2
-                        crt_col = 0
-                        for item_idx, item in enumerate(next_line):
-                            if item_idx == 0:
-                                continue
-                            if isinstance(item, Cell):
-                                crt_col += item.h_span
-                                continue
-                            if item is Sep.DOUBLE:
-                                crt_col += 1
-                            if crt_col < start or item is not Sep.DOUBLE:
-                                continue
-                            self.write("\\cmidrule{" + f"{start}-{crt_col-1}" + "}")
-                            start = crt_col + 1
-                        self.line()
-                    else:
-                        self.line("\\\\\\hdashline")
-                else:
-                    self.line("\\\\")
+        for line_idx in range(1, len(table) - 1, 2):
+            line, sep = table[line_idx], table[line_idx + 1]
             for item_idx, item in enumerate(line):
                 if item_idx not in [0, len(line) - 1]:
                     self.write(item.fmt(self._latex))
+            if sep is Sep.DOUBLE:
+                if line_idx // 2 == len(col_headers) - 1:
+                    self.line("\\\\\\midrule")
+                elif line_idx // 2 < len(col_headers) - 1:
+                    self.write("\\\\")
+                    start = line.index(Sep.DOUBLE, 1) // 2 + 2
+                    crt_col = 0
+                    for item_idx, item in enumerate(line):
+                        if item_idx == 0:
+                            continue
+                        if isinstance(item, Cell):
+                            crt_col += item.h_span
+                            continue
+                        if item is Sep.DOUBLE:
+                            crt_col += 1
+                        if crt_col < start or item is not Sep.DOUBLE:
+                            continue
+                        if crt_col - 1 > start:
+                            self.write("\\cmidrule{" + f"{start}-{crt_col-1}" + "}")
+                        start = crt_col + 1
+                    self.line()
+                elif line_idx < len(table) - 2:
+                    self.line("\\\\\\hdashline")
+            else:
+                self.line("\\\\")
         self.line("\\\\\\bottomrule")
 
         self.line("\\end{tabular}")
