@@ -507,7 +507,7 @@ class TableTerminalWritter(Writter):
 
         # Print the table.
         if self._latex:
-            self.latex_print(table, col_length, flat_col_headers)
+            self.latex_print(table, col_length, flat_col_headers, flat_row_headers)
         else:
             self.term_print(table, col_length)
 
@@ -518,6 +518,7 @@ class TableTerminalWritter(Writter):
         table: CellTable,
         col_length: Dict[int, int],
         col_headers: List[List[Tuple]],
+        row_headers: List[List[Tuple]],
     ) -> None:
         """Prints a table of cells in LaTeX."""
         env = "table*" if self._latex_star else "table"
@@ -530,6 +531,7 @@ class TableTerminalWritter(Writter):
         self.line("\\begin{tabular}{" + "@{\\hs}c" * num_col + "@{}}")
         self.line("\\toprule")
 
+        num_row_headers = len(row_headers[-1][-1])
         for line_idx in range(1, len(table) - 1, 2):
             line, sep = table[line_idx], table[line_idx + 1]
             for item_idx, item in enumerate(line):
@@ -540,7 +542,7 @@ class TableTerminalWritter(Writter):
                     self.line("\\\\\\midrule")
                 elif line_idx // 2 < len(col_headers) - 1:
                     self.write("\\\\")
-                    start = line.index(Sep.DOUBLE, 1) // 2 + 2
+                    start = line.index(Sep.DOUBLE, num_row_headers) // 2 + 2
                     crt_col = 0
                     for item_idx, item in enumerate(line):
                         if item_idx == 0:
