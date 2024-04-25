@@ -20,7 +20,7 @@ class SatelliteNumericDomain(AbstractDomain):
             quality = 0
             slew_time = version.fluent("slew_time")
             for action in plan.actions:
-                if action.action.name != "turn_to":
+                if action.action.name.lower() != "turn_to":
                     continue
                 val = version.initial_value(slew_time(*action.actual_parameters[1:]))
                 quality += val.constant_value()
