@@ -188,36 +188,16 @@ class TableTerminalWritter(Writter):
 
     # =============================== Manipulation =============================== #
 
-    def _merge_results(self, results: List[PlannerResult]) -> List[PlannerResult]:
-        """Merges the results of the same planner on the same problem.
-
-        Args:
-            results (List[PlannerResult]): The results to merge.
-
-        Returns:
-            List[PlannerResult]: The merged results.
-        """
-        merged = {}
-        for result in results:
-            key = (result.problem, result.planner_name)
-            if key not in merged:
-                merged[key] = result
-            else:
-                merged[key] = merged[key].merge(result)
-
-        return list(merged.values())
-
     def set_results(self, results: List[PlannerResult]):
         """Modifies the stored results.
 
         Args:
             results (List[Optional[PlannerResult]]): The results to store.
         """
-        merged = self._merge_results(results)
-        self._results = merged
+        self._results = PlannerResult.merge_all(results)
 
         if not self.quiet:
-            total = len(merged)
+            total = len(self._results)
             msg = f"collected {total} result" + ("" if total <= 1 else "s")
             self.line(msg, bold=True)
 

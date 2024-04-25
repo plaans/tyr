@@ -1,6 +1,6 @@
 from dataclasses import dataclass, replace
 from enum import Enum, auto
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, List, Optional, Union
 
 from unified_planning.engines.results import (
     PlanGenerationResult,
@@ -139,6 +139,26 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
         if self.status != PlannerResultStatus.SOLVED:
             return replace(other, **args)  # type: ignore
         return replace(self, computation_time=computation, **args)  # type: ignore
+
+    @staticmethod
+    def merge_all(results: List["PlannerResult"]) -> List["PlannerResult"]:
+        """Merges a list of results into a list of merged results.
+
+        Args:
+            results (List[PlannerResult]): The results to merge.
+
+        Returns:
+                List[PlannerResult]: The merged results.
+        """
+        merged = {}
+        for result in results:
+            key = (result.problem, result.planner_name)
+            if key not in merged:
+                merged[key] = result
+            else:
+                merged[key] = merged[key].merge(result)
+
+        return list(merged.values())
 
     @staticmethod
     def error(  # pylint: disable = too-many-arguments
