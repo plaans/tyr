@@ -33,6 +33,7 @@ DEFAULT_CONFIG = {
     "jobs": 1,
     "latex": False,
     "latex_caption": "Table of metrics.",
+    "latex_fontsize": "normalsize",
     "latex_star": False,
     "logs_path": "",
     "memout": 4 * 1024**3,
@@ -628,6 +629,7 @@ def cli_solve(
 # @click.option("--best-row", is_flag=True, help="Print the best metrics on the bottom.")
 @latex_option
 @click.option("--latex-caption", type=str, help="Caption for the LaTeX table.")
+@click.option("--latex-font-size", type=str, help="Font size for the LaTeX table.")
 @click.option(
     "--latex-star",
     is_flag=True,
@@ -651,6 +653,7 @@ def cli_table(
     # best_row: bool,
     latex: bool,
     latex_caption: str,
+    latex_font_size: str,
     latex_star: bool,
 ):
     config = config or ctx.config
@@ -669,6 +672,7 @@ def cli_table(
         # "best_row": best_row,
         "latex": latex,
         "latex_caption": latex_caption,
+        "latex_font_size": latex_font_size,
         "latex_star": latex_star,
     }
     conf = merge_configs(cli_config, yaml_config(config, "table"), DEFAULT_CONFIG)
@@ -695,6 +699,7 @@ def cli_table(
         False,
         conf["latex"],
         conf["latex_caption"],
+        conf["latex_font_size"],
         conf["latex_star"],
     )
 
