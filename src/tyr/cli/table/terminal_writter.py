@@ -552,7 +552,7 @@ class TableTerminalWritter(Writter):
                             crt_col += 1
                         if crt_col < start or item is not Sep.DOUBLE:
                             continue
-                        if crt_col - 1 > start:
+                        if crt_col - 1 >= start:
                             self.write("\\cmidrule{" + f"{start}-{crt_col-1}" + "}")
                         start = crt_col + 1
                     self.line()
