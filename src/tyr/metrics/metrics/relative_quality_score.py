@@ -1,4 +1,5 @@
 from typing import List
+
 from tyr.metrics.metric import Metric
 from tyr.metrics.metrics.coverage import CoverageMetric
 from tyr.metrics.metrics.quality_score import QualityScoreMetric
