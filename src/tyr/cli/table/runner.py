@@ -20,6 +20,7 @@ def run_table(
     best_row: bool,
     latex: bool,
     latex_caption: str,
+    latex_star: bool,
 ):
     """Analyse the planners over the domains based on the database content.
 
@@ -33,7 +34,8 @@ def run_table(
         best_column (bool): Whether to print the best metrics on the right.
         best_row (bool): Whether to print the best metrics on the bottom.
         latex (bool): Whether to print the table in latex format.
-        lexat_caption (str): The caption to use for the latex table.
+        latex_caption (str): The caption to use for the latex table.
+        latex_star (bool): Whether to use a table* environment in LaTeX rather than a table one.
     """
     # pylint: disable = duplicate-code
 
@@ -48,6 +50,7 @@ def run_table(
         best_row,
         latex,
         latex_caption,
+        latex_star,
     )
     tw.session_starts()
 

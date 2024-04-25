@@ -169,6 +169,7 @@ class TableTerminalWritter(Writter):
         best_row: bool = False,
         latex: bool = False,
         latex_caption: str = "",
+        latex_star: bool = False,
     ) -> None:
         super().__init__(solve_config, out, verbosity, config)
         self._results: List[PlannerResult] = []
@@ -179,6 +180,7 @@ class TableTerminalWritter(Writter):
         self._best_row = best_row
         self._latex = latex
         self._latex_caption = latex_caption
+        self._latex_star = latex_star
 
     # =============================== Manipulation =============================== #
 
@@ -487,7 +489,8 @@ class TableTerminalWritter(Writter):
         col_headers: List[List[Tuple]],
     ) -> None:
         """Prints a table of cells in LaTeX."""
-        self.line("\\begin{table}[htb]")
+        env = "table*" if self._latex_star else "table"
+        self.line(f"\\begin{{{env}}}[htb]")
         self.line("\\centering")
         self.line("\\renewcommand{\\arraystretch}{1.2}")
         self.line("\\def\\hs{\\hspace{0.35cm}}")
@@ -531,7 +534,7 @@ class TableTerminalWritter(Writter):
         self.line("\\end{tabular}")
         self.line(f"\\caption{{{self._latex_caption}}}")
         self.line("\\label{tab:metrics}")
-        self.line("\\end{table}")
+        self.line(f"\\end{{{env}}}")
 
     def term_print(self, table: CellTable, col_length: Dict[int, int]) -> None:
         """Prints a table of cells in the terminal."""
