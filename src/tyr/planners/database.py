@@ -191,7 +191,8 @@ class Database(Singleton):
                 resp[11],
                 (
                     datetime.datetime.fromisoformat(resp[11])
-                    - datetime.timedelta(seconds=config.timeout)
+                    # + 10 seconds to avoid issues linked to retried savings
+                    - datetime.timedelta(seconds=config.timeout + 10)
                 ).isoformat(),
             ]
             with self.database() as conn:
