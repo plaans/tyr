@@ -1,3 +1,5 @@
+# flake8: noqa # pylint: disable = line-too-long
+
 from collections import namedtuple
 from typing import List, Tuple
 
@@ -67,6 +69,10 @@ class QualityRatioPlotter(Plotter):
                 q2 += 1  # Avoid division by zero
                 value = 0 if q1 == q2 else -q1 / q2 + 1 if q1 > q2 else q2 / q1 - 1
                 raw_data.append(Point(timeout=None, value=value))
+                if abs(value) > 1:
+                    print(
+                        f"pb: {res1.problem.name}, q1: {q1}, q2: {q2}, value: {value}"
+                    )
 
         # Compute the unsolved values
         min_value = min((p.value for p in raw_data if p.value is not None), default=-1)
@@ -144,45 +150,57 @@ class QualityRatioPlotter(Plotter):
         data = self._data(results)
         max_x = max(data[0])
         min_y, max_y = min(data[1]), max(data[1])
+        nl = "\n                "
 
-        result = "\\begin{tikzpicture}\n\\begin{axis}[\n"
-        result += f"title={{{self._title()}}},\n"
-        result += f"xlabel={{{self._xaxis()['title']}}},\n"
-        result += f"ylabel={{{self._yaxis()['title']}}},\n"
-        result += f"xmin=0,xmax={max_x},\n"
-        result += "xmajorgrids=true,\n"
-        result += "ymajorgrids=true,\n"
-        result += "grid style=dashed,\n"
-        result += "]\n"
-
-        result += "\\addplot[\n"
-        result += "color=blue,\n"
-        result += "fill=blue!20,\n"
-        result += "mark=+,\n"
-        result += "mark size=2,\n"
-        result += "]\n"
-        result += "coordinates {\n"
-        for x, y in zip(data[0], data[1]):
-            result += f"({x}, {y})\n"
-        result += "} \\closedcycle;\n"
-
-        result += f"\\draw (axis cs:0,0) -- (axis cs:{max_x},0);\n"
-        result += f"\\node [below left] at (axis cs:{max_x},0) {{Equality}};\n"
-        result += f"\\draw [red] (axis cs:0,{min_y}) -- (axis cs:{max_x},{min_y});\n"
-        result += (
-            f"\\node [below left] at (axis cs:{max_x},{min_y}) "
-            f"{{Unsolved by {self._planner_names[0]}}};\n"
-        )
-        result += f"\\draw [red] (axis cs:0,{max_y}) -- (axis cs:{max_x},{max_y});\n"
-        result += (
-            f"\\node [above left] at (axis cs:{max_x},{max_y}) "
-            f"{{Unsolved by {self._planner_names[1]}}};\n"
-        )
-        result += f"\\node [above right] at (axis cs:0,0) {{{self._planner_names[0]} is better}};\n"
-        result += f"\\node [below right] at (axis cs:0,0) {{{self._planner_names[1]} is better}};\n"
-
-        result += "\\end{axis}\n\\end{tikzpicture}\n"
-        return result
+        return f"""\\begin{{tikzpicture}}
+    \\tikzmath
+    {{
+        function symlog(\\x,\\a){{
+                \\yLarge = ((\\x>\\a) - (\\x<-\\a)) * (ln(max(abs(\\x/\\a),1)) + 1);
+                \\ySmall = (\\x >= -\\a) * (\\x <= \\a) * \\x / \\a ;
+                return \\yLarge + \\ySmall ;
+            }};
+        function symexp(\\y,\\a){{
+                \\xLarge = ((\\y>1) - (\\y<-1)) * \\a * exp(abs(\\y) - 1) ;
+                \\xSmall = (\\y>=-1) * (\\y<=1) * \\a * \\y ;
+                return \\xLarge + \\xSmall ;
+            }};
+    }}
+    \\def\\basis{{1}}
+    \\pgfplotsset
+    {{
+        y coord trafo/.code={{\\pgfmathparse{{symlog(#1,\\basis)}}\\pgfmathresult}},
+        y coord inv trafo/.code={{\\pgfmathparse{{symexp(#1,\\basis)}}\\pgfmathresult}},
+        yticklabel style={{/pgf/number format/.cd,int detect,precision=2}},
+    }}
+    \\begin{{axis}}
+        [
+            xlabel={{{self._xaxis()['title']}}},
+            ylabel={{{self._yaxis()['title']}}},
+            ytick={{-1000, -100, -10, -1, 0, 1, 10, 100, 1000}},
+            minor ytick = {{-900,-800,...,-200,-90,-80,...,-20,-9,-8,...,-2,-.9,-.8,...,.9,2,3,...,9,20,30,...,90,200,300,...,900}},
+            xmin=0,xmax={max_x},
+            xmajorgrids=true,
+            ymajorgrids=true, yminorgrids = true,
+        ]
+        \\addplot [
+            color=blue,
+            fill=blue!20,
+            mark=+,
+            mark size=2,
+        ]
+        coordinates {{{nl.join(f"({x}, {y})" for x, y in zip(data[0], data[1]))}
+            }} \\closedcycle;
+        \\draw (axis cs:0,0) -- (axis cs:{max_x},0);
+        \\node [below left, fill=white, fill opacity=.7] at (axis cs:{max_x},0) {{Equality}};
+        \\draw [red] (axis cs:0,{min_y}) -- (axis cs:{max_x},{min_y});
+        \\node [below left, fill=white, fill opacity=.7] at (axis cs:{max_x},{min_y}) {{Unsolved by {self._planner_names[0]}}};
+        \\draw [red] (axis cs:0,{max_y}) -- (axis cs:{max_x},{max_y});
+        \\node [above left, fill=white, fill opacity=.7] at (axis cs:{max_x},{max_y}) {{Unsolved by {self._planner_names[1]}}};
+        \\node [above right, fill=white, fill opacity=.7] at (axis cs:0,0) {{{self._planner_names[0]} is better}};
+        \\node [below right, fill=white, fill opacity=.7] at (axis cs:0,0) {{{self._planner_names[1]} is better}};
+    \\end{{axis}}
+\\end{{tikzpicture}}"""
 
 
 __all__ = ["QualityRatioPlotter"]
