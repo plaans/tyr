@@ -69,10 +69,6 @@ class QualityRatioPlotter(Plotter):
                 q2 += 1  # Avoid division by zero
                 value = 0 if q1 == q2 else -q1 / q2 + 1 if q1 > q2 else q2 / q1 - 1
                 raw_data.append(Point(timeout=None, value=value))
-                if abs(value) > 1:
-                    print(
-                        f"pb: {res1.problem.name}, q1: {q1}, q2: {q2}, value: {value}"
-                    )
 
         # Compute the unsolved values
         min_value = min((p.value for p in raw_data if p.value is not None), default=-1)
@@ -166,7 +162,7 @@ class QualityRatioPlotter(Plotter):
                 return \\xLarge + \\xSmall ;
             }};
     }}
-    \\def\\basis{{1}}
+    \\def\\basis{{0.1}}
     \\pgfplotsset
     {{
         y coord trafo/.code={{\\pgfmathparse{{symlog(#1,\\basis)}}\\pgfmathresult}},
