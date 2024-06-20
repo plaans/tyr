@@ -38,6 +38,9 @@ class TyrPDDLPlanner(PDDLAnytimePlanner):
     def _file_extension(self) -> str:
         return "pddl"
 
+    def _get_computation_time(self, _logs: List[LogMessage]) -> Optional[float]:
+        return None
+
     def _get_plan(self, proc_out: List[str]) -> str:
         raise NotImplementedError()
 
@@ -118,7 +121,10 @@ class TyrPDDLPlanner(PDDLAnytimePlanner):
                 )
 
             metrics = {}
-            metrics["engine_internal_time"] = str(process_end - process_start)
+            if (computation := self._get_computation_time(logs)) is not None:
+                metrics["engine_internal_time"] = str(computation)
+            else:
+                metrics["engine_internal_time"] = str(process_end - process_start)
             if timeout_occurred and retval != 0:
                 return PlanGenerationResult(
                     PlanGenerationResultStatus.TIMEOUT,

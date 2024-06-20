@@ -4,7 +4,10 @@ from typing import Dict, Optional
 from unified_planning.io import PDDLReader
 from unified_planning.model.htn import HierarchicalProblem
 from unified_planning.model.scheduling import SchedulingProblem
+from unified_planning.model.types import _IntType
 from unified_planning.shortcuts import (
+    GE,
+    LE,
     DurativeAction,
     EffectKind,
     EndTiming,
@@ -112,7 +115,7 @@ def goals_to_tasks(
     return hier_pb
 
 
-# pylint: disable = too-many-locals
+# pylint: disable = too-many-locals, too-many-branches
 def scheduling_to_actions(schd_pb: SchedulingProblem) -> Problem:
     """Converts the scheduling problem to a PDDL problem."""
 
@@ -122,6 +125,12 @@ def scheduling_to_actions(schd_pb: SchedulingProblem) -> Problem:
     # Copy the fluents
     for fluent in schd_pb.fluents:
         pddl_pb.add_fluent(fluent, default_initial_value=schd_pb.initial_value(fluent))
+        # Force the integer fluents to be within their bounds at the end
+        if isinstance(fluent.type, _IntType):
+            if (lb := fluent.type.lower_bound) is not None:
+                pddl_pb.add_goal(GE(fluent, lb))
+            if (ub := fluent.type.upper_bound) is not None:
+                pddl_pb.add_goal(LE(fluent, ub))
 
     for activity in schd_pb.activities:
         # Convert each activity to a durative action
@@ -153,6 +162,18 @@ def scheduling_to_actions(schd_pb: SchedulingProblem) -> Problem:
                     effect.forall,
                 )
 
+                # Create a condition to check the fluent is within its bounds before each effect.
+                # Additional check is made in the goal to ensure it is within bounds at the end.
+                if effect.is_increase() or effect.is_decrease():
+                    if not isinstance(effect.fluent.type, _IntType):
+                        raise ValueError(
+                            "Only integer fluents are supported for increases."
+                        )
+                    if (lb := effect.fluent.type.lower_bound) is not None:
+                        action.add_condition(timing, GE(effect.fluent, lb))
+                    if (ub := effect.fluent.type.upper_bound) is not None:
+                        action.add_condition(timing, LE(effect.fluent, ub))
+
         # Add a fluent to force the presence of the action (all activities must be present)
         fluent = pddl_pb.add_fluent(f"{action.name}_pres", default_initial_value=False)
         action.add_condition(StartTiming(), Not(fluent))
@@ -163,7 +184,7 @@ def scheduling_to_actions(schd_pb: SchedulingProblem) -> Problem:
         pddl_pb.add_action(action)
 
     # Add constraints between the actions
-    for constraint in schd_pb.base_constraints:
+    for (constraint, _act) in schd_pb.all_constraints():
         # Only support `<=` constraints
         assert constraint.is_le()  # nosec: B101
 

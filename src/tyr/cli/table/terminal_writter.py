@@ -10,7 +10,7 @@ from tyr.configuration.loader import load_config
 from tyr.metrics.metric import Metric
 from tyr.planners.model.config import SolveConfig
 from tyr.planners.model.planner import Planner
-from tyr.planners.model.result import PlannerResult
+from tyr.planners.model.result import PlannerResult, PlannerResultStatus
 from tyr.problems.model.domain import AbstractDomain
 from tyr.problems.model.instance import ProblemInstance
 
@@ -165,20 +165,26 @@ class TableTerminalWritter(Writter):
         out: Union[Optional[TextIO], List[TextIO]] = None,
         verbosity: int = 0,
         config: Optional[Path] = None,
-        best_column: bool = False,
-        best_row: bool = False,
         latex: bool = False,
+        latex_array_stretch: float = 1.2,
         latex_caption: str = "",
+        latex_font_size: str = "footnotesize",
+        latex_horizontal_space: float = 0.35,
+        latex_pos: str = "htb",
+        latex_star: bool = False,
     ) -> None:
         super().__init__(solve_config, out, verbosity, config)
         self._results: List[PlannerResult] = []
         self._planners: List[Planner] = []
         self._problems: List[ProblemInstance] = []
         self._metrics: List[Metric] = []
-        self._best_column = best_column
-        self._best_row = best_row
         self._latex = latex
+        self._latex_array_stretch = latex_array_stretch
         self._latex_caption = latex_caption
+        self._latex_font_size = latex_font_size
+        self._latex_horizontal_space = latex_horizontal_space
+        self._latex_pos = latex_pos
+        self._latex_star = latex_star
 
     # =============================== Manipulation =============================== #
 
@@ -188,11 +194,12 @@ class TableTerminalWritter(Writter):
         Args:
             results (List[Optional[PlannerResult]]): The results to store.
         """
-        self._results = results
+        self._results = PlannerResult.merge_all(results)
 
-        total = len(results)
-        msg = f"collected {total} result" + ("" if total <= 1 else "s")
-        self.line(msg, bold=True)
+        if not self.quiet:
+            total = len(self._results)
+            msg = f"collected {total} result" + ("" if total <= 1 else "s")
+            self.line(msg, bold=True)
 
     # ================================== Report ================================== #
 
@@ -244,13 +251,11 @@ class TableTerminalWritter(Writter):
             conf_row_headers = [
                 {"mapping": "lambda d, p, m: d.name"},
             ]
+        final_column = conf.get("final_column", None)
+        final_row = conf.get("final_row", None)
 
         # Get all domains.
         domains = {p.domain for p in self._problems}
-
-        # Add the best row entry in the domains.
-        if self._best_row:
-            domains.add(None)  # type: ignore
 
         # Get all headers.
         raw_col_headers: Dict[
@@ -324,35 +329,53 @@ class TableTerminalWritter(Writter):
         # Create the column headers.
         for i, col_headers in enumerate(flat_col_headers):
             v_span = len(flat_col_headers) * (1 if i == 0 else -1)
-            empty = Cell("", Adjust.CENTER, len(flat_row_headers), v_span=v_span)
-            table.append(CellRow([Sep.DOUBLE, empty, Sep.DOUBLE]))
+            head_empty = Cell("", Adjust.CENTER, len(flat_row_headers), v_span)
+            tail_empty = Cell("", Adjust.CENTER, v_span=v_span)
+            table.append(CellRow([Sep.DOUBLE, head_empty, Sep.DOUBLE]))
+            # XXX: This assums that each "planner" has the same number of "metrics".
             col_modulo = int(len(col_headers) / len(flat_col_headers[-2]))
             for j, col_header in enumerate(col_headers):
-                # XXX: This assums that each header has the same number of subheaders.
-                span = int(len(flat_col_headers[-1]) / len(col_headers))
+                span = sum(
+                    1
+                    for col_subheader in flat_col_headers[-1]
+                    if all(
+                        col_header[k] == col_subheader[k]
+                        for k in range(len(col_header))
+                    )
+                )
                 table[-1].append(Cell(col_header[-1], Adjust.CENTER, span))
                 if span == 1 and j % col_modulo < col_modulo - 1:
                     table[-1].append(Sep.SIMPLE)
                 else:
                     table[-1].append(Sep.DOUBLE)
+            if final_column is not None:
+                if i == 0:
+                    name = final_column["name"]
+                    table[-1].append(Cell(name, Adjust.CENTER, v_span=v_span))
+                else:
+                    table[-1].append(tail_empty)
+                table[-1].append(Sep.DOUBLE)
             table.append(Sep.DOUBLE)
 
         # Create the cells.
-        # XXX: This assums that each header has the same number of subheaders.
-        row_modulo = (
-            int(len(flat_row_headers[-1]) / len(flat_row_headers[-2]))
-            if len(flat_row_headers) > 1
-            else 1
-        )
+        col_values: List[List[float]] = [[] for _ in range(len(flat_col_headers[-1]))]
         for i, row_header in enumerate(flat_row_headers[-1]):
+            row_values = []
             table.append(CellRow([Sep.DOUBLE]))
             for k, v in enumerate(row_header):
-                to_print = v if k == len(row_header) - 1 or i % row_modulo == 0 else ""
-                v_span = (
-                    1
-                    if k == len(row_header) - 1
-                    else row_modulo * (1 if to_print else -1)
+                is_first_header = (
+                    i == 0
+                    or flat_row_headers[-1][i - 1][: k + 1] != row_header[: k + 1]
                 )
+                to_print = v if is_first_header else ""
+                v_span, j = 0, 0
+                while (
+                    i + j < len(flat_row_headers[-1])
+                    and flat_row_headers[-1][i + j][: k + 1] == row_header[: k + 1]
+                ):
+                    v_span += 1
+                    j += 1
+                v_span = v_span * (1 if to_print else -1)
                 table[-1].append(Cell(to_print, Adjust.RIGHT, v_span=v_span))
                 table[-1].append(Sep.SIMPLE)
             table[-1].pop()
@@ -368,11 +391,22 @@ class TableTerminalWritter(Writter):
                     crt_row_header = crt_row_header[v]  # type: ignore
 
                 candidates = crt_col_header.intersection(crt_row_header)  # type: ignore
+                # Filter the candidates with unsupported results.
+                candidates = {
+                    candidate
+                    for candidate in candidates
+                    if all(
+                        result.status != PlannerResultStatus.UNSUPPORTED
+                        for result in self._results
+                        if result.problem.domain == candidate[0]
+                        and result.planner_name == candidate[1].name
+                    )
+                }
+
                 if len(candidates) > 1:
                     raise ValueError(
                         f"Multiple candidates for {col_header} in {row_header}: {candidates}"
                     )
-
                 if len(candidates) == 0:
                     value = "x"
                 else:
@@ -383,19 +417,43 @@ class TableTerminalWritter(Writter):
                         if result.problem.domain == d and result.planner_name == p.name
                     ]
                     value = m.evaluate(results, self._results)
+                    raw_value = m.evaluate_raw(results, self._results)
+                    row_values.append(raw_value)
+                    col_values[j].append(raw_value)
 
                 table[-1].append(Cell(value, Adjust.RIGHT))
-                # XXX: This assums that each header has the same number of subheaders.
+                # XXX: This assums that each "planner" has the same number of "metrics".
                 if j % col_modulo < col_modulo - 1:
                     table[-1].append(Sep.SIMPLE)
                 else:
                     table[-1].append(Sep.DOUBLE)
-            if i % row_modulo < row_modulo - 1 or row_modulo == 1:
-                table.append(Sep.SIMPLE)
-            else:
+            if final_column is not None:
+                final_row_val = eval(final_column["value"])(row_values)  # nosec: B307
+                table[-1].append(Cell(f"{final_row_val:.2f}", Adjust.RIGHT))
+                table[-1].append(Sep.DOUBLE)
+            is_last_header = i == len(flat_row_headers[-1]) - 1 or any(
+                flat_row_headers[-1][i + 1][k] != row_header[k]
+                for k in range(len(row_header) - 1)
+            )
+            if is_last_header:
                 table.append(Sep.DOUBLE)
+            else:
+                table.append(Sep.SIMPLE)
         table.pop()
         table.append(Sep.DOUBLE)
+        if final_row is not None:
+            table.append(CellRow([Sep.DOUBLE]))
+            name = final_row["name"]
+            table[-1].append(Cell(name, Adjust.CENTER, len(flat_row_headers[-1][-1])))
+            table[-1].append(Sep.DOUBLE)
+            for col_vals in col_values:
+                final_row_val = eval(final_row["value"])(col_vals)  # nosec: B307
+                table[-1].append(Cell(f"{final_row_val:.2f}", Adjust.RIGHT))
+                table[-1].append(Sep.DOUBLE)
+            if final_column is not None:
+                table[-1].append(Cell("", Adjust.CENTER))
+                table[-1].append(Sep.DOUBLE)
+            table.append(Sep.DOUBLE)
 
         # Add the padding to the cells.
         for line in table.lines:
@@ -428,9 +486,32 @@ class TableTerminalWritter(Writter):
                     col_length[line.column_of(cell) + i] for i in range(cell.h_span)
                 ) + (cell.h_span - 1)
 
+        # Update the horizontal span of cells for LaTeX.
+        if self._latex:
+            lines = list(table.lines)
+            for i, line in enumerate(lines):
+                if i == len(lines) - 1:
+                    break
+                next_line = lines[i + 1]
+                for cell in line.cells:
+                    cell_start = line.column_of(cell)
+                    cell_end = cell_start + cell.h_span
+                    is_sub_item = False
+                    for item in next_line:
+                        if isinstance(item, Cell):
+                            item_start = next_line.column_of(item)
+                            item_end = item_start + item.h_span
+                            if cell_start <= item_start:
+                                is_sub_item = True
+                            if item_end >= cell_end:
+                                break
+                        else:
+                            if item is Sep.DOUBLE and is_sub_item:
+                                cell.h_span += 1
+
         # Print the table.
         if self._latex:
-            self.latex_print(table, col_length, flat_row_headers)
+            self.latex_print(table, col_length, flat_col_headers, flat_row_headers)
         else:
             self.term_print(table, col_length)
 
@@ -441,53 +522,63 @@ class TableTerminalWritter(Writter):
         table: CellTable,
         col_length: Dict[int, int],
         col_headers: List[List[Tuple]],
+        row_headers: List[List[Tuple]],
     ) -> None:
         """Prints a table of cells in LaTeX."""
-        self.line("\\begin{table}[htb]")
+        env = "table*" if self._latex_star else "table"
+        self.line(f"\\begin{{{env}}}[{self._latex_pos}]")
         self.line("\\centering")
-        self.line("\\renewcommand{\\arraystretch}{1.2}")
-        self.line("\\def\\hs{\\hspace{0.35cm}}")
+        self.line(f"\\{self._latex_font_size}")
+        self.line(f"\\renewcommand{{\\arraystretch}}{{{self._latex_array_stretch}}}")
+        self.line(f"\\def\\hs{{\\hspace{{{self._latex_horizontal_space}cm}}}}")
         num_col = max(col_length) + 1 + len([i for i in table[-2] if i is Sep.DOUBLE])
         self.line("\\begin{tabular}{" + "@{\\hs}c" * num_col + "@{}}")
         self.line("\\toprule")
 
-        for line_idx in range(1, len(table), 2):
-            line, sep = table[line_idx], table[line_idx - 1]
-            if line_idx not in [1, len(table) - 1]:
-                if sep is Sep.DOUBLE:
-                    if line_idx // 2 == len(col_headers):
-                        self.line("\\\\\\midrule")
-                    elif line_idx // 2 < len(col_headers):
-                        self.write("\\\\")
-                        next_line = table[line_idx + 2]
-                        start = next_line.index(Sep.DOUBLE, 1) // 2 + 2
-                        crt_col = 0
-                        for item_idx, item in enumerate(next_line):
-                            if item_idx == 0:
-                                continue
-                            if isinstance(item, Cell):
-                                crt_col += item.h_span
-                                continue
-                            if item is Sep.DOUBLE:
-                                crt_col += 1
-                            if crt_col < start or item is not Sep.DOUBLE:
-                                continue
-                            self.write("\\cmidrule{" + f"{start}-{crt_col-1}" + "}")
-                            start = crt_col + 1
-                        self.line()
-                    else:
-                        self.line("\\\\\\hdashline")
-                else:
-                    self.line("\\\\")
+        num_row_headers = len(row_headers[-1][-1])
+        for line_idx in range(1, len(table) - 1, 2):
+            line, sep = table[line_idx], table[line_idx + 1]
             for item_idx, item in enumerate(line):
                 if item_idx not in [0, len(line) - 1]:
                     self.write(item.fmt(self._latex))
+            if sep is Sep.DOUBLE:
+                if line_idx // 2 == len(col_headers) - 1:
+                    self.line("\\\\\\midrule")
+                elif line_idx // 2 < len(col_headers) - 1:
+                    self.write("\\\\")
+                    start = line.index(Sep.DOUBLE, num_row_headers) // 2 + 2
+                    crt_col = 0
+                    for item_idx, item in enumerate(line):
+                        if item_idx == 0:
+                            continue
+                        if isinstance(item, Cell):
+                            crt_col += item.h_span
+                            continue
+                        if item is Sep.DOUBLE:
+                            crt_col += 1
+                        if crt_col < start or item is not Sep.DOUBLE:
+                            continue
+                        if crt_col - 1 >= start:
+                            self.write("\\cmidrule{" + f"{start}-{crt_col-1}" + "}")
+                        start = crt_col + 1
+                    self.line()
+                elif line_idx < len(table) - 2:
+                    next_line: CellRow = table[line_idx + 2]
+                    start = 1
+                    for cell in next_line.cells:
+                        if cell.value.strip() == "":
+                            start += 1
+                        else:
+                            break
+                    self.line(f"\\\\\\cdashline{{{start}-{crt_col-1}}}")
+            else:
+                self.line("\\\\")
         self.line("\\\\\\bottomrule")
 
         self.line("\\end{tabular}")
         self.line(f"\\caption{{{self._latex_caption}}}")
         self.line("\\label{tab:metrics}")
-        self.line("\\end{table}")
+        self.line(f"\\end{{{env}}}")
 
     def term_print(self, table: CellTable, col_length: Dict[int, int]) -> None:
         """Prints a table of cells in the terminal."""
@@ -534,7 +625,10 @@ class TableTerminalWritter(Writter):
 
         else:
             if next_line.num_columns != prev_line.num_columns:
-                raise ValueError("The two lines must have the same number of columns.")
+                raise ValueError(
+                    "The two lines must have the same number of columns."
+                    + f" {next_line.num_columns} != {prev_line.num_columns}"
+                )
             self.horizontal_separator_middle(prev_line, next_line, col_length, sep)
 
         self.line()
@@ -632,10 +726,16 @@ class TableTerminalWritter(Writter):
                 if prev_sep != next_sep:
                     raise ValueError("The two lines must have with the same separator.")
                 if next_cell.v_span < 0:
-                    if prev_sep is Sep.SIMPLE:
-                        self.write("├" if line_sep is Sep.SIMPLE else "╞")
+                    if next_line[next_cell_idx + 2].v_span < 0:
+                        if prev_sep is Sep.SIMPLE:
+                            self.write("│")
+                        else:
+                            self.write("║")
                     else:
-                        self.write("╟" if line_sep is Sep.SIMPLE else "╠")
+                        if prev_sep is Sep.SIMPLE:
+                            self.write("├" if line_sep is Sep.SIMPLE else "╞")
+                        else:
+                            self.write("╟" if line_sep is Sep.SIMPLE else "╠")
                 else:
                     if prev_sep is Sep.SIMPLE:
                         self.write("┼" if line_sep is Sep.SIMPLE else "╪")

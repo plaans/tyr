@@ -99,6 +99,14 @@ class Writter:
         return self.verbosity > 0
 
     @property
+    def quiet(self) -> bool:
+        """
+        Returns:
+            bool: Whether quiet mode is active.
+        """
+        return self.verbosity < 0
+
+    @property
     def current_line_width(self) -> int:
         """
         Returns:
@@ -198,10 +206,14 @@ class Writter:
 
     def report_collecting(self):
         """Reports the beginning of a collection process."""
-        self.write("collecting...", flush=True, bold=True)
+        if not self.quiet:
+            self.write("collecting...", flush=True, bold=True)
 
     def report_collected(self, result: CollectionResult, name: str):
         """Reports the result of a collection process."""
+        if self.quiet:
+            return
+
         total = result.total
         selected = len(result.selected)
         deselected = len(result.deselected)
@@ -219,6 +231,9 @@ class Writter:
 
     def report_solve_config(self):
         """Prints a report about the configuration being used for the resolution."""
+        if self.quiet:
+            return
+
         # Database
         db_status = (
             "disabled"
@@ -234,7 +249,9 @@ class Writter:
         self.line(f"database: {TyrPaths().db} -- {db_status}")
 
         # Timeout
-        msg = f"timeout: {self.format_seconds(self._solve_config.timeout)}"
+        timeout = self.format_seconds(self._solve_config.timeout)
+        offset = self.format_seconds(self._solve_config.timeout_offset)
+        msg = f"timeout: {timeout} ± {offset}"
         num_bytes = self._solve_config.memout * 1.0
 
         # Memout
@@ -260,6 +277,8 @@ class Writter:
     def session_starts(self):
         """Prints information about the starting session."""
         self._starttime = time.time()
+        if self.quiet:
+            return
 
         self.separator("=", f"Tyr {self.session_name()} session starts", bold=True)
         self.line(f"start at {time.strftime('%Y-%m-%d %H:%M:%S')} on {platform.node()}")

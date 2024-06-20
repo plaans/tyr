@@ -29,3 +29,10 @@ class JobshopTemporalNumericDomain(AbstractDomain):
             compilation_kind=CompilationKind.NEGATIVE_CONDITIONS_REMOVING,
         ) as compiler:
             return compiler.compile(base).problem  # pylint: disable=no-member
+
+    def build_problem_base_hier(
+        self, problem: ProblemInstance
+    ) -> Optional[AbstractProblem]:
+        from tyr.problems.domains.jobshop_scheduling import JobshopSchedulingDomain
+
+        return JobshopSchedulingDomain().build_problem_base(problem)

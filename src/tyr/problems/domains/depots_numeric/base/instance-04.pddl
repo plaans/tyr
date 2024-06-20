@@ -458,4 +458,4 @@
 	)
 )
 
-(:metric minimize (total-time)))
+(:metric minimize (fuel-cost)))

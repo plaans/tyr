@@ -39,7 +39,7 @@ class TestDomainCreation:
                     if (
                         "rovers" in d.name
                         and "temporal" in d.name
-                        and v in ["base", "red"]
+                        and v in ["base", "red", "base_hier", "red_hier"]
                         and p != 1000
                     )
                     else []

@@ -28,7 +28,7 @@ class TestCoverageMetric:
             planner_result("unsupported"),
             planner_result("not_run"),
         ]
-        expected = f"{1 / (len(results) - 3) * 100:.2f}"
+        expected = f"{1 / (len(results)) * 100:.2f}"
         result = CoverageMetric().evaluate(results, results)
         assert result == expected
 
@@ -44,6 +44,6 @@ class TestCoverageMetric:
             planner_result("not_run"),
             planner_result("error"),
         ]
-        expected = "100"
+        expected = "25.00"
         result = CoverageMetric().evaluate(results, results)
         assert result == expected

@@ -16,10 +16,13 @@ def run_table(
     planner_filters: List[str],
     domain_filters: List[str],
     metric_filters: List[str],
-    best_column: bool,
-    best_row: bool,
     latex: bool,
+    latex_array_stretch: float,
     latex_caption: str,
+    latex_font_size: str,
+    latex_horizontal_space: float,
+    latex_pos: str,
+    latex_star: bool,
 ):
     """Analyse the planners over the domains based on the database content.
 
@@ -30,24 +33,30 @@ def run_table(
         planner_filters (List[str]): A list of regex filters on planner names.
         domains_filters (List[str]): A list of regex filters on problems names.
         metric_filters (List[str]): A list of regex filters on metric names.
-        best_column (bool): Whether to print the best metrics on the right.
-        best_row (bool): Whether to print the best metrics on the bottom.
-        latex (bool): Whether to print the table in latex format.
-        lexat_caption (str): The caption to use for the latex table.
+        latex (bool): Whether to print the table in LaTeX format.
+        latex_array_stretch (float): The stretch factor to use for the LaTeX array.
+        latex_caption (str): The caption to use for the LaTeX table.
+        latex_font_size (str): The font size to use for the LaTeX table.
+        latex_horizontal_space (float): The horizontal space for the LaTeX table in cm.
+        latex_pos (str): The position to use for the LaTeX table.
+        latex_star (bool): Whether to use a table* environment in LaTeX rather than a table one.
     """
     # pylint: disable = duplicate-code
 
     # Create the writter and start the session.
-    solve_config = SolveConfig(1, memout, timeout, True, False, True)
+    solve_config = SolveConfig(1, memout, timeout, 0, True, False, True)
     tw = TableTerminalWritter(
         solve_config,
         ctx.out,
         ctx.verbosity,
         ctx.config,
-        best_column,
-        best_row,
         latex,
+        latex_array_stretch,
         latex_caption,
+        latex_font_size,
+        latex_horizontal_space,
+        latex_pos,
+        latex_star,
     )
     tw.session_starts()
 

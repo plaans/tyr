@@ -304,7 +304,8 @@ class TestAbstractDomain(AbstractSingletonModelTest):
 
     def test_get_plan_quality_returns_None_by_default(self, domain: AbstractDomain):
         plan = MagicMock()
-        result = domain.get_quality_of_plan(plan)
+        version = domain.get_problem_version("01", "base")
+        result = domain.get_quality_of_plan(plan, version)
         assert result is None
 
     # ============================== Load from files ============================= #

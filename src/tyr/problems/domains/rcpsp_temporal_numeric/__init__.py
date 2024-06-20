@@ -29,3 +29,10 @@ class RcpspTemporalNumericDomain(AbstractDomain):
             compilation_kind=CompilationKind.NEGATIVE_CONDITIONS_REMOVING,
         ) as compiler:
             return compiler.compile(base).problem  # pylint: disable=no-member
+
+    def build_problem_base_hier(
+        self, problem: ProblemInstance
+    ) -> Optional[AbstractProblem]:
+        from tyr.problems.domains.rcpsp_scheduling import RcpspSchedulingDomain
+
+        return RcpspSchedulingDomain().build_problem_base(problem)

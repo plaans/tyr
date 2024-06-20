@@ -20,8 +20,18 @@ class TestLoader:
         for planner in planners:
             OneshotPlanner(name=planner.name)
 
-    @pytest.mark.parametrize("planner", get_all_planners(), ids=lambda x: x.name)
-    def test_real_planner_upf_registration(self, planner: Planner):
+    @pytest.mark.parametrize(
+        "planner", get_all_planners(), ids=lambda x: x.oneshot_name
+    )
+    def test_real_planner_upf_registration_oneshot(self, planner: Planner):
         # Check the planner is registered in unified planning
         register_all_planners()
-        OneshotPlanner(name=planner.name)
+        OneshotPlanner(name=planner.oneshot_name)
+
+    @pytest.mark.parametrize(
+        "planner", get_all_planners(), ids=lambda x: x.anytime_name
+    )
+    def test_real_planner_upf_registration_anytime(self, planner: Planner):
+        # Check the planner is registered in unified planning
+        register_all_planners()
+        OneshotPlanner(name=planner.anytime_name)

@@ -1,6 +1,7 @@
 import os
 import resource
 import time
+import traceback
 from dataclasses import replace
 from typing import Any, Dict
 from unittest.mock import MagicMock, Mock, call, patch
@@ -43,6 +44,8 @@ class TestPlanner(ModelTest):
     def config(self) -> PlannerConfig:
         return PlannerConfig(
             name="mock-config",
+            anytime_name="mock-anytime",
+            oneshot_name="mock-oneshot",
             problems={"mockdomain": "base"},
             env={"MY_VARIABLE": "new_value", "MY_BOOL": "True"},
         )
@@ -73,6 +76,7 @@ class TestPlanner(ModelTest):
             jobs=1,
             memout=4 * 1024 * 1024 * 1024,  # 4GB
             timeout=350,
+            timeout_offset=0,
             db_only=False,
             no_db_load=False,
             no_db_save=True,
@@ -98,7 +102,7 @@ class TestPlanner(ModelTest):
 
     @pytest.mark.parametrize("name", ["name1", "name2"])
     def test_oneshot_name_default(self, name: str):
-        config = replace(self.config(), name=name)
+        config = replace(self.config(), name=name, oneshot_name=None)
         planner = Planner(config)
         assert planner.oneshot_name == name
 
@@ -110,7 +114,7 @@ class TestPlanner(ModelTest):
 
     @pytest.mark.parametrize("name", ["name1", "name2"])
     def test_anytime_name_default(self, name: str):
-        config = replace(self.config(), name=name)
+        config = replace(self.config(), name=name, anytime_name=None)
         planner = Planner(config)
         assert planner.anytime_name == name
 
@@ -156,19 +160,22 @@ class TestPlanner(ModelTest):
     # ================================ Get version =============================== #
 
     def test_get_correct_version(self, planner: Planner, problem: ProblemInstance):
-        version = planner.get_version(problem)
+        name, version = planner.get_version(problem)
+        assert name == "base"
         assert version.uid == problem.uid * 3
 
     def test_get_inexistant_version(self, planner: Planner, problem: ProblemInstance):
         planner.config.problems["mockdomain"] = "inexistant"
-        version = planner.get_version(problem)
+        name, version = planner.get_version(problem)
+        assert name is None
         assert version is None
 
     def test_get_version_from_unsupported_domain(
         self, planner: Planner, problem: ProblemInstance
     ):
         planner.config.problems.clear()
-        version = planner.get_version(problem)
+        name, version = planner.get_version(problem)
+        assert name is None
         assert version is None
 
     # ================================= Database ================================= #
@@ -267,11 +274,13 @@ class TestPlanner(ModelTest):
             mock_planner.solve(problem, solve_config, RunningMode.ONESHOT)
             save_mock.assert_not_called()
 
-    def test_solver_database_save_result_anytime_duplicate_first_as_oneshot(
+    @pytest.mark.parametrize("running_mode", RunningMode)
+    def test_solver_database_save_result_not_duplicate_first_as_oneshot(
         self,
         mock_planner: Planner,
         problem: ProblemInstance,
         solve_config: SolveConfig,
+        running_mode: RunningMode,
     ):
         solve_config = replace(solve_config, no_db_save=False)
         db = Database()
@@ -279,14 +288,14 @@ class TestPlanner(ModelTest):
             result1 = PlannerResult(
                 mock_planner.name,
                 problem,
-                RunningMode.ANYTIME,
+                running_mode,
                 PlannerResultStatus.SOLVED,
                 solve_config,
             )
             result2 = PlannerResult(
                 mock_planner.name,
                 problem,
-                RunningMode.ANYTIME,
+                running_mode,
                 PlannerResultStatus.ERROR,
                 solve_config,
             )
@@ -294,41 +303,7 @@ class TestPlanner(ModelTest):
             mock_planner.solve = lambda x, y, z: list(
                 Planner.solve(mock_planner, x, y, z)
             )
-            mock_planner.solve(problem, solve_config, RunningMode.ANYTIME)
-            anytime_call = call(result1)
-            oneshot_call = call(replace(result1, running_mode=RunningMode.ONESHOT))
-            final_call = call(result2)
-            save_mock.assert_has_calls([anytime_call, oneshot_call, final_call])
-            assert save_mock.call_count == 3
-
-    def test_solver_database_save_result_oneshot_not_duplicate_first_as_oneshot(
-        self,
-        mock_planner: Planner,
-        problem: ProblemInstance,
-        solve_config: SolveConfig,
-    ):
-        solve_config = replace(solve_config, no_db_save=False)
-        db = Database()
-        with patch.object(db, "save_planner_result") as save_mock:
-            result1 = PlannerResult(
-                mock_planner.name,
-                problem,
-                RunningMode.ONESHOT,
-                PlannerResultStatus.SOLVED,
-                solve_config,
-            )
-            result2 = PlannerResult(
-                mock_planner.name,
-                problem,
-                RunningMode.ONESHOT,
-                PlannerResultStatus.ERROR,
-                solve_config,
-            )
-            mock_planner._solve.return_value = [result1, result2]
-            mock_planner.solve = lambda x, y, z: list(
-                Planner.solve(mock_planner, x, y, z)
-            )
-            mock_planner.solve(problem, solve_config, RunningMode.ONESHOT)
+            mock_planner.solve(problem, solve_config, running_mode)
             first_call = call(result1)
             final_call = call(result2)
             save_mock.assert_has_calls([first_call, final_call])
@@ -336,19 +311,30 @@ class TestPlanner(ModelTest):
 
     # =================================== Solve ================================== #
 
+    @pytest.mark.parametrize(
+        "running_mode",
+        [
+            pytest.param(
+                r,
+                marks=[pytest.mark.xfail] if r == RunningMode.MERGED else [],
+            )
+            for r in RunningMode
+        ],
+    )
     def test_solve_get_version_if_db_has_nothing(
         self,
         mock_planner: Planner,
         problem: ProblemInstance,
         solve_config: SolveConfig,
+        running_mode: RunningMode,
     ):
         solve_config = replace(solve_config, no_db_load=True)
         mock_planner.solve = lambda x, y, z: list(Planner.solve(mock_planner, x, y, z))
         mock_planner._solve = lambda x, y, z: Planner._solve(mock_planner, x, y, z)
         try:
-            mock_planner.solve(problem, solve_config, True)
-        except Exception as err:  # nosec: B110
-            print(err)
+            mock_planner.solve(problem, solve_config, running_mode)
+        except Exception:  # nosec: B110
+            print(traceback.format_exc())
         mock_planner.get_version.assert_called_once_with(problem)
 
     def test_solve_no_available_version(
@@ -379,13 +365,14 @@ class TestPlanner(ModelTest):
     ):
         solve_config = replace(solve_config, timeout=timeout)
         mocked_planner = mocked_oneshot_planner.return_value.__enter__.return_value
-        version = planner.get_version(problem)
+        _, version = planner.get_version(problem)
 
         try:
-            list(planner.solve(problem, solve_config, RunningMode.ONESHOT))[-1]
+            res = list(planner.solve(problem, solve_config, RunningMode.ONESHOT))[-1]
         except Exception:  # nosec: B110
             pass
 
+        assert res.planner_name == planner.name
         mocked_oneshot_planner.assert_called_once_with(name=planner.oneshot_name)
         mocked_planner.solve.assert_called_once()
         solve_args, solve_kwargs = mocked_planner.solve.call_args
@@ -409,13 +396,14 @@ class TestPlanner(ModelTest):
     ):
         solve_config = replace(solve_config, timeout=timeout)
         mocked_planner = mocked_anytime_planner.return_value.__enter__.return_value
-        version = planner.get_version(problem)
+        _, version = planner.get_version(problem)
 
         try:
-            list(planner.solve(problem, solve_config, RunningMode.ANYTIME))
+            res = list(planner.solve(problem, solve_config, RunningMode.ANYTIME))
         except Exception:  # nosec: B110
             pass
 
+        assert all(r.planner_name == planner.name for r in res)
         mocked_anytime_planner.assert_called_once_with(name=planner.anytime_name)
         mocked_planner.get_solutions.assert_called_once()
         solve_args, solve_kwargs = mocked_planner.get_solutions.call_args
@@ -446,6 +434,7 @@ class TestPlanner(ModelTest):
         mocked_result_from_upf.assert_called_once_with(
             planner.name,
             problem,
+            "base",
             upf_result,
             solve_config,
             RunningMode.ONESHOT,
@@ -475,7 +464,7 @@ class TestPlanner(ModelTest):
             computation_time,
             "foo toto",
         )
-        with patch("time.time", side_effect=[0, 0, computation_time]):
+        with patch("time.time", side_effect=[0, 0, 0, computation_time]):
             result = list(planner.solve(problem, solve_config, RunningMode.ONESHOT))[-1]
         assert result == expected
 
@@ -516,7 +505,7 @@ class TestPlanner(ModelTest):
         )
         mocked_result_from_upf.return_value = upf_result
         expected = replace(upf_result, computation_time=computation_time)
-        with patch("time.time", side_effect=[0, 0, computation_time]):
+        with patch("time.time", side_effect=[0, 0, 0, computation_time]):
             result = list(planner.solve(problem, solve_config, RunningMode.ONESHOT))[-1]
         assert result == expected
 

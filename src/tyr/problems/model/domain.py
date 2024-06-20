@@ -119,11 +119,14 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
             return None
 
     # pylint: disable = unused-argument
-    def get_quality_of_plan(self, plan: Plan) -> Optional[float]:
+    def get_quality_of_plan(
+        self, plan: Plan, version: AbstractProblem
+    ) -> Optional[float]:
         """Extracts the quality of the given plan.
 
         Args:
             plan (Plan): The plan to study.
+            version (AbstractProblem): The version of the problem used to generate the plan.
 
         Returns:
             Optional[float]: The quality of the plan if any.

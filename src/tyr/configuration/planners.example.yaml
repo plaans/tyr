@@ -24,11 +24,25 @@
     rovers-numeric: red
     rovers-temporal-numeric: red_no_div
     satellite-hierarchical: base
-    satellite-hierarchical-numeric: red
+    satellite-hierarchical-numeric: red_no_float
     satellite-hierarchical-temporal-numeric: red_no_float
-    satellite-numeric: red
+    satellite-numeric: red_no_float
     satellite-temporal-numeric: red_no_float
     transport-hierarchical: base
+  env:
+    ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
+  upf_engine: tyr.planners.planners.aries.planning.unified.plugin.up_aries.Aries
+
+- name: aries-hier
+  problems:
+    depots-numeric: red_hier
+    depots-temporal-numeric: red_no_div_hier
+    jobshop-temporal-numeric: base_hier
+    rcpsp-temporal-numeric: base_hier
+    rovers-numeric: red_hier
+    rovers-temporal-numeric: red_no_div_hier
+    satellite-numeric: red_no_float_hier
+    satellite-temporal-numeric: red_no_float_hier
   env:
     ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
   upf_engine: tyr.planners.planners.aries.planning.unified.plugin.up_aries.Aries
@@ -68,6 +82,17 @@
   env:
     ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
   upf_engine: tyr.planners.planners.aries.planning.unified.plugin.up_aries.Aries
+
+# ============================================================================ #
+#                                     ENHSP                                    #
+# ============================================================================ #
+
+- name: enhsp
+  anytime_name: enhsp-any
+  problems:
+    depots-numeric: red
+    rovers-numeric: red
+    satellite-numeric: red_no_float
 
 # ============================================================================ #
 #                                    Linear                                    #
@@ -112,22 +137,6 @@
     transport-hierarchical: insertion
 
 # ============================================================================ #
-#                                      LPG                                     #
-# ============================================================================ #
-
-- name: lpg
-  anytime_name: lpg-anytime
-  problems:
-    depots-numeric: red
-    depots-temporal-numeric: red_no_div
-    jobshop-temporal-numeric: base
-    rcpsp-temporal-numeric: base
-    rovers-numeric: red
-    rovers-temporal-numeric: red_no_div
-    satellite-numeric: red
-    satellite-temporal-numeric: red_no_float
-
-# ============================================================================ #
 #                                     Optic                                    #
 # ============================================================================ #
 
@@ -139,7 +148,7 @@
     rcpsp-temporal-numeric: no_neg_cond
     rovers-numeric: red
     rovers-temporal-numeric: red_no_div
-    satellite-numeric: red
+    satellite-numeric: red_no_float
     satellite-temporal-numeric: red_no_float
 
 # ============================================================================ #
@@ -183,3 +192,18 @@
     goto-simple-hierarchical: insertion
     rovers-hierarchical: insertion
     transport-hierarchical: insertion
+
+# ============================================================================ #
+#                                     POPF                                     #
+# ============================================================================ #
+
+- name: popf
+  problems:
+    depots-numeric: red
+    depots-temporal-numeric: red_no_div
+    jobshop-temporal-numeric: no_neg_cond
+    rcpsp-temporal-numeric: no_neg_cond
+    rovers-numeric: red
+    rovers-temporal-numeric: red_no_div
+    satellite-numeric: red_no_float
+    satellite-temporal-numeric: red_no_float
