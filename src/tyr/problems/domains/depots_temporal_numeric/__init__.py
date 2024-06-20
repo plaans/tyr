@@ -79,3 +79,41 @@ class DepotsTemporalNumericDomain(AbstractDomain):
         self, problem: ProblemInstance
     ) -> Optional[AbstractProblem]:
         return reduce_version(problem, "no_div", int(problem.uid) % 5 + 1)
+
+    def build_problem_base_hier(
+        self, problem: ProblemInstance
+    ) -> Optional[AbstractProblem]:
+        from tyr.problems.domains.depots_hierarchical_temporal_numeric import (
+            DepotsHierarchicalTemporalNumericDomain,
+        )
+
+        return DepotsHierarchicalTemporalNumericDomain().build_problem_base(problem)
+
+    def build_problem_red_hier(
+        self, problem: ProblemInstance
+    ) -> Optional[AbstractProblem]:
+        from tyr.problems.domains.depots_hierarchical_temporal_numeric import (
+            DepotsHierarchicalTemporalNumericDomain,
+        )
+
+        return DepotsHierarchicalTemporalNumericDomain().build_problem_red(problem)
+
+    def build_problem_no_div_hier(
+        self, problem: ProblemInstance
+    ) -> Optional[AbstractProblem]:
+        from tyr.problems.domains.depots_hierarchical_temporal_numeric import (
+            DepotsHierarchicalTemporalNumericDomain,
+        )
+
+        return DepotsHierarchicalTemporalNumericDomain().build_problem_no_div(problem)
+
+    def build_problem_red_no_div_hier(
+        self, problem: ProblemInstance
+    ) -> Optional[AbstractProblem]:
+        from tyr.problems.domains.depots_hierarchical_temporal_numeric import (
+            DepotsHierarchicalTemporalNumericDomain,
+        )
+
+        return DepotsHierarchicalTemporalNumericDomain().build_problem_red_no_div(
+            problem
+        )

@@ -13,7 +13,7 @@ def planner_result(status_name: str, quality: float):
         "bar",
         MagicMock(),
         getattr(PlannerResultStatus, status_name.upper()),
-        SolveConfig(1, 1, 5, False, False, False),
+        SolveConfig(1, 1, 5, 0, False, False, False),
         MagicMock(),
         quality,
         MagicMock(),
@@ -36,16 +36,7 @@ class TestAgileScoreMetric:
     @pytest.mark.parametrize("status", PlannerResultStatus)
     def test_quality_score_single_result(self, quality, expected, status):
         if status != PlannerResultStatus.SOLVED:
-            expected = (
-                "-"
-                if status
-                in [
-                    PlannerResultStatus.NOT_RUN,
-                    PlannerResultStatus.UNSUPPORTED,
-                    PlannerResultStatus.ERROR,
-                ]
-                else "0.00"
-            )
+            expected = "0.00"
         else:
             expected = f"{expected*100:.2f}" if expected != 1 else "100"
         results = [planner_result(status.name, quality)]
@@ -60,6 +51,11 @@ class TestAgileScoreMetric:
         expected = sum([1, 0.75, 0.6, 0.5]) / 4
         assert result == f"{expected*100:.2f}"
 
+    def test_quality_score_best_is_zero(self):
+        results = [planner_result("solved", 0)]
+        result = QualityScoreMetric().evaluate(results, results)
+        assert result == "100"
+
     def test_quality_score_empty_results(self):
         results = []
         result = QualityScoreMetric().evaluate(results, results)
@@ -72,6 +68,6 @@ class TestAgileScoreMetric:
             planner_result("not_run", 0.5),
             planner_result("error", 0.5),
         ]
-        expected = "100"
+        expected = "25.00"
         result = QualityScoreMetric().evaluate(results, results)
         assert result == expected

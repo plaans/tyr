@@ -97,20 +97,23 @@ class Planner:
         folder.mkdir(parents=True, exist_ok=True)
         return folder / f"{file_name}.log"
 
-    def get_version(self, problem: ProblemInstance) -> Optional[AbstractProblem]:
+    def get_version(
+        self, problem: ProblemInstance
+    ) -> Tuple[Optional[str], Optional[AbstractProblem]]:
         """Search the version that the planner has to solve for the given problem.
 
         Args:
             problem (ProblemInstance): The problem to solve.
 
         Returns:
-            Optional[AbstractProblem]: The version to solve. `None` if it is not supported.
+            Optional[AbstractProblem]: The version to solve and its name.
+                `None` for both if it is not supported.
         """
         try:
             version_name = self.config.problems[problem.domain.name]
-            return problem.versions[version_name].value
+            return version_name, problem.versions[version_name].value
         except KeyError:
-            return None
+            return None, None
 
     def solve(
         self,
@@ -129,16 +132,27 @@ class Planner:
         Returns:
             Generator[PlannerResult, None, None]: The results of the resolution.
         """
-        first_result = True and running_mode == RunningMode.ANYTIME
-        for result in self._solve(problem, config, running_mode):
-            if config.no_db_save is False:
-                Database().save_planner_result(result)
-                if first_result:
-                    first_result = False
-                    Database().save_planner_result(
-                        replace(result, running_mode=RunningMode.ONESHOT)
-                    )
-            yield result
+        start = time.time()
+        try:
+            for result in self._solve(problem, config, running_mode):
+                if config.no_db_save is False:
+                    Database().save_planner_result(result)
+                yield result
+        except Exception:  # pylint: disable=broad-exception-caught
+            # Save the error in logs.
+            log_path = self.get_log_file(problem, "error", running_mode)
+            with open(log_path, "w", encoding="utf-8") as log_file:
+                log_file.write(traceback.format_exc())
+            # Return an error or memout result.
+            computation_time = time.time() - start
+            yield PlannerResult.error(
+                problem,
+                self,
+                config,
+                running_mode,
+                computation_time,
+                traceback.format_exc(),
+            )
 
     def solve_single(
         self,
@@ -179,15 +193,17 @@ class Planner:
         # Get the planner based on the running mode.
         if running_mode == RunningMode.ONESHOT:
             builder = upf.OneshotPlanner
-            planner_name = self.oneshot_name
-        else:
+            upf_planner_name = self.oneshot_name
+        elif running_mode == RunningMode.ANYTIME:
             builder = upf.AnytimePlanner
-            planner_name = self.anytime_name
+            upf_planner_name = self.anytime_name
+        else:
+            raise NotImplementedError(f"Running mode {running_mode} is not supported.")
 
         # Check the database.
         if config.no_db_load is False:
             db = Database().load_planner_result(
-                planner_name,
+                self.name,
                 problem,
                 config,
                 running_mode,
@@ -200,8 +216,8 @@ class Planner:
                 return
 
         # Get the version to solve.
-        version = self.get_version(problem)
-        if version is None:
+        version_name, version = self.get_version(problem)
+        if version_name is None or version is None:
             # No version found, the problem is not supported.
             yield PlannerResult.unsupported(problem, self, config, running_mode)
             return
@@ -221,7 +237,7 @@ class Planner:
         try:
             # Disable credits.
             get_environment().credits_stream = None
-            with builder(name=planner_name) as planner:
+            with builder(name=upf_planner_name) as planner:
                 # Disable compatibility checking.
                 planner.skip_checks = True
                 # Get the log file.
@@ -232,7 +248,7 @@ class Planner:
                         self._last_upf_result = None
                         # Set the timeout alarm.
                         signal.signal(signal.SIGALRM, self._solve_timed_out)
-                        signal.alarm(config.timeout)
+                        signal.alarm(config.timeout + config.timeout_offset)
                         # Get the solutions.
                         if running_mode == RunningMode.ONESHOT:
                             self._last_upf_result, start, end = self._solve_oneshot(
@@ -251,8 +267,9 @@ class Planner:
                                 self._last_upf_result, start, end = result, s, e
                                 yield self._handle_upf_result(
                                     result,
-                                    planner_name,
+                                    self.name,
                                     problem,
+                                    version_name,
                                     running_mode,
                                     config,
                                     (start, end),
@@ -262,9 +279,9 @@ class Planner:
                     except TimeoutError:
                         # The planner timed out.
                         # Kill the process if it is still running.
-                        if hasattr(planner, "_process"):
+                        if (process := getattr(planner, "_process", None)) is not None:
                             try:
-                                planner._process.kill()  # pylint: disable=protected-access
+                                process.kill()
                             except OSError:
                                 pass  # This can happen if the process is already terminated
                         # Return a timeout result if no result was found.
@@ -279,8 +296,9 @@ class Planner:
 
             yield self._handle_upf_result(
                 self.last_upf_result,
-                planner_name,
+                self.name,
                 problem,
+                version_name,
                 running_mode,
                 config,
                 (start, end),
@@ -289,19 +307,13 @@ class Planner:
 
         except Exception:  # pylint: disable=broad-exception-caught
             # An error occured...
-            # Try to detect a memory allocation failure.
-            memout = False
-            if "log_path" in locals():
-                with open(log_path, "r", encoding="utf-8") as log_file:
-                    for line in log_file:
-                        if line.startswith("memory") and line.endswith("failed\n"):
-                            memout = True
-                            break
+            # Disable the timeout alarm.
+            signal.alarm(0)
             # Save the error in logs.
             log_path = self.get_log_file(problem, "error", running_mode)
             with open(log_path, "w", encoding="utf-8") as log_file:
                 log_file.write(traceback.format_exc())
-            # Return an error or memout result.
+            # Generate the error result.
             computation_time = time.time() - start
             result = PlannerResult.error(
                 problem,
@@ -311,8 +323,10 @@ class Planner:
                 computation_time,
                 traceback.format_exc(),
             )
-            if memout:
-                result = replace(result, status=PlannerResultStatus.MEMOUT)
+            # Check if a special status can be found in the logs.
+            log_path = self.get_log_file(problem, "solve", running_mode)
+            if special_status := self._check_special_status_from_logs(log_path):
+                result = replace(result, status=special_status)
             yield result
             return
 
@@ -362,6 +376,7 @@ class Planner:
         upf_result: PlanGenerationResult,
         planner_name: str,
         problem: ProblemInstance,
+        version_name: str,
         running_mode: RunningMode,
         config: SolveConfig,
         times: Tuple[float, float],
@@ -376,24 +391,77 @@ class Planner:
         result = PlannerResult.from_upf(
             planner_name,
             problem,
+            version_name,
             upf_result,
             config,
             running_mode,
         )
+        if result.computation_time is None:
+            result.computation_time = times[1] - times[0]
+
+        if upf_result is not None and upf_result.plan is not None:
+            splitted = str(upf_result.plan).strip().split("\n")
+            has_plan = len(splitted) > 1
+        else:
+            has_plan = False
         if (
-            upf_result is not None
-            and upf_result.plan is not None
+            has_plan
             and upf_result.status == PlanGenerationResultStatus.TIMEOUT
+            and running_mode == RunningMode.ANYTIME
         ):
             # On anytime mode, last result can be timeout even if an intermediate was solved.
             result.status = PlannerResultStatus.SOLVED
-        if result.computation_time is None:
-            result.computation_time = times[1] - times[0]
+
+        # Check if a special status can be found in the logs if the result is not solved.
+        log_path = self.get_log_file(problem, "solve", running_mode)
+        if (
+            status := self._check_special_status_from_logs(log_path)
+        ) is not None and result.status != PlannerResultStatus.SOLVED:
+            result = replace(result, status=status)
         return result
 
     @staticmethod
     def _solve_timed_out(signum, frame):
         raise TimeoutError("The planner timed out.")
+
+    # ============================================================================ #
+    #                             Special Planner Cases                            #
+    # ============================================================================ #
+
+    def _check_special_status_from_logs(
+        self, logs: Path
+    ) -> Optional[PlannerResultStatus]:
+        callback = getattr(self, f"_check_special_status_from_logs_{self.name}", None)
+        if callback is None:
+            return None
+
+        with open(logs, "r", encoding="utf-8") as log_file:
+            for line in log_file:
+                if (res := callback(line)) is not None:
+                    return res
+        return None
+
+    # =================================== Aries ================================== #
+
+    def _check_special_status_from_logs_aries(
+        self, line: str
+    ) -> Optional[PlannerResultStatus]:
+        if line.startswith("memory") and line.endswith("failed\n"):
+            return PlannerResultStatus.MEMOUT
+        return None
+
+    # ==================================== LPG =================================== #
+
+    def _check_special_status_from_logs_lpg(
+        self, line: str
+    ) -> Optional[PlannerResultStatus]:
+        if line in ["Max time exceeded.\n", "Error: max cpu-time reached\n"]:
+            return PlannerResultStatus.TIMEOUT
+        return None
+
+    # ============================================================================ #
+    #                            Python's Magic Methods                            #
+    # ============================================================================ #
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Planner):

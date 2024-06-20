@@ -48,3 +48,16 @@ class TestSingleton:
 
         singleton = [SingletonWithPostInit() for _ in range(10)][0]
         assert singleton.counter == 1
+
+    def test_clear_singleton(self):
+        Singleton.purge_singletons()
+        instance = Singleton()
+        assert Singleton._instances == {Singleton: instance}
+        Singleton.clear_singleton()
+        assert Singleton._instances == {}
+
+    def test_purge_singletons(self):
+        Singleton()
+        assert Singleton._instances != {}
+        Singleton.purge_singletons()
+        assert Singleton._instances == {}

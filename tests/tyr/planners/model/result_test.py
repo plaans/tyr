@@ -1,3 +1,4 @@
+from dataclasses import replace
 from typing import Optional
 from unittest.mock import MagicMock, Mock
 
@@ -50,6 +51,7 @@ class TestPlannerResult:
         result = PlannerResult.from_upf(
             "mockplanner",
             problem,
+            "version_name",
             upf_result,
             config,
             RunningMode.ONESHOT,
@@ -79,6 +81,7 @@ class TestPlannerResult:
         result = PlannerResult.from_upf(
             "mockplanner",
             problem,
+            "version_name",
             upf_result,
             config,
             RunningMode.ONESHOT,
@@ -96,6 +99,7 @@ class TestPlannerResult:
         result = PlannerResult.from_upf(
             name,
             problem,
+            "version_name",
             upf_result,
             config,
             RunningMode.ONESHOT,
@@ -119,6 +123,7 @@ class TestPlannerResult:
         result = PlannerResult.from_upf(
             "mockplanner",
             problem,
+            "version_name",
             upf_result,
             config,
             RunningMode.ONESHOT,
@@ -128,10 +133,12 @@ class TestPlannerResult:
     @pytest.mark.parametrize(
         ["plan", "quality"], [(None, None), (MagicMock(), 15), (MagicMock(), 7.6)]
     )
+    @pytest.mark.parametrize("version_name", [MagicMock(), MagicMock()])
     def test_from_upf_plan_quality(
         self,
         plan: Optional[Mock],
         quality: Optional[float],
+        version_name: str,
         problem: Mock,
         config: Mock,
         upf_result: PlanGenerationResult,
@@ -141,6 +148,7 @@ class TestPlannerResult:
         result = PlannerResult.from_upf(
             "mockplanner",
             problem,
+            version_name,
             upf_result,
             config,
             RunningMode.ONESHOT,
@@ -150,7 +158,189 @@ class TestPlannerResult:
         if plan is None:
             problem.get_quality_of_plan.assert_not_called()
         else:
-            problem.get_quality_of_plan.assert_called_once_with(plan)
+            problem.get_quality_of_plan.assert_called_once_with(plan, version_name)
+
+    # =================================== Merge ================================== #
+
+    def test_merge_same_results(self):
+        result1 = PlannerResult(
+            config="config",
+            planner_name="planner",
+            problem="problem",
+            computation_time=10.0,
+            plan_quality=0.5,
+            status=PlannerResultStatus.SOLVED,
+            running_mode=RunningMode.ONESHOT,
+        )
+        result2 = PlannerResult(
+            config="config",
+            planner_name="planner",
+            problem="problem",
+            computation_time=5.0,
+            plan_quality=0.8,
+            status=PlannerResultStatus.SOLVED,
+            running_mode=RunningMode.ONESHOT,
+        )
+        merged_result = result1.merge(result2)
+        assert merged_result.config == "config"
+        assert merged_result.planner_name == "planner"
+        assert merged_result.problem == "problem"
+        assert merged_result.computation_time == 5.0
+        assert merged_result.plan_quality == 0.5
+        assert merged_result.status == PlannerResultStatus.SOLVED
+
+    def test_merge_different_config(self):
+        result1 = PlannerResult(
+            config="config1",
+            planner_name="planner",
+            problem="problem",
+            computation_time=10.0,
+            plan_quality=0.9,
+            status=PlannerResultStatus.SOLVED,
+            running_mode=RunningMode.ONESHOT,
+        )
+        result2 = PlannerResult(
+            config="config2",
+            planner_name="planner",
+            problem="problem",
+            computation_time=5.0,
+            plan_quality=0.8,
+            status=PlannerResultStatus.SOLVED,
+            running_mode=RunningMode.ONESHOT,
+        )
+        with pytest.raises(ValueError):
+            result1.merge(result2)
+
+    def test_merge_different_planners(self):
+        result1 = PlannerResult(
+            config="config",
+            planner_name="planner1",
+            problem="problem",
+            computation_time=10.0,
+            plan_quality=0.9,
+            status=PlannerResultStatus.SOLVED,
+            running_mode=RunningMode.ONESHOT,
+        )
+        result2 = PlannerResult(
+            config="config",
+            planner_name="planner2",
+            problem="problem",
+            computation_time=5.0,
+            plan_quality=0.8,
+            status=PlannerResultStatus.SOLVED,
+            running_mode=RunningMode.ONESHOT,
+        )
+        with pytest.raises(ValueError):
+            result1.merge(result2)
+
+    def test_merge_different_problems(self):
+        result1 = PlannerResult(
+            config="config",
+            planner_name="planner",
+            problem="problem1",
+            computation_time=10.0,
+            plan_quality=0.9,
+            status=PlannerResultStatus.SOLVED,
+            running_mode=RunningMode.ONESHOT,
+        )
+        result2 = PlannerResult(
+            config="config",
+            planner_name="planner",
+            problem="problem2",
+            computation_time=5.0,
+            plan_quality=0.8,
+            status=PlannerResultStatus.SOLVED,
+            running_mode=RunningMode.ONESHOT,
+        )
+        with pytest.raises(ValueError):
+            result1.merge(result2)
+
+    def test_merge_other_result_not_solved(self):
+        result1 = PlannerResult(
+            config="config",
+            planner_name="planner",
+            problem="problem",
+            computation_time=10.0,
+            plan_quality=0.9,
+            status=PlannerResultStatus.SOLVED,
+            running_mode=RunningMode.ONESHOT,
+        )
+        result2 = PlannerResult(
+            config="config",
+            planner_name="planner",
+            problem="problem",
+            computation_time=None,
+            plan_quality=None,
+            status=PlannerResultStatus.TIMEOUT,
+            running_mode=RunningMode.ONESHOT,
+        )
+        merged_result = result1.merge(result2)
+        assert merged_result == replace(result1, running_mode=RunningMode.MERGED)
+
+    def test_merge_self_result_not_solved(self):
+        result1 = PlannerResult(
+            config="config",
+            planner_name="planner",
+            problem="problem",
+            computation_time=None,
+            plan_quality=None,
+            status=PlannerResultStatus.TIMEOUT,
+            running_mode=RunningMode.ONESHOT,
+        )
+        result2 = PlannerResult(
+            config="config",
+            planner_name="planner",
+            problem="problem",
+            computation_time=10.0,
+            plan_quality=0.9,
+            status=PlannerResultStatus.SOLVED,
+            running_mode=RunningMode.ONESHOT,
+        )
+        merged_result = result1.merge(result2)
+        assert merged_result == replace(result2, running_mode=RunningMode.MERGED)
+
+    def test_merge_all(self):
+        result1 = PlannerResult(
+            config="config",
+            planner_name="planner",
+            problem="problem",
+            computation_time=10.0,
+            plan_quality=0.5,
+            status=PlannerResultStatus.SOLVED,
+            running_mode=RunningMode.ONESHOT,
+        )
+        result2 = PlannerResult(
+            config="config",
+            planner_name="planner",
+            problem="problem",
+            computation_time=5.0,
+            plan_quality=0.8,
+            status=PlannerResultStatus.SOLVED,
+            running_mode=RunningMode.ONESHOT,
+        )
+        result3 = PlannerResult(
+            config="config",
+            planner_name="planner-bis",
+            problem="problem",
+            computation_time=5.0,
+            plan_quality=0.8,
+            status=PlannerResultStatus.SOLVED,
+            running_mode=RunningMode.ONESHOT,
+        )
+        result4 = PlannerResult(
+            config="config",
+            planner_name="planner-bis",
+            problem="problem-bis",
+            computation_time=5.0,
+            plan_quality=0.8,
+            status=PlannerResultStatus.SOLVED,
+            running_mode=RunningMode.ONESHOT,
+        )
+        results = [result1, result2, result3, result4]
+
+        expected = [result1.merge(result2), result3, result4]
+        merged_results = PlannerResult.merge_all(results)
+        assert merged_results == expected
 
     # =================================== Error ================================== #
 

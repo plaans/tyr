@@ -14,7 +14,7 @@ def planner_result(status_name: str, computation_time: float):
         MagicMock(),
         MagicMock(),
         getattr(PlannerResultStatus, status_name.upper()),
-        SolveConfig(1, 1, 5, False, False, False),
+        SolveConfig(1, 1, 5, 0, False, False, False),
         computation_time,
         MagicMock(),
         MagicMock(),
@@ -41,16 +41,7 @@ class TestAgileScoreMetric:
     @pytest.mark.parametrize("status", PlannerResultStatus)
     def test_agile_score_single_result(self, computation_time, expected, status):
         if status != PlannerResultStatus.SOLVED:
-            expected = (
-                "-"
-                if status
-                in [
-                    PlannerResultStatus.NOT_RUN,
-                    PlannerResultStatus.UNSUPPORTED,
-                    PlannerResultStatus.ERROR,
-                ]
-                else "0.00"
-            )
+            expected = "0.00"
         else:
             expected = f"{expected*100:.2f}" if expected != 1 else "100"
         results = [planner_result(status.name, computation_time)]
@@ -88,6 +79,6 @@ class TestAgileScoreMetric:
             planner_result("not_run", 0.5),
             planner_result("error", 0.5),
         ]
-        expected = "100"
+        expected = "25.00"
         result = TimeScoreMetric().evaluate(results, results)
         assert result == expected

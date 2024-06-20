@@ -16,6 +16,9 @@ From: python:3.12-slim
     wget https://github.com/apptainer/apptainer/releases/download/v1.3.0/apptainer_1.3.0_amd64.deb
     apt install -y ./apptainer_1.3.0_amd64.deb
 
+    # Install Java
+    apt install -y default-jre
+
     # Install Rust
     apt install -y build-essential curl
     curl https://sh.rustup.rs | sh -s -- --no-modify-path -y

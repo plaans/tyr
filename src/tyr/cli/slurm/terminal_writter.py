@@ -1,3 +1,4 @@
+import datetime
 from pathlib import Path
 from typing import List, Optional, TextIO, Union
 
@@ -76,11 +77,11 @@ class SlurmTerminalWritter(Writter):
             self.line("#SBATCH --mail-type=ALL")
             self.line(f"#SBATCH --mail-user={user_mail}")
         if nodelist:
-            self.line(f"#SBATCH --nodes={min(len(nodelist), num_jobs)}")
+            self.line(f"#SBATCH --nodes=1-{min(len(nodelist), num_jobs)}")
             self.line(f"#SBATCH --nodelist={','.join(nodelist)}")
         else:
             # 5 is a total arbitrary number.
-            self.line(f"#SBATCH --nodes={min(5, num_jobs)}")
+            self.line(f"#SBATCH --nodes=1-{min(5, num_jobs)}")
         self.line("#SBATCH --cpus-per-task=1")
         self.line(f"#SBATCH --mem-per-cpu={self.mem_kilo()}K")
         self.line(f"#SBATCH --array=0-{num_jobs-1}")
@@ -112,11 +113,15 @@ class SlurmTerminalWritter(Writter):
         if RunningMode.ONESHOT in running_modes:
             running_options += " --oneshot"
         self.line("\necho \"==> Running '$PLANNER' on '$DOMAIN'\"")
+        uid = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         self.line(
             " ".join(
-                f"""srun tyr.sif bench -p $PLANNER -d $DOMAIN --logs-path logs/
---db-path db.sqlite3 --timeout {self._solve_config.timeout} --memout {self._solve_config.memout}
---verbose{running_options}""".splitlines()
+                f"srun tyr.sif bench -p $PLANNER -d $DOMAIN --logs-path logs-{uid}/ "
+                f"--db-path db-{uid}-${{SLURM_ARRAY_TASK_ID}}.sqlite3 "
+                f"--timeout {self._solve_config.timeout} "
+                f"--memout {self._solve_config.memout} "
+                f"--verbose{running_options}"
+                "".splitlines()
             )
         )
 

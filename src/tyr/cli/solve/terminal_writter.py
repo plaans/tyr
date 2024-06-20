@@ -62,7 +62,9 @@ class SolveTerminalWritter(Writter):
             return False
 
         planner, problem = planners.selected[0], problems.selected[0]
-        self.line(f"{problem.name} with {planner.name} in {running_mode}", bold=True)
+        if not self.quiet:
+            msg = f"{problem.name} with {planner.name} in {running_mode}"
+            self.line(msg, bold=True)
         return planner, problem
 
     def report_file(  # pylint: disable=too-many-arguments

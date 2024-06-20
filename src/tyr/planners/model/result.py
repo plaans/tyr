@@ -1,6 +1,6 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum, auto
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, List, Optional, Union
 
 from unified_planning.engines.results import (
     PlanGenerationResult,
@@ -62,10 +62,12 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
     error_message: str = ""
     from_database: bool = False
 
+    # pylint: disable = too-many-arguments
     @staticmethod
     def from_upf(
         planner_name: str,
         problem: ProblemInstance,
+        version_name: str,
         result: PlanGenerationResult,
         config: SolveConfig,
         running_mode: RunningMode,
@@ -75,6 +77,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
         Args:
             planner_name (str): The name of the planner solving the problem.
             problem (ProblemInstance): The problem solved by the planner.
+            version_name (str): The name of the version of the problem solved.
             result (PlanGenerationResult): The result to convert.
             config (SolveConfig): The configuration used to solve the problem.
             running_mode (RunningMode): The mode used by the planner.
@@ -89,7 +92,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
 
         plan_quality = None
         if result.plan is not None:
-            plan_quality = problem.get_quality_of_plan(result.plan)
+            plan_quality = problem.get_quality_of_plan(result.plan, version_name)
 
         return PlannerResult(
             planner_name,
@@ -100,6 +103,62 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             computation_time,
             plan_quality,
         )
+
+    def merge(self, other: "PlannerResult") -> "PlannerResult":
+        """Merges two results into one.
+
+        Args:
+            other (PlannerResult): The other result to merge.
+
+        Returns:
+            PlannerResult: The merged result.
+        """
+        if self.config != other.config:
+            raise ValueError("Cannot merge results with different configurations.")
+        if self.planner_name != other.planner_name:
+            raise ValueError("Cannot merge results from different planners.")
+        if self.problem != other.problem:
+            raise ValueError("Cannot merge results from different problems.")
+
+        computation = min(
+            (
+                x.computation_time
+                for x in (self, other)
+                if x.computation_time is not None
+            ),
+            default=None,
+        )
+        quality = min(
+            (x.plan_quality for x in (self, other) if x.plan_quality is not None),
+            default=None,
+        )
+
+        args = {"running_mode": RunningMode.MERGED, "plan_quality": quality}
+        if other.status != PlannerResultStatus.SOLVED:
+            return replace(self, **args)  # type: ignore
+        if self.status != PlannerResultStatus.SOLVED:
+            return replace(other, **args)  # type: ignore
+        return replace(self, computation_time=computation, **args)  # type: ignore
+
+    @staticmethod
+    def merge_all(results: List["PlannerResult"]) -> List["PlannerResult"]:
+        """Merges a list of results into a list of merged results.
+
+        Args:
+            results (List[PlannerResult]): The results to merge.
+
+        Returns:
+                List[PlannerResult]: The merged results.
+        """
+        merged = {}
+        for result in results:
+            key = (result.problem, result.planner_name)
+            if key not in merged:
+                merged[key] = result
+            else:
+                merged[key] = merged[key].merge(result)
+
+        return list(merged.values())
 
     @staticmethod
     def error(  # pylint: disable = too-many-arguments

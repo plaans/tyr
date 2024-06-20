@@ -1,17 +1,24 @@
-import sys
 from fractions import Fraction
 from pathlib import Path
 from typing import Any, List, Optional
 
-from unified_planning.engines.results import LogMessage, PlanGenerationResultStatus
-from unified_planning.plans import Plan
-from unified_planning.shortcuts import AbstractProblem, Problem
+from unified_planning.engines.results import (
+    LogMessage,
+    PlanGenerationResultStatus,
+    PlanGenerationResult,
+)
+from unified_planning.io import PDDLWriter
+from unified_planning.shortcuts import Problem
 
 from tyr.planners.model.pddl_planner import TyrPDDLPlanner
 
 
 class OpticPlanner(TyrPDDLPlanner):
-    """The Optic planner wrapped into local PDDL planner."""
+    """
+    The Optic planner wrapped into local PDDL planner.
+
+    NOTE: In Anytime mode, the planner will only return the last plan found.
+    """
 
     def _get_cmd(
         self,
@@ -20,7 +27,7 @@ class OpticPlanner(TyrPDDLPlanner):
         plan_filename: str,
     ) -> List[str]:
         binary = (Path(__file__).parent / "optic-cplex").resolve().as_posix()
-        return f"{binary} {domain_filename} {problem_filename} -N".split()
+        return f"{binary} -N {domain_filename} {problem_filename}".split()
 
     def _get_anytime_cmd(
         self,
@@ -34,36 +41,60 @@ class OpticPlanner(TyrPDDLPlanner):
             .split()
         )
 
+    def _parse_planner_output(self, writer, planner_output):
+        assert isinstance(self._writer, PDDLWriter)
+        for l in planner_output.splitlines():
+            if self._starting_plan_str() in l:
+                writer.storing = True
+            elif writer.storing and "" == l:
+                plan_str = "\n".join(writer.current_plan)
+                plan = self._plan_from_str(
+                    writer.problem, plan_str, self._writer.get_item_named
+                )
+                res = PlanGenerationResult(
+                    PlanGenerationResultStatus.INTERMEDIATE,
+                    plan=plan,
+                    engine_name=self.name,
+                )
+                writer.res_queue.put(res)
+                writer.current_plan = []
+                writer.storing = False
+            elif writer.storing and l:
+                writer.current_plan.append(self._parse_plan_line(l))
+
     def _get_engine_epsilon(self) -> Optional[Fraction]:
         return Fraction(1, 1000)
 
+    def _get_computation_time(self, logs: List[LogMessage]) -> Optional[float]:
+        for log in logs:
+            for line in reversed(log.message.splitlines()):
+                if line.startswith("; Time"):
+                    return float(line.split()[2])
+        return None
+
     def _get_plan(self, proc_out: List[str]) -> str:
-        sol_found = "; Time"
-        sol_idx = -1
-        for idx, line in enumerate(proc_out):
-            if sol_found in line:
-                sol_idx = idx
-                break
-        if sol_idx == -1:
-            # No solution
-            plan = []
-        else:
-            # Keep only the plan with the time
-            plan = proc_out[sol_idx:]
-            try:
-                plan = plan[: plan.index("\n")]
-            except ValueError:
-                pass
+        plan: List[str] = []
+        parsing = False
+        for line in proc_out:
+            if self._starting_plan_str() in line:
+                parsing = True
+                plan = []  # Clear the plan to keep only the last one
+                continue
+            if not parsing:
+                continue
+            if self._ending_plan_str() == line:
+                parsing = False
+            plan.append(self._parse_plan_line(line))
         return "\n".join(plan)
 
     def _starting_plan_str(self) -> str:
-        return ";;;; Solution Found"
+        return "; Time"
 
     def _ending_plan_str(self) -> str:
         return "\n"
 
     def _parse_plan_line(self, plan_line: str) -> str:
-        return plan_line
+        return plan_line.strip()
 
     def _result_status(
         self,
@@ -73,6 +104,12 @@ class OpticPlanner(TyrPDDLPlanner):
         log_messages: Optional[List[LogMessage]] = None,
     ) -> PlanGenerationResultStatus:
         if plan is not None:
+            splitted = str(plan).strip().split("\n")
+            has_plan = len(splitted) > 1
+        else:
+            has_plan = False
+
+        if has_plan:
             return PlanGenerationResultStatus.SOLVED_SATISFICING
         if retval == 0:
             return PlanGenerationResultStatus.UNSOLVABLE_INCOMPLETELY

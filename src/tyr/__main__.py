@@ -32,7 +32,12 @@ DEFAULT_CONFIG = {
     "fs": False,
     "jobs": 1,
     "latex": False,
+    "latex_array_stretch": 1.2,
     "latex_caption": "Table of metrics.",
+    "latex_font_size": "footnotesize",
+    "latex_horizontal_space": 0.35,
+    "latex_pos": "htb",
+    "latex_star": False,
     "logs_path": "",
     "memout": 4 * 1024**3,
     "metrics": [],
@@ -47,6 +52,7 @@ DEFAULT_CONFIG = {
     "problem": "",
     "quiet": 0,
     "timeout": 5,
+    "timeout_offset": 10,
     "user_mail": None,
     "verbose": 0,
 }
@@ -60,6 +66,8 @@ def merge_configs(cli_config: dict, file_config: dict, default_config: dict) -> 
         if isinstance(v, (list, tuple)):
             if list(v) != list(default_config[k]):
                 config[k] = v
+        elif isinstance(v, int) and not isinstance(v, bool):
+            config[k] = v
         elif v is not None and v != default_config[k]:
             config[k] = v
 
@@ -68,12 +76,12 @@ def merge_configs(cli_config: dict, file_config: dict, default_config: dict) -> 
 
 def merge_running_modes(anytime: bool, oneshot: bool) -> List[RunningMode]:
     if anytime and oneshot:
-        return [RunningMode.ANYTIME]
+        return [RunningMode.ANYTIME, RunningMode.ONESHOT]
     if anytime:
         return [RunningMode.ANYTIME]
     if oneshot:
         return [RunningMode.ONESHOT]
-    return [RunningMode.ANYTIME]
+    return [RunningMode.ANYTIME, RunningMode.ONESHOT]
 
 
 def yaml_config(path: Optional[Path], name: str) -> dict:
@@ -197,6 +205,12 @@ timeout_option = click.option(
     type=int,
     help=f"Timeout for planners in seconds. Default to {DEFAULT_CONFIG['timeout']}s.",
 )
+timeout_offset_option = click.option(
+    "--timeout-offset",
+    type=int,
+    help=f"Additional seconds on timeout for planner to timeout by themselves.\
+        Default to {DEFAULT_CONFIG['timeout_offset']}s.",
+)
 verbose_option = click.option(
     "-v",
     "--verbose",
@@ -246,6 +260,7 @@ def update_context(ctx, verbose, quiet, out, logs_path, db_path, config):
 @db_path_option
 @config_option
 @timeout_option
+@timeout_offset_option
 @memout_option
 @jobs_option
 @planners_filter
@@ -265,6 +280,7 @@ def cli_bench(
     db_path: str,
     config,
     timeout: int,
+    timeout_offset: int,
     memout: int,
     jobs: int,
     planners: List[str],
@@ -283,6 +299,7 @@ def cli_bench(
         "logs_path": logs_path,
         "db_path": db_path,
         "timeout": timeout,
+        "timeout_offset": timeout_offset,
         "memout": memout,
         "jobs": jobs,
         "planners": planners,
@@ -315,6 +332,7 @@ def cli_bench(
         conf["jobs"],
         conf["memout"],
         conf["timeout"],
+        conf["timeout_offset"],
         conf["db_only"],
         conf["no_db_load"],
         conf["no_db_save"],
@@ -412,6 +430,7 @@ def cli_plot(
 @db_path_option
 @config_option
 @timeout_option
+@timeout_offset_option
 @memout_option
 @planners_filter
 @domains_filter
@@ -438,6 +457,7 @@ def cli_slurm(
     db_path: str,
     config,
     timeout: int,
+    timeout_offset: int,
     memout: int,
     planners: List[str],
     domains: List[str],
@@ -454,6 +474,7 @@ def cli_slurm(
         "logs_path": logs_path,
         "db_path": db_path,
         "timeout": timeout,
+        "timeout_offset": timeout_offset,
         "memout": memout,
         "planners": planners,
         "domains": domains,
@@ -479,6 +500,7 @@ def cli_slurm(
         jobs=1,
         memout=conf["memout"],
         timeout=conf["timeout"],
+        timeout_offset=conf["timeout_offset"],
         db_only=False,
         no_db_load=False,
         no_db_save=False,
@@ -513,6 +535,7 @@ def cli_slurm(
 @click.argument("planner", type=str, required=False)
 @click.argument("problem", type=str, required=False)
 @timeout_option
+@timeout_offset_option
 @memout_option
 @click.option(
     "--fs",
@@ -533,6 +556,7 @@ def cli_solve(
     planner: str,
     problem: str,
     timeout: int,
+    timeout_offset: int,
     memout: int,
     fs: bool,
     no_db_save: bool,
@@ -547,6 +571,7 @@ def cli_solve(
         "planner": planner,
         "problem": problem,
         "timeout": timeout,
+        "timeout_offset": timeout_offset,
         "memout": memout,
         "fs": fs,
         "no_db_save": no_db_save,
@@ -574,6 +599,7 @@ def cli_solve(
         jobs=1,
         memout=conf["memout"],
         timeout=conf["timeout"],
+        timeout_offset=conf["timeout_offset"],
         db_only=False,
         no_db_load=True,
         no_db_save=conf["no_db_save"],
@@ -601,11 +627,40 @@ def cli_solve(
 @planners_filter
 @domains_filter
 @metrics_filter
-# NOTE: The following options are deprecrated for the moment and not implemented.
-# @click.option("--best-col", is_flag=True, help="Print the best metrics on the right.")
-# @click.option("--best-row", is_flag=True, help="Print the best metrics on the bottom.")
 @latex_option
-@click.option("--latex-caption", type=str, help="Caption for the LaTeX table.")
+@click.option(
+    "--latex-array-stretch",
+    type=float,
+    help="Stretch the LaTeX table vertically. "
+    f"Default: {DEFAULT_CONFIG['latex_array_stretch']}",
+)
+@click.option(
+    "--latex-caption",
+    type=str,
+    help=f"Caption for the LaTeX table. Default: {DEFAULT_CONFIG['latex_caption']}",
+)
+@click.option(
+    "--latex-font-size",
+    type=str,
+    help="Font size for the LaTeX table. "
+    f"Default: {DEFAULT_CONFIG['latex_font_size']}",
+)
+@click.option(
+    "--latex-horizontal-space",
+    type=float,
+    help="Horizontal space between columns for the LaTeX table in cm. "
+    f"Default: {DEFAULT_CONFIG['latex_horizontal_space']}cm",
+)
+@click.option(
+    "--latex-pos",
+    type=str,
+    help=f"Position of the LaTeX table. Default: {DEFAULT_CONFIG['latex_pos']}",
+)
+@click.option(
+    "--latex-star",
+    is_flag=True,
+    help="Use a table* environment in LaTeX. Default: table.",
+)
 @pass_context
 def cli_table(
     ctx: CliContext,
@@ -620,10 +675,13 @@ def cli_table(
     planners: List[str],
     domains: List[str],
     metrics: List[str],
-    # best_col: bool,
-    # best_row: bool,
     latex: bool,
+    latex_array_stretch: float,
     latex_caption: str,
+    latex_font_size: str,
+    latex_horizontal_space: float,
+    latex_pos: str,
+    latex_star: bool,
 ):
     config = config or ctx.config
     cli_config = {
@@ -637,10 +695,13 @@ def cli_table(
         "planners": planners,
         "domains": domains,
         "metrics": metrics,
-        # "best_column": best_col,
-        # "best_row": best_row,
         "latex": latex,
+        "latex_array_stretch": latex_array_stretch,
         "latex_caption": latex_caption,
+        "latex_font_size": latex_font_size,
+        "latex_horizontal_space": latex_horizontal_space,
+        "latex_pos": latex_pos,
+        "latex_star": latex_star,
     }
     conf = merge_configs(cli_config, yaml_config(config, "table"), DEFAULT_CONFIG)
     update_context(
@@ -660,12 +721,13 @@ def cli_table(
         conf["planners"],
         conf["domains"],
         conf["metrics"],
-        # conf["best_column"],
-        # conf["best_row"],
-        False,
-        False,
         conf["latex"],
+        conf["latex_array_stretch"],
         conf["latex_caption"],
+        conf["latex_font_size"],
+        conf["latex_horizontal_space"],
+        conf["latex_pos"],
+        conf["latex_star"],
     )
 
 

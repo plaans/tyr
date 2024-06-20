@@ -40,7 +40,7 @@ class ApptainerPlanner(TyrPDDLPlanner):
         return self._get_cmd(domain_filename, problem_filename, plan_filename)
 
     def _get_plan(self, proc_out: List[str]) -> str:
-        # Linear writes the plan to the file specified in the command line if it finds a solution.
+        # Apptainer planners should write the plan to the file specified in the command line.
         # If this method is called, it means that the file was not found, so there is no plan.
         self._plan_found = False
         return ""
