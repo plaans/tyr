@@ -14,6 +14,6 @@ numpy==1.*
 -r aries.txt
 
 # Unified Planning
-git+https://github.com/aiplan4eu/unified-planning.git@master#egg=unified_planning
+git+https://github.com/aiplan4eu/unified-planning.git@d3ddd24#egg=unified_planning
 up-enhsp
-git+https://github.com/aiplan4eu/up-lpg.git@9db5a58#egg=up-lpg
+# git+https://github.com/aiplan4eu/up-lpg.git@9db5a58#egg=up-lpg
