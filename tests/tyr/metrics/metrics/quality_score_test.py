@@ -36,16 +36,7 @@ class TestAgileScoreMetric:
     @pytest.mark.parametrize("status", PlannerResultStatus)
     def test_quality_score_single_result(self, quality, expected, status):
         if status != PlannerResultStatus.SOLVED:
-            expected = (
-                "-"
-                if status
-                in [
-                    PlannerResultStatus.NOT_RUN,
-                    PlannerResultStatus.UNSUPPORTED,
-                    PlannerResultStatus.ERROR,
-                ]
-                else "0.00"
-            )
+            expected = "0.00"
         else:
             expected = f"{expected*100:.2f}" if expected != 1 else "100"
         results = [planner_result(status.name, quality)]
@@ -77,6 +68,6 @@ class TestAgileScoreMetric:
             planner_result("not_run", 0.5),
             planner_result("error", 0.5),
         ]
-        expected = "100"
+        expected = "25.00"
         result = QualityScoreMetric().evaluate(results, results)
         assert result == expected

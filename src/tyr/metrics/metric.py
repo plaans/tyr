@@ -4,7 +4,7 @@ from typing import List
 from tyr.patterns import AbstractSingletonMeta
 from tyr.patterns.abstract import Abstract
 from tyr.patterns.singleton import Singleton
-from tyr.planners.model.result import PlannerResult, PlannerResultStatus
+from tyr.planners.model.result import PlannerResult
 
 
 # pylint: disable = too-few-public-methods
@@ -33,18 +33,6 @@ class Metric(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         """The maximum value of the metric."""
         return 100
 
-    def _filter_results(self, results: List[PlannerResult]) -> List[PlannerResult]:
-        return [
-            r
-            for r in results
-            if r.status
-            not in [
-                PlannerResultStatus.NOT_RUN,
-                PlannerResultStatus.UNSUPPORTED,
-                PlannerResultStatus.ERROR,
-            ]
-        ]
-
     def _evaluate(
         self,
         results: List[PlannerResult],
@@ -65,7 +53,6 @@ class Metric(Abstract, Singleton, metaclass=AbstractSingletonMeta):
             results: The results to evaluate.
             all_results: All the results containing the other planners and domains.
         """
-        results, all_results = tuple(map(self._filter_results, (results, all_results)))
         if len(results) == 0:
             return "-"
         value = self.evaluate_raw(results, all_results)
@@ -85,7 +72,6 @@ class Metric(Abstract, Singleton, metaclass=AbstractSingletonMeta):
             results: The results to evaluate.
             all_results: All the results containing the other planners and domains.
         """
-        results, all_results = tuple(map(self._filter_results, (results, all_results)))
         return self._evaluate(results, all_results)
 
 
