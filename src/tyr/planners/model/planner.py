@@ -153,7 +153,6 @@ class Planner:
                 computation_time,
                 traceback.format_exc(),
             )
-            return
 
     def solve_single(
         self,
