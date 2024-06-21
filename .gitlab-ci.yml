@@ -45,7 +45,8 @@ docker:
   stage: Static Analysis
   allow_failure: true
   before_script:
-    - just install $PYTHON_REQUIREMENTS_TARGET $DEFAULT_PYTHON_VERSION
+    - just --set PY_T $PYTHON_REQUIREMENTS_TARGET --set PT_V $DEFAULT_PYTHON_VERSION install
+    - just --set PY_T $PYTHON_REQUIREMENTS_TARGET --set PT_V $DEFAULT_PYTHON_VERSION install-all-planners
     - .venv/bin/python --version
   parallel:
     matrix:
@@ -111,7 +112,8 @@ tests:
     matrix:
       - VERSION: ["3.8", "3.9", "3.10", "3.11", "3.12"]
   before_script:
-    - just reset $PYTHON_REQUIREMENTS_TARGET $VERSION
+    - just --set PY_T $PYTHON_REQUIREMENTS_TARGET --set PT_V $DEFAULT_PYTHON_VERSION reset
+    - just --set PY_T $PYTHON_REQUIREMENTS_TARGET --set PT_V $DEFAULT_PYTHON_VERSION install-all-planners
     - .venv/bin/python --version
   script:
     - just _cov-ci
