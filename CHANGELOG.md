@@ -4,6 +4,81 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [1.18.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.17.0...v1.18.0) (2024-06-21)
+
+
+### Bug Fixes
+
+* **apptainer:** install java ([dc28883](https://gitlab.laas.fr/rgodet1/tyr/commit/dc28883fba381a6c3d7fb14f416c77f8ebf10370))
+* **cli:** merge int options ([27e7e38](https://gitlab.laas.fr/rgodet1/tyr/commit/27e7e3829b7378db3f14906381360f72974dce6c))
+* **database:** add a security offset when loading previous results of the same run ([bcb5ddb](https://gitlab.laas.fr/rgodet1/tyr/commit/bcb5ddb345a1db124a247ce22e6df7d6448715d9))
+* **database:** for anytime, try to get the latest result before the timeout ([c8b9f03](https://gitlab.laas.fr/rgodet1/tyr/commit/c8b9f0336d07a1dadf04bd1c2129d50f58b5a35a))
+* **database:** retry on in/out error during saving ([67bdded](https://gitlab.laas.fr/rgodet1/tyr/commit/67bdded0caab13a93624e007f790c515049a84f5))
+* **database:** try to get the latest solved result of the run in anytime ([fdd2ea8](https://gitlab.laas.fr/rgodet1/tyr/commit/fdd2ea897faabe20ccfaa70fd4350871a77b188f))
+* **database:** use multiprocessing to save results ([0de0565](https://gitlab.laas.fr/rgodet1/tyr/commit/0de0565ab8493147f994b98e3dde9c72593e0a4f))
+* **domains:** rover and satellite quality with timed plans ([9bbdfb6](https://gitlab.laas.fr/rgodet1/tyr/commit/9bbdfb63108128a9ec39e03a8d55e3dda1e5ae4f))
+* **domains:** specify version name to get the quality ([8a4f518](https://gitlab.laas.fr/rgodet1/tyr/commit/8a4f518b4ac8acc20815b53b09dd50bb8341d715))
+* **lpg:** detect timeout from logs ([f13dd3e](https://gitlab.laas.fr/rgodet1/tyr/commit/f13dd3e31acff78279efd8cd7e0203531e50fb3c))
+* **metric:** best quality score of zero ([0822993](https://gitlab.laas.fr/rgodet1/tyr/commit/0822993b32bbff5ddb29109d832148b15bec8b9c))
+* **metric:** stop filtering resutls ([25a1422](https://gitlab.laas.fr/rgodet1/tyr/commit/25a14220b6cc480d2f0546b3405c60d49512925c))
+* **optic:** cmd option position ([293a414](https://gitlab.laas.fr/rgodet1/tyr/commit/293a414b482c0332572100a1cae9cfe5d1ebf7b3))
+* **optic:** get several plans in anytime mode ([c657694](https://gitlab.laas.fr/rgodet1/tyr/commit/c657694fabb82478944cab23d703bc5a0d6c59af))
+* **optic:** get the latest plan ([485668d](https://gitlab.laas.fr/rgodet1/tyr/commit/485668d651b720785f7f3e340bab2589161e6667))
+* **optic:** get the latest plan from the logs ([458ef62](https://gitlab.laas.fr/rgodet1/tyr/commit/458ef62b6355306a1467d1598f6df4c357e4ec86))
+* **optic:** plan detection ([c7e76f2](https://gitlab.laas.fr/rgodet1/tyr/commit/c7e76f2390ef3f4cab2b7df73ecd7db569ea735e))
+* **optic:** plan detection when no end line ([b1c8af1](https://gitlab.laas.fr/rgodet1/tyr/commit/b1c8af147403776ab3ec841c00f593bdb8b4b8c4))
+* **optic:** status when plan is empty ([7c03f12](https://gitlab.laas.fr/rgodet1/tyr/commit/7c03f121e652f70fd121845558483f58ecf2be3c))
+* **planner:** disable timeout alarm on error ([97a53f4](https://gitlab.laas.fr/rgodet1/tyr/commit/97a53f4846c3e2e578f077eb7967a9b38c843bff))
+* **planners:** process killing ([a46821e](https://gitlab.laas.fr/rgodet1/tyr/commit/a46821e34141a7a0345833a1766b33bca54201af))
+* **planners:** save local planner name instead of upf one in the database ([9acf05e](https://gitlab.laas.fr/rgodet1/tyr/commit/9acf05e9f74dddddca21266f9add40b1604572d0))
+* **planners:** status when no plan ([20eaf63](https://gitlab.laas.fr/rgodet1/tyr/commit/20eaf63b889b02193456cbf345385b9668f008a7))
+* **planners:** use red_no_float version for satellite numeric ([ea46a08](https://gitlab.laas.fr/rgodet1/tyr/commit/ea46a0825534cea519a8c2049bf4cfd1b6f677fa))
+* **planner:** wrap whole solving code in try/except ([0dcaba2](https://gitlab.laas.fr/rgodet1/tyr/commit/0dcaba2914e6f0d7d8ec53412a323eb47c16ed35))
+* **plot:** quality ratio basis value in latex export ([6a74a36](https://gitlab.laas.fr/rgodet1/tyr/commit/6a74a36a18343ebfc8dfbb9e9d3035da66ecdfef))
+* **plot:** use only anytime results for quality ratio ([cf9bf8e](https://gitlab.laas.fr/rgodet1/tyr/commit/cf9bf8edf301e0e101d80fad07a232d273a9ed72))
+* **popf:** empty plan detection ([eef0a49](https://gitlab.laas.fr/rgodet1/tyr/commit/eef0a49cb5bea2db13847704545996ea6d85ef67))
+* **problems:** check integer fluent bounds when convert sched to actions ([01f40c9](https://gitlab.laas.fr/rgodet1/tyr/commit/01f40c9a1b02a152c753779bd1901eaa2588ddc5))
+* **rovers:** quality of numerical plans ([7e41cf3](https://gitlab.laas.fr/rgodet1/tyr/commit/7e41cf3917d050052820b7dfa7fe7dbef7f320a1))
+* **satellite:** quality of numerical plans ([9339723](https://gitlab.laas.fr/rgodet1/tyr/commit/9339723dcb5a557680cf916c92dcca7002c719e8))
+* **scheduling:** constraint creation ([77ad027](https://gitlab.laas.fr/rgodet1/tyr/commit/77ad02757ac13759abb0f6124851abad58ca6d40))
+* **slurm:** specify min and max number of nodes ([516895f](https://gitlab.laas.fr/rgodet1/tyr/commit/516895f5dedf444d405713033fa622d8c07272f3))
+* **slurm:** use dedicated db for each task ([89f707a](https://gitlab.laas.fr/rgodet1/tyr/commit/89f707a4e57bdd7129f6599ca2f8b8dd94a27a8d))
+* **table:** give col headers to latex ([7a685bd](https://gitlab.laas.fr/rgodet1/tyr/commit/7a685bde8e8f68962ce86a5d82637aef15aafea0))
+* **table:** headers can have different number of subheaders ([78dc34d](https://gitlab.laas.fr/rgodet1/tyr/commit/78dc34da30dff410ecb2e1b68465b52cf989caf8))
+* **table:** intermediate horizontal dashed separator in latex ([21c5839](https://gitlab.laas.fr/rgodet1/tyr/commit/21c5839384f5154eb24adbbfbe85b17aa43f3aa0))
+* **table:** latex horizontal separators ([e4070fd](https://gitlab.laas.fr/rgodet1/tyr/commit/e4070fde3f865c6d906d761c9b6c68e619f331bc))
+* **table:** latex horizontal separators of unit size ([2c792f9](https://gitlab.laas.fr/rgodet1/tyr/commit/2c792f9361df00b9a99f64e88e7cf823453cd376))
+* **table:** latex separator over domains ([38fa5f9](https://gitlab.laas.fr/rgodet1/tyr/commit/38fa5f92ed77ea692a51ade553f1177fd118a5cd))
+* **table:** vertical terminal separator ([899b53f](https://gitlab.laas.fr/rgodet1/tyr/commit/899b53fdbde96800d54a030737799c0e791dd510))
+
+
+### Features
+
+* **cli:** in quiet mode, the header is not printed ([bec09a6](https://gitlab.laas.fr/rgodet1/tyr/commit/bec09a6b71e882a6eade4ea627cdfaa385103d7c))
+* **cli:** print the timeout offset ([d4617d4](https://gitlab.laas.fr/rgodet1/tyr/commit/d4617d4c730e6abc42971c37781eb6056e4801e2))
+* **metrics:** add quality ratio ([f4cc390](https://gitlab.laas.fr/rgodet1/tyr/commit/f4cc39039022ba221a4904325e62ad4faec6738f))
+* **metrics:** add relative quality score ([5f970c8](https://gitlab.laas.fr/rgodet1/tyr/commit/5f970c856da9a00a57848b3b380e9b4631169986))
+* **optic:** get all intermediate plans ([8eea161](https://gitlab.laas.fr/rgodet1/tyr/commit/8eea161bd1f33baccc73f8a555a9b333c7fdb64c))
+* **pddl planners:** can get computation time from logs ([a4b7f66](https://gitlab.laas.fr/rgodet1/tyr/commit/a4b7f66c063cf73f108e9befd27f810cadc3bc36))
+* **planners:** add additional offset seconds before force planner to timeout ([6b38bdd](https://gitlab.laas.fr/rgodet1/tyr/commit/6b38bdda9b21e5222c525baa1ac8f1c08292b2dd))
+* **planners:** add ENHSP ([fbd8b6f](https://gitlab.laas.fr/rgodet1/tyr/commit/fbd8b6f0279133fd56bdfc8988112eacde49927d))
+* **planners:** add POPF ([7c9ef92](https://gitlab.laas.fr/rgodet1/tyr/commit/7c9ef922d9dc1fa2d85031b38d8e9d3d3a6b107e))
+* **result:** can be merged ([1d9bd89](https://gitlab.laas.fr/rgodet1/tyr/commit/1d9bd89f672871e41c51cfca84f0b44d6459403e))
+* **script:** merge SQLite database files into a single database ([29a071d](https://gitlab.laas.fr/rgodet1/tyr/commit/29a071dc01ba057be371ee12ac1184876ffa7e26))
+* **singleton:** methods for clearing and purging instances ([66fc48c](https://gitlab.laas.fr/rgodet1/tyr/commit/66fc48c19752b496e33ec3c30fd4b23a72923d77))
+* **table:** add latex-star option to create a table* ([2c3ebf0](https://gitlab.laas.fr/rgodet1/tyr/commit/2c3ebf0de73bf59d8d386578f43638c4812b7d2d))
+* **table:** can add final row and column ([9c8346b](https://gitlab.laas.fr/rgodet1/tyr/commit/9c8346bf017e08e91f3aecb32e0d6f8e129dd12a))
+* **table:** can specify latex font size ([850075f](https://gitlab.laas.fr/rgodet1/tyr/commit/850075fdf84ecc8efc01664e855252207402b5a7))
+* **table:** can specify latex position ([a706241](https://gitlab.laas.fr/rgodet1/tyr/commit/a7062419aab3bf7c8ea4d7acc35140e12076ca8d))
+* **table:** can specify latex vertical and horizontal spaces ([05ca21c](https://gitlab.laas.fr/rgodet1/tyr/commit/05ca21c0fc6ec7ed2e6b8dc6c0655cdeacc76c24))
+* **table:** filter candidates with unsupported results ([dcd5e7f](https://gitlab.laas.fr/rgodet1/tyr/commit/dcd5e7f2d873b58efce810e51a200d0fc565660b))
+* **table:** merge results ([278c913](https://gitlab.laas.fr/rgodet1/tyr/commit/278c9131b8c9231c60645f6b6e3ae8060f22ca83))
+
+
+### Reverts
+
+* **planner:** stop anytime first solution duplication ([8f9f153](https://gitlab.laas.fr/rgodet1/tyr/commit/8f9f15390ef6fb395903e9a2e73e55840dc53200))
+
 # [1.17.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.16.0...v1.17.0) (2024-04-09)
 
 
