@@ -4,3 +4,6 @@
 [submodule "src/tyr/planners/planners/optic"]
 	path = src/tyr/planners/planners/optic
 	url = https://github.com/plaans/tyr-optic.git
+[submodule "src/tyr/planners/planners/pandapi"]
+	path = src/tyr/planners/planners/pandapi
+	url = https://github.com/plaans/tyr-pandapi.git
