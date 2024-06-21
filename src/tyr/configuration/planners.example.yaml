@@ -47,42 +47,6 @@
     ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
   upf_engine: tyr.planners.planners.aries.planning.unified.plugin.up_aries.Aries
 
-- name: aries-exponential
-  problems:
-    factories-simple-hierarchical: exponential
-    goto-complex-hierarchical: exponential
-    goto-hard-hierarchical: exponential
-    goto-simple-hierarchical: exponential
-    rovers-hierarchical: exponential
-    transport-hierarchical: exponential
-  env:
-    ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
-  upf_engine: tyr.planners.planners.aries.planning.unified.plugin.up_aries.Aries
-
-- name: aries-linear
-  problems:
-    factories-simple-hierarchical: linear
-    goto-complex-hierarchical: linear
-    goto-hard-hierarchical: linear
-    goto-simple-hierarchical: linear
-    rovers-hierarchical: linear
-    transport-hierarchical: linear
-  env:
-    ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
-  upf_engine: tyr.planners.planners.aries.planning.unified.plugin.up_aries.Aries
-
-- name: aries-insertion
-  problems:
-    factories-simple-hierarchical: insertion
-    goto-complex-hierarchical: insertion
-    goto-hard-hierarchical: insertion
-    goto-simple-hierarchical: insertion
-    rovers-hierarchical: insertion
-    transport-hierarchical: insertion
-  env:
-    ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
-  upf_engine: tyr.planners.planners.aries.planning.unified.plugin.up_aries.Aries
-
 # ============================================================================ #
 #                                     ENHSP                                    #
 # ============================================================================ #
@@ -98,7 +62,7 @@
 #                                    Linear                                    #
 # ============================================================================ #
 
-- name: linear
+- name: linear-complex
   problems:
     depots-hierarchical: base
     factories-simple-hierarchical: base
@@ -108,33 +72,6 @@
     rovers-hierarchical: base
     satellite-hierarchical: base
     transport-hierarchical: base
-
-- name: linear-exponential
-  problems:
-    factories-simple-hierarchical: exponential
-    goto-complex-hierarchical: exponential
-    goto-hard-hierarchical: exponential
-    goto-simple-hierarchical: exponential
-    rovers-hierarchical: exponential
-    transport-hierarchical: exponential
-
-- name: linear-linear
-  problems:
-    factories-simple-hierarchical: linear
-    goto-complex-hierarchical: linear
-    goto-hard-hierarchical: linear
-    goto-simple-hierarchical: linear
-    rovers-hierarchical: linear
-    transport-hierarchical: linear
-
-- name: linear-insertion
-  problems:
-    factories-simple-hierarchical: insertion
-    goto-complex-hierarchical: insertion
-    goto-hard-hierarchical: insertion
-    goto-simple-hierarchical: insertion
-    rovers-hierarchical: insertion
-    transport-hierarchical: insertion
 
 # ============================================================================ #
 #                                     Optic                                    #
@@ -165,33 +102,6 @@
     rovers-hierarchical: base
     satellite-hierarchical: base
     transport-hierarchical: base
-
-- name: panda-pi-exponential
-  problems:
-    factories-simple-hierarchical: exponential
-    goto-complex-hierarchical: exponential
-    goto-hard-hierarchical: exponential
-    goto-simple-hierarchical: exponential
-    rovers-hierarchical: exponential
-    transport-hierarchical: exponential
-
-- name: panda-pi-linear
-  problems:
-    factories-simple-hierarchical: linear
-    goto-complex-hierarchical: linear
-    goto-hard-hierarchical: linear
-    goto-simple-hierarchical: linear
-    rovers-hierarchical: linear
-    transport-hierarchical: linear
-
-- name: panda-pi-insertion
-  problems:
-    factories-simple-hierarchical: insertion
-    goto-complex-hierarchical: insertion
-    goto-hard-hierarchical: insertion
-    goto-simple-hierarchical: insertion
-    rovers-hierarchical: insertion
-    transport-hierarchical: insertion
 
 # ============================================================================ #
 #                                     POPF                                     #
