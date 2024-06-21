@@ -1,3 +1,6 @@
 [submodule "libs/aries"]
 	path = src/tyr/planners/planners/aries
 	url = https://github.com/plaans/aries.git
+[submodule "src/tyr/planners/planners/optic"]
+	path = src/tyr/planners/planners/optic
+	url = https://github.com/plaans/tyr-optic.git
