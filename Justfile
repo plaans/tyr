@@ -114,6 +114,7 @@ install-aries: install-venv
 # Install the LinearComplex planner
 install-linear-complex:
     @just _install-planner-submodule linear-complex
+    ./{{ planners_dir }}/linear-complex/install.sh
     @just _register-planner linear-complex
 
 # Install the Optic planner
@@ -124,6 +125,7 @@ install-optic:
 # Install the PandaPi planner
 install-pandapi:
     @just _install-planner-submodule pandapi
+    ./{{ planners_dir }}/pandapi/install.sh
     @just _register-planner panda-pi
 
 # Install the Popf planner
