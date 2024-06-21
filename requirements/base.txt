@@ -10,10 +10,5 @@ plotly
 # See: https://stackoverflow.com/questions/78634235/numpy-dtype-size-changed-may-indicate-binary-incompatibility-expected-96-from
 numpy==1.*
 
-# Aries requirements symbolic link
--r aries.txt
-
 # Unified Planning
 git+https://github.com/aiplan4eu/unified-planning.git@d3ddd24#egg=unified_planning
-up-enhsp
-# git+https://github.com/aiplan4eu/up-lpg.git@9db5a58#egg=up-lpg
