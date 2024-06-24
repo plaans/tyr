@@ -17,3 +17,6 @@
 	path = src/tyr/planners/planners/linear-complex
 	url = https://github.com/plaans/tyr-linear-complex.git
 	branch = master
+[submodule "src/tyr/problems/domains/ipc"]
+	path = src/tyr/problems/domains/ipc
+	url = https://github.com/plaans/tyr-ipc-domains.git
