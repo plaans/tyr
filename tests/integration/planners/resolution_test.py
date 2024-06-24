@@ -23,7 +23,7 @@ class TestResolution:
             no_db_load=True,
             no_db_save=True,
         )
-        problem = domain.get_problem("01")
+        problem = domain.get_problem("1")
         assert problem is not None
         planner.solve(problem, config, RunningMode.ONESHOT)  # Check no crash
         signal.alarm(0)  # Disable potential timeout

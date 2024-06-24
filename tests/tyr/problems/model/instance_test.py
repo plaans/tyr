@@ -17,13 +17,13 @@ class TestProblemInstance(ModelTest):
 
     def get_default_attributes(self) -> Dict[str, Any]:
         return {
-            "_uid": "05",
+            "_uid": "5",
             "_domain": self.domain(),
             "_versions": dict(),
         }
 
     def get_instance(self) -> ProblemInstance:
-        return ProblemInstance(self.domain(), "05")
+        return ProblemInstance(self.domain(), "5")
 
     def domain(self):
         if not hasattr(self, "_domain"):
@@ -37,7 +37,7 @@ class TestProblemInstance(ModelTest):
             folder = Path(__file__).parent.parent / "fixtures/pddl"
             return PDDLReader().parse_problem(
                 (folder / "domain.pddl").as_posix(),
-                (folder / "instance-01.pddl").as_posix(),
+                (folder / "instance-1.pddl").as_posix(),
             )
 
         problem = self.get_instance()
@@ -64,7 +64,7 @@ class TestProblemInstance(ModelTest):
     # ============================================================================ #
 
     def test_get_name(self, problem: ProblemInstance):
-        expected = "mockdomain:05"
+        expected = "mockdomain:5"
         assert problem.name == expected
 
     def test_is_empty(self, problem: ProblemInstance):

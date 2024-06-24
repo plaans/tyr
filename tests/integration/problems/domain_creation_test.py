@@ -10,7 +10,7 @@ from tyr import AbstractDomain, get_all_domains
 class TestDomainCreation:
     @pytest.mark.parametrize(
         ["problem_id", "is_none"],
-        [(str(i).zfill(2), not (0 < i <= 3)) for i in range(15)],
+        [(str(i), not (0 < i <= 3)) for i in range(15)],
     )
     @pytest.mark.parametrize("version_name", ["a_first", "base", "modified"])
     def test_fake_domain_problem_creation(
@@ -32,7 +32,7 @@ class TestDomainCreation:
         [
             pytest.param(
                 d,
-                f"{p:0>2}",
+                str(p),
                 v,
                 marks=(
                     [pytest.mark.xfail]

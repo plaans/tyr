@@ -234,7 +234,7 @@ class TestCollectors:
     ):
         mocked_get_all_domain.return_value = all_domains
         problems = [
-            d.get_problem(f"{p+1:0>2}")
+            d.get_problem(str(p + 1))
             for d in all_domains
             for p in range(d.get_num_problems())
         ]
@@ -253,7 +253,7 @@ class TestCollectors:
         filter1 = ".*[4-8]:.*"
 
         problems = [
-            d.get_problem(f"{p+1:0>2}")
+            d.get_problem(str(p + 1))
             for d in all_domains
             for p in range(d.get_num_problems())
         ]
@@ -276,7 +276,7 @@ class TestCollectors:
         filter2 = ".*[1-5]:.*"
 
         problems = [
-            d.get_problem(f"{p+1:0>2}")
+            d.get_problem(str(p + 1))
             for d in all_domains
             for p in range(d.get_num_problems())
         ]
@@ -298,7 +298,7 @@ class TestCollectors:
         filter1 = ".*:.*[4-8]"
 
         problems = [
-            d.get_problem(f"{p+1:0>2}")
+            d.get_problem(str(p + 1))
             for d in all_domains
             for p in range(d.get_num_problems())
         ]
@@ -321,7 +321,7 @@ class TestCollectors:
         filter2 = ".*:.*[2-5]"
 
         problems = [
-            d.get_problem(f"{p+1:0>2}")
+            d.get_problem(str(p + 1))
             for d in all_domains
             for p in range(d.get_num_problems())
         ]
@@ -344,7 +344,7 @@ class TestCollectors:
         mocked_get_all_domain.return_value = all_domains
 
         problems = [
-            d.get_problem(f"{p+1:0>2}")
+            d.get_problem(str(p + 1))
             for d in all_domains
             for p in range(d.get_num_problems())
         ]

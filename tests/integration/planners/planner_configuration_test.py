@@ -24,5 +24,5 @@ class TestPlannerConfiguration:
         assert domain_name in domains, f"The domain {domain_name} does not exist"
         domain = domains[domain_name]
         assert (
-            version_name in domain.get_problem("01").versions
+            version_name in domain.get_problem("1").versions
         ), f"The domain {domain_name} does not have the {version_name} version"

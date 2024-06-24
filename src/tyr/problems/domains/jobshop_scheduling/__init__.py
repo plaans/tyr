@@ -74,4 +74,4 @@ class JobshopSchedulingDomain(AbstractDomain):
         ope = OPERATORS[uid // div]
         jsp_num = uid % div + 1
 
-        return _parse(FOLDER / f"instance-{jsp_num:0>2}.jsp", ope)
+        return _parse(FOLDER / f"instance-{jsp_num}.jsp", ope)

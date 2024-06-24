@@ -67,7 +67,7 @@ class TestPlanner(ModelTest):
     @staticmethod
     @pytest.fixture()
     def problem(domain: AbstractDomain):
-        yield domain.get_problem("01")
+        yield domain.get_problem("1")
 
     @staticmethod
     @pytest.fixture()
@@ -120,7 +120,7 @@ class TestPlanner(ModelTest):
 
     # =============================== Get log file =============================== #
 
-    @pytest.mark.parametrize("problem_id", ["01", "06"])
+    @pytest.mark.parametrize("problem_id", ["1", "6"])
     @pytest.mark.parametrize("domain_name", ["domain1", "domain2"])
     @pytest.mark.parametrize("planner_name", ["planner1", "planner2"])
     @pytest.mark.parametrize("file_name", ["solve", "error", "warning"])
