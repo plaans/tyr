@@ -42,5 +42,7 @@ RUN cargo install just
 WORKDIR /tmp
 RUN wget https://github.com/apptainer/apptainer/releases/download/v1.3.2/apptainer_1.3.2_amd64.deb
 RUN apt install -y ./apptainer_1.3.2_amd64.deb
+RUN wget https://github.com/apptainer/apptainer/releases/download/v1.3.2/apptainer-suid_1.3.2_amd64.deb
+RUN dpkg -i ./apptainer-suid_1.3.2_amd64.deb
 
 WORKDIR /root/workspace
