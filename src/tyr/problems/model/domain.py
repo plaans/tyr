@@ -17,7 +17,7 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
 
     For each problem version, the class must implements the method
     ``` python
-    def build_problem_VERSION(self, problem_id: str) -> Optional[up.AbstractProblem]
+    def build_problem_VERSION(self, problem_id: int) -> Optional[up.AbstractProblem]
     ```
     """
 
@@ -25,7 +25,7 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         super().__init__()
         base_name = self.__class__.__name__[:-6]
         self._name = re.sub(r"([A-Z])", r"-\1", base_name).lower().lstrip("-")
-        self._problems: Dict[str, ProblemInstance] = {}
+        self._problems: Dict[int, ProblemInstance] = {}
 
     @property
     def name(self) -> str:
@@ -36,10 +36,10 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         return self._name
 
     @property
-    def problems(self) -> Dict[str, ProblemInstance]:
+    def problems(self) -> Dict[int, ProblemInstance]:
         """
         Returns:
-            Dict[str, ProblemInstance]: The problems of the domain, indexed by id.
+            Dict[int, ProblemInstance]: The problems of the domain, indexed by id.
         """
         return self._problems
 
@@ -57,11 +57,11 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         """
         return [v[14:] for v in dir(self) if v.startswith("build_problem_")]
 
-    def build_problem(self, problem_id: str) -> Optional[ProblemInstance]:
+    def build_problem(self, problem_id: int) -> Optional[ProblemInstance]:
         """Builds the problem with the given id.
 
         Args:
-            problem_id (str): The id of the problem to create.
+            problem_id (int): The id of the problem to create.
 
         Returns:
             Optional[ProblemInstance]: The generated problem, `None` if it doesn't exist.
@@ -80,11 +80,11 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
 
         return problem
 
-    def get_problem(self, problem_id: str) -> Optional[ProblemInstance]:
+    def get_problem(self, problem_id: int) -> Optional[ProblemInstance]:
         """Builds the problem with the given id.
 
         Args:
-            problem_id (str): The id of the problem to build.
+            problem_id (int): The id of the problem to build.
 
         Returns:
             Optional[ProblemInstance]: The generated problem or `None` if the problem doesn't exist.
@@ -97,13 +97,13 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
 
     def get_problem_version(
         self,
-        problem_id: str,
+        problem_id: int,
         version: str,
     ) -> Optional[AbstractProblem]:
         """Retrieves the requested version with the given id.
 
         Args:
-            problem_id (str): The id of the problem to search.
+            problem_id (int): The id of the problem to search.
             version (str): The requested version of the problem.
 
         Returns:
@@ -133,11 +133,11 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         """
         return None
 
-    def load_problem_from_cache(self, problem_id: str) -> Optional[AbstractProblem]:
+    def load_problem_from_cache(self, problem_id: int) -> Optional[AbstractProblem]:
         """Loads the problem with the given id from the cache.
 
         Args:
-            problem_id (str): The id of the problem to load
+            problem_id (int): The id of the problem to load
 
         Returns:
             Optional[AbstractProblem]: The cached problem or `None`.
@@ -147,7 +147,7 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
     def load_from_files(
         self,
         folder_path: Path,
-        problem_id: str,
+        problem_id: int,
     ) -> Optional[AbstractProblem]:
         """
         Builds a unified planning problem based on the files present on the given folder.
@@ -157,7 +157,7 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
 
         Args:
             folder_path (Path): The path of the folder to use to find the files.
-            problem_id (str): The uid of the problem to load.
+            problem_id (int): The uid of the problem to load.
 
         Returns:
             Optional[AbstractProblem]: The optional problem. `None` if no files found.

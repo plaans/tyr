@@ -120,7 +120,7 @@ class TestPlanner(ModelTest):
 
     # =============================== Get log file =============================== #
 
-    @pytest.mark.parametrize("problem_id", ["1", "6"])
+    @pytest.mark.parametrize("problem_id", [1, 6])
     @pytest.mark.parametrize("domain_name", ["domain1", "domain2"])
     @pytest.mark.parametrize("planner_name", ["planner1", "planner2"])
     @pytest.mark.parametrize("file_name", ["solve", "error", "warning"])
@@ -131,7 +131,7 @@ class TestPlanner(ModelTest):
         problem: ProblemInstance,
         planner_name: str,
         domain_name: str,
-        problem_id: str,
+        problem_id: int,
         file_name: str,
         running_mode: RunningMode,
     ):

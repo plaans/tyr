@@ -17,16 +17,16 @@ class ProblemInstance:
     The value of this versions are lazy, so the unified planning problem is only build when needed.
     """
 
-    def __init__(self, domain: "AbstractDomain", uid: str) -> None:
+    def __init__(self, domain: "AbstractDomain", uid: int) -> None:
         self._uid = uid
         self._domain = domain
         self._versions: Dict[str, Lazy[AbstractProblem]] = {}
 
     @property
-    def uid(self) -> str:
+    def uid(self) -> int:
         """
         Returns:
-            str: The id of the problem.
+            int: The id of the problem.
         """
         return self._uid
 
