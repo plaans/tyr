@@ -1,3 +1,2 @@
 *.yaml
 !cli.example.yaml
-!planners.yaml

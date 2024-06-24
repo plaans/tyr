@@ -1,1 +1,5 @@
----
+- name: aries
+  upf_engine: tyr.planners.planners.aries.planning.unified.plugin.up_aries.Aries
+- name: optic
+- name: popf
+- name: enhsp

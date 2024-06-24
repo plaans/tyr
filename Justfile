@@ -93,7 +93,7 @@ _install-planner-submodule name:
 
 _register-planner name:
     #!/bin/bash
-    file="shortcuts/configuration/planners.example.yaml"
+    file="shortcuts/configuration/planners.yaml"
     line="name: {{ name }}"
     if ! grep -Fq "$line" "$file"
     then
@@ -103,13 +103,26 @@ _register-planner name:
         echo "{{ name }} planner already registered."
     fi
 
+_register-planner-aries:
+    #!/bin/bash
+    file="shortcuts/configuration/planners.yaml"
+    line="name: aries"
+    if ! grep -Fq "$line" "$file"
+    then
+        echo "- $line" >> "$file"
+        echo "  upf_engine: tyr.planners.planners.aries.planning.unified.plugin.up_aries.Aries" >> "$file"
+        echo "aries planner registered."
+    else
+        echo "aries planner already registered."
+    fi
+
 # Install the Aries planner
 install-aries: install-venv
     @just _install-planner-submodule aries
     cargo build --release --bin up-server --manifest-path {{ planners_dir }}/aries/Cargo.toml
     cp {{ planners_dir }}/aries/target/release/up-server {{ planners_dir }}/aries/planning/unified/plugin/up_aries/bin/up-aries_linux_amd64
     {{ python }} -m pip install -r {{ planners_dir }}/aries/planning/unified/requirements.txt
-    @just _register-planner aries
+    @just _register-planner-aries
 
 # Install the LinearComplex planner
 install-linear-complex:
@@ -202,6 +215,7 @@ cov: (test-all "tests --cov src --cov-report term:skip-covered --cov-report html
 #                                      CI                                      #
 # ============================================================================ #
 
+_install-all-planners-ci: install-aries install-optic install-popf install-enhsp
 _cov-ci: (test-all "tests --cov src --cov-report term --cov-report xml --junitxml report.xml")
 
 
