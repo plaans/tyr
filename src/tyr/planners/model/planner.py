@@ -109,8 +109,8 @@ class Planner:
             Optional[AbstractProblem]: The version to solve and its name.
                 `None` for both if it is not supported.
         """
+        version_name = self.config.problems.get(problem.domain.name, "base")
         try:
-            version_name = self.config.problems[problem.domain.name]
             return version_name, problem.versions[version_name].value
         except KeyError:
             return None, None

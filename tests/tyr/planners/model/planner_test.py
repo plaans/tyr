@@ -175,8 +175,8 @@ class TestPlanner(ModelTest):
     ):
         planner.config.problems.clear()
         name, version = planner.get_version(problem)
-        assert name is None
-        assert version is None
+        assert name == "base"
+        assert version.uid == problem.uid * 3
 
     # ================================= Database ================================= #
 
@@ -343,7 +343,8 @@ class TestPlanner(ModelTest):
         problem: ProblemInstance,
         solve_config: SolveConfig,
     ):
-        planner.config.problems.clear()
+        planner.config.problems["foo"] = "bar"
+        problem.domain._name = "foo"
         expected = PlannerResult.unsupported(
             problem,
             planner,
