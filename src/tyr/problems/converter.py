@@ -184,7 +184,7 @@ def scheduling_to_actions(schd_pb: SchedulingProblem) -> Problem:
         pddl_pb.add_action(action)
 
     # Add constraints between the actions
-    for (constraint, _act) in schd_pb.all_constraints():
+    for constraint, _act in schd_pb.all_constraints():
         # Only support `<=` constraints
         assert constraint.is_le()  # nosec: B101
 
