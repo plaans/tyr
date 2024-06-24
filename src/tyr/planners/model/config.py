@@ -8,7 +8,7 @@ class PlannerConfig:
     """Represents the configuration of a planner."""
 
     name: str
-    problems: Dict[str, str]
+    problems: Dict[str, str] = field(default_factory=dict)
     env: Dict[str, str] = field(default_factory=dict)
     anytime_name: Optional[str] = None
     oneshot_name: Optional[str] = None
