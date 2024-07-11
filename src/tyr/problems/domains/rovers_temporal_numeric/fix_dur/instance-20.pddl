@@ -1,1 +1,0 @@
-../base/instance-20.pddl

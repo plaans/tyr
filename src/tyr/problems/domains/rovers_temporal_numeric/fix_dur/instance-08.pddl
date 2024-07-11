@@ -1,1 +1,0 @@
-../base/instance-08.pddl

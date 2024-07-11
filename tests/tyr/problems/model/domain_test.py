@@ -313,7 +313,7 @@ class TestAbstractDomain(AbstractSingletonModelTest):
     @patch("builtins.open")
     @pytest.mark.parametrize("problem_id", [str(i).zfill(2) for i in range(15)])
     @pytest.mark.parametrize("files_path", ["hddl", "pddl"], indirect=True)
-    def test_load_from_files_reads_domain(
+    def test_load_from_folder_reads_domain(
         self,
         mock_open: Mock,
         domain: AbstractDomain,
@@ -325,7 +325,7 @@ class TestAbstractDomain(AbstractSingletonModelTest):
 
         # Raises a ParseException because of the patch of builtins.open
         try:
-            domain.load_from_files(files_path, problem_id)
+            domain.load_from_folder(files_path, problem_id)
             mock_open.assert_not_called()
         except ParseException:
             mock_open.assert_any_call(domain_file.as_posix(), "r")
@@ -333,7 +333,7 @@ class TestAbstractDomain(AbstractSingletonModelTest):
     @patch("builtins.open")
     @pytest.mark.parametrize("problem_id", [str(i).zfill(2) for i in range(15)])
     @pytest.mark.parametrize("files_path", ["hddl", "pddl"], indirect=True)
-    def test_load_from_files_reads_problem(
+    def test_load_from_folder_reads_problem(
         self,
         mock_open: Mock,
         domain: AbstractDomain,
@@ -345,7 +345,7 @@ class TestAbstractDomain(AbstractSingletonModelTest):
 
         # Raises a ParseException because of the patch of builtins.open
         try:
-            domain.load_from_files(files_path, problem_id)
+            domain.load_from_folder(files_path, problem_id)
             mock_open.assert_not_called()
         except ParseException:
             mock_open.assert_any_call(problem_file.as_posix(), "r")
@@ -356,14 +356,14 @@ class TestAbstractDomain(AbstractSingletonModelTest):
         ids=[f"{i}-{'Some' if (0 < i <= 3) else 'None'}" for i in range(15)],
     )
     @pytest.mark.parametrize("files_path", ["hddl", "pddl"], indirect=True)
-    def test_load_from_files_result(
+    def test_load_from_folder_result(
         self,
         domain: AbstractDomain,
         files_path: Path,
         problem_id: int,
         is_none: bool,
     ):
-        result = domain.load_from_files(files_path, problem_id)
+        result = domain.load_from_folder(files_path, problem_id)
         assert (result is None) == is_none
         if not is_none:
             assert isinstance(result, AbstractProblem)

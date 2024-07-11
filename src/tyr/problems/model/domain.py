@@ -144,7 +144,7 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         """
         return self.problems.get(problem_id, None)
 
-    def load_from_files(
+    def load_from_folder(
         self,
         folder_path: Path,
         problem_id: int,
@@ -174,10 +174,29 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         if domain_file is None or problem_file is None:
             return None
 
-        return PDDLReader().parse_problem(
-            domain_file.as_posix(),
-            problem_file.as_posix(),
-        )
+        return self.load_from_files(problem_file, domain_file)
+
+    def load_from_files(
+        self,
+        problem_file: Path,
+        domain_file: Path,
+    ) -> Optional[AbstractProblem]:
+        """
+        Builds a unified planning problem based on the given files.
+
+        Args:
+            problem_file (Path): The path of the problem file.
+            domain_file (Path): The path of the domain file.
+
+        Returns:
+            Optional[AbstractProblem]: The optional problem. `None` if no files found.
+        """
+        if domain_file.exists() and problem_file.exists():
+            return PDDLReader().parse_problem(
+                domain_file.as_posix(),
+                problem_file.as_posix(),
+            )
+        return None
 
     def save_problem_to_cache(self, problem: Optional[ProblemInstance]) -> None:
         """

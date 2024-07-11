@@ -18,7 +18,10 @@ def get_all_domains() -> List[AbstractDomain]:
     for _, name, _ in walk_packages(problem_module.__path__):
         module = import_module(f"{problem_module.__name__}.{name}")
         for obj_name in dir(module):
-            if obj_name.endswith("Domain") and obj_name != "AbstractDomain":
+            if obj_name.endswith("Domain") and obj_name not in [
+                "AbstractDomain",
+                "IpcAbstractDomain",
+            ]:
                 obj = getattr(module, obj_name)
                 if issubclass(obj, AbstractDomain):
                     domains.append(obj())

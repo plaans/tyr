@@ -34,7 +34,7 @@ class FakeDomain(AbstractDomain):
         It is used to demonstrate the creation of problems from files.
         """
         folder_path = Path(__file__).parent / "hddl"
-        return self.load_from_files(folder_path, problem.uid)
+        return self.load_from_folder(folder_path, problem.uid)
 
     def build_problem_modified(
         self, problem: ProblemInstance

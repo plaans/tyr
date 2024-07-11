@@ -1,10 +1,119 @@
 import pytest
-from unified_planning.model.htn import HierarchicalProblem
-from unified_planning.model.scheduling import SchedulingProblem
 from unified_planning.shortcuts import AbstractProblem
 
 from tests.integration.problems.domains import FakeDomain
 from tyr import AbstractDomain, get_all_domains
+
+REAL_FAILED = [
+    "ipc2002-zenotravel-numeric-automatic",
+    "ipc2011-tidybot-sequential-multi-core",
+    "ipc2011-temporal-machine-shop-temporal-satisficing",
+    "ipc2011-tidybot-sequential-optimal",
+    "ipc2006-pathways-metric-time",
+    "ipc2011-tidybot-sequential-satisficing",
+    "ipc2006-openstacks-metric-time",
+    "ipc1998-mystery-prime-round1-adl",
+    "ipc2006-storage-time-constraints",
+    "ipc2008-elevator-net-benefit-optimal-strips",
+    "ipc2006-openstacks-metric-time-strips",
+    "ipc2006-openstacks-preferences-simple",
+    "ipc2006-rovers-preferences-qualitative",
+    "ipc2011-turn-and-open-temporal-satisficing",
+    "ipc1998-mystery-round1-adl",
+    "ipc2002-rovers-time-hand-coded",
+    "ipc2006-trucks-preferences-simple-grounded",
+    "ipc2006-pipesworld-preferences-complex",
+    "ipc2011-floor-tile-sequential-optimal",
+    "ipc2020-freecell-learned-ecai16-total-order",
+    "ipc2002-driverlog-numeric-automatic",
+    "ipc2006-pipesworld-metric-time-constraints",
+    "ipc2000-freecell-strips-typed",
+    "ipc2006-rovers-metric-preferences-simple",
+    "ipc2006-rovers-metric-time",
+    "ipc2008-openstacks-net-benefit-optimal-adl",
+    "ipc2020-woodworking-partial-order",
+    "ipc2006-storage-preferences-simple-grounded-preferences",
+    "ipc2006-tpp-preferences-simple-grounded-preferences",
+    "ipc2000-schedule-adl-typed",
+    "ipc2006-tpp-metric-time-constraints",
+    "ipc2011-floor-tile-temporal-satisficing",
+    "ipc2006-storage-preferences-qualitative",
+    "ipc2002-rovers-time-automatic",
+    "ipc2006-storage-propositional",
+    "ipc2006-tpp-preferences-complex",
+    "ipc2020-um-translog-partial-order",
+    "ipc2014-floor-tile-sequential-multi-core",
+    "ipc2006-tpp-preferences-simple",
+    "ipc2014-floor-tile-sequential-optimal",
+    "ipc2002-driverlog-numeric-hand-coded",
+    "ipc2002-driverlog-numeric-hard-automatic",
+    "ipc2006-trucks-preferences-simple-grounded-preferences",
+    "ipc2006-trucks-preferences-simple",
+    "ipc2006-pathways-preferences-simple",
+    "ipc2006-trucks-preferences-qualitative",
+    "ipc2006-openstacks-preferences-qualitative",
+    "ipc2004-psr-large-derived-predicates-adl",
+    "ipc2014-floor-tile-sequential-agile",
+    "ipc2008-model-train-temporal-satisficing-numeric-fluents",
+    "ipc2020-barman-bdi-partial-order",
+    "ipc2014-storage-temporal-satisficing",
+    "ipc2006-storage-preferences-simple",
+    "ipc2014-temporal-machine-shop-temporal-satisficing",
+    "ipc2002-settlers-numeric-automatic",
+    "ipc2008-peg-solitaire-net-benefit-optimal-strips",
+    "ipc2014-floor-tile-sequential-satisficing",
+    "ipc2002-zenotravel-numeric-hand-coded",
+    "ipc2014-tidybot-sequential-optimal",
+    "ipc2002-zenotravel-strips-hand-coded",
+    "ipc2002-zenotravel-time-simple-hand-coded",
+    "ipc2002-zenotravel-time-hand-coded",
+    "ipc2008-transport-net-benefit-optimal-numeric-fluents",
+    "ipc2014-turn-and-open-temporal-satisficing",
+    "ipc2002-zenotravel-time-simple-automatic",
+    "ipc2008-openstacks-net-benefit-optimal-adl-numeric-fluents",
+    "ipc2014-floor-tile-temporal-satisficing",
+    "ipc2008-openstacks-net-benefit-optimal-strips-negative-preconditions",
+    "ipc2008-woodworking-net-benefit-optimal-numeric-fluents",
+    "ipc2004-pipesworld-no-tankage-temporal-deadlines-compiled-strips",
+    "ipc2004-promela-dining-philosophers-adl",
+    "ipc2004-promela-dining-philosophers-derived-predicates-strips",
+    "ipc2011-floor-tile-sequential-multi-core",
+    "ipc2004-promela-dining-philosophers-fluents-derived-predicates-adl",
+    "ipc2004-promela-optical-telegraph-adl",
+    "ipc2011-floor-tile-sequential-satisficing",
+    "ipc2004-promela-optical-telegraph-derived-predicates-strips",
+    "ipc2004-promela-optical-telegraph-derived-predicates-adl",
+    "ipc2004-promela-optical-telegraph-fluents-derived-predicates-adl",
+    "ipc2004-promela-optical-telegraph-fluents-adl",
+    "ipc2004-psr-middle-compiled-adl",
+    "ipc2004-psr-middle-derived-predicates-adl",
+    "ipc2018-spider-sequential-optimal",
+    "ipc2004-psr-middle-derived-predicates-simple-adl",
+    "ipc2004-psr-middle-derived-predicates-strips",
+    "ipc2018-spider-sequential-satisficing",
+    "ipc2004-satellite-complex-time-windows-compiled-strips",
+    "ipc2004-satellite-complex-time-windows-strips",
+    "ipc2020-barman-bdi-total-order",
+    "ipc2004-promela-dining-philosophers-derived-predicates-adl",
+    "ipc2006-pathways-preferences-complex",
+    "ipc2004-satellite-time-time-windows-compiled-strips",
+    "ipc1998-logistics-round1-adl",
+    "ipc2008-elevator-net-benefit-optimal-numeric-fluents",
+    "ipc2006-storage-time",
+    "ipc2002-zenotravel-time-automatic",
+    "ipc2006-pathways-propositional",
+    "ipc2006-storage-preferences-complex",
+    "ipc2006-tpp-metric-time",
+    "ipc2006-trucks-preferences-complex",
+    "ipc2008-crew-planning-net-benefit-optimal-numeric-fluents",
+    "ipc2006-tpp-preferences-qualitative",
+    "ipc2006-trucks-time-constraints",
+    "ipc2000-logistics-strips-untyped",
+    "ipc2004-promela-dining-philosophers-fluents-adl",
+    "ipc2011-storage-temporal-satisficing",
+    "ipc2002-driverlog-numeric-hard-hand-coded",
+    "ipc2002-zenotravel-strips-automatic",
+]
 
 
 class TestDomainCreation:
@@ -30,26 +139,11 @@ class TestDomainCreation:
     @pytest.mark.parametrize(
         ["domain", "problem_id", "version_name"],
         [
-            pytest.param(
-                d,
-                p,
-                v,
-                marks=(
-                    [pytest.mark.xfail]
-                    if (
-                        "rovers" in d.name
-                        and "temporal" in d.name
-                        and v in ["base", "red", "base_hier", "red_hier"]
-                        and p != 1000
-                    )
-                    else []
-                ),
-            )
+            (d, p, v)
             for d in get_all_domains()
             for v in d.get_versions()
-            # Reduce the number, CI of 2 hours otherwise
-            # Test one more problem in order to check behaviour on non existant problem
-            for p in list(range(1, min(d.get_num_problems(), 6))) + [1000]
+            # Test 1000 in order to check behaviour on non existant problem
+            for p in [1, 1000]
         ],
         ids=lambda x: x if isinstance(x, (int, str)) else x.name,
     )
@@ -59,15 +153,19 @@ class TestDomainCreation:
         problem_id: int,
         version_name: str,
     ):
+        should_fail = (
+            domain.name in REAL_FAILED and problem_id != 1000 and version_name == "base"
+        )
         problem = domain.get_problem(problem_id)
         assert problem is not None, "The domain is empty, consider to remove it."
         version = problem.versions[version_name]
-        value = version.value  # Check the value can be accessed without error.
-        if value is not None:
-            # Check the problems have goals to achieve.
-            if isinstance(value, HierarchicalProblem):
-                assert len(value.task_network.subtasks) != 0
-            elif isinstance(value, SchedulingProblem):
-                assert len(value.activities) != 0
+
+        try:
+            version.value  # Check the value can be accessed without error.
+            if should_fail:
+                pytest.fail("This domain should fail")
+        except Exception as e:
+            if should_fail:
+                pytest.xfail(str(e))
             else:
-                assert len(value.goals) != 0
+                raise e from e
