@@ -210,4 +210,43 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
             self.problems[problem.uid] = problem
 
 
-__all__ = ["AbstractDomain"]
+class FolderAbstractDomain(AbstractDomain):
+    """
+    Represents the base class for all domains created from a structured folder.
+
+    Problem instances reside in the `instances` subdirectory and are of the form
+    `instance-x.pddl` or `instance-x.hddl`, where `x` ≥ 1 (without leading zeros).
+
+    With most domains, there is only one domain description for all instances, `domain.pddl`
+    or `domain.hddl`.
+    In some cases, a proper domain is provided for each instance, in which case the domain
+    descriptions are stored in a `domains` subdirectory.
+    """
+
+    folder: Path
+
+    @property
+    def suffix(self) -> str:
+        instance = next(self.instances_folder.iterdir())
+        return instance.suffix
+
+    @property
+    def instances_folder(self) -> Path:
+        return self.folder / "instances"
+
+    def get_domain_path(self, problem_id: int) -> Path:
+        if (self.folder / f"domain{self.suffix}").exists():
+            return self.folder / f"domain{self.suffix}"
+        return self.folder / "domains" / f"domain-{problem_id}{self.suffix}"
+
+    def get_num_problems(self) -> int:
+        return len(list(self.instances_folder.iterdir()))
+
+    def build_problem_base(self, problem: ProblemInstance) -> Optional[AbstractProblem]:
+        return self.load_from_files(
+            self.instances_folder / f"instance-{problem.uid}{self.suffix}",
+            self.get_domain_path(problem.uid),
+        )
+
+
+__all__ = ["AbstractDomain", "FolderAbstractDomain"]

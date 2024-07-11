@@ -20,7 +20,7 @@ def get_all_domains() -> List[AbstractDomain]:
         for obj_name in dir(module):
             if obj_name.endswith("Domain") and obj_name not in [
                 "AbstractDomain",
-                "IpcAbstractDomain",
+                "FolderAbstractDomain",
             ]:
                 obj = getattr(module, obj_name)
                 if issubclass(obj, AbstractDomain):
