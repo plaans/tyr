@@ -108,7 +108,7 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
 
         Returns:
             Optional[AbstractProblem]: The value of the requested version.
-                `None` if the problem or the version doee not exist.
+                `None` if the problem or the version does not exist.
         """
         problem = self.get_problem(problem_id)
         if problem is None:
@@ -227,14 +227,25 @@ class FolderAbstractDomain(AbstractDomain):
 
     @property
     def suffix(self) -> str:
+        """
+        Returns:
+            str: The suffix of the domain and instances.
+        """
         instance = next(self.instances_folder.iterdir())
         return instance.suffix
 
     @property
     def instances_folder(self) -> Path:
+        """
+        Returns:
+            Path: The path of the instances folder.
+        """
         return self.folder / "instances"
 
     def get_domain_path(self, problem_id: int) -> Path:
+        """
+        Returns the path of the domain file for the given problem id.
+        """
         if (self.folder / f"domain{self.suffix}").exists():
             return self.folder / f"domain{self.suffix}"
         return self.folder / "domains" / f"domain-{problem_id}{self.suffix}"
@@ -243,6 +254,9 @@ class FolderAbstractDomain(AbstractDomain):
         return len(list(self.instances_folder.iterdir()))
 
     def build_problem_base(self, problem: ProblemInstance) -> Optional[AbstractProblem]:
+        """
+        Builds the base problem for the given instance.
+        """
         return self.load_from_files(
             self.instances_folder / f"instance-{problem.uid}{self.suffix}",
             self.get_domain_path(problem.uid),
