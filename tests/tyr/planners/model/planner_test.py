@@ -80,6 +80,7 @@ class TestPlanner(ModelTest):
             db_only=False,
             no_db_load=False,
             no_db_save=True,
+            unify_epsilons=False,
         )
 
     # ============================================================================ #

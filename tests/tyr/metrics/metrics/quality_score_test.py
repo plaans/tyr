@@ -13,7 +13,7 @@ def planner_result(status_name: str, quality: float):
         "bar",
         MagicMock(),
         getattr(PlannerResultStatus, status_name.upper()),
-        SolveConfig(1, 1, 5, 0, False, False, False),
+        SolveConfig(1, 1, 5, 0, False, False, False, False),
         MagicMock(),
         quality,
         MagicMock(),

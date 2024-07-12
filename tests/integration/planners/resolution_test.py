@@ -22,6 +22,7 @@ class TestResolution:
             db_only=False,
             no_db_load=True,
             no_db_save=True,
+            unify_epsilons=False,
         )
         problem = domain.get_problem("1")
         assert problem is not None

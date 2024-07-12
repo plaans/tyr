@@ -19,7 +19,7 @@ class PlannerConfig:
 
 
 @dataclass(frozen=True)
-class SolveConfig:
+class SolveConfig:  # pylint: disable=too-many-instance-attributes
     """Represents the configuration of the solving process."""
 
     jobs: int
@@ -29,6 +29,7 @@ class SolveConfig:
     db_only: bool
     no_db_load: bool
     no_db_save: bool
+    unify_epsilons: bool
 
 
 class RunningMode(Enum):

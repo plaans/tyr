@@ -1,11 +1,13 @@
 from dataclasses import dataclass, replace
 from enum import Enum, auto
+from fractions import Fraction
 from typing import TYPE_CHECKING, List, Optional, Union
 
 from unified_planning.engines.results import (
     PlanGenerationResult,
     PlanGenerationResultStatus,
 )
+from unified_planning.plans import PlanKind, TimeTriggeredPlan
 
 from tyr.planners.model.config import RunningMode, SolveConfig
 from tyr.problems import ProblemInstance
@@ -74,6 +76,8 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
     ) -> "PlannerResult":
         """Converts a result from the unified planning library to our inner result format.
 
+        NOTE: If `config.unify_epsilons` is True, the plan is updated in place.
+
         Args:
             planner_name (str): The name of the planner solving the problem.
             problem (ProblemInstance): The problem solved by the planner.
@@ -92,6 +96,14 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
 
         plan_quality = None
         if result.plan is not None:
+            if isinstance(result.plan, TimeTriggeredPlan) and config.unify_epsilons:
+                pb = problem.versions[version_name].value
+                if pb.epsilon is None:
+                    pb.epsilon = Fraction(1, 1000)
+                result.plan = result.plan.convert_to(PlanKind.STN_PLAN, pb).convert_to(
+                    PlanKind.TIME_TRIGGERED_PLAN, pb
+                )
+
             plan_quality = problem.get_quality_of_plan(result.plan, version_name)
 
         return PlannerResult(
