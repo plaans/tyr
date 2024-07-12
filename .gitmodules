@@ -23,3 +23,6 @@
 [submodule "src/tyr/problems/domains/custom"]
 	path = src/tyr/problems/domains/custom
 	url = https://github.com/plaans/tyr-custom-domains.git
+[submodule "src/tyr/planners/planners/lpg"]
+	path = src/tyr/planners/planners/lpg
+	url = https://github.com/aiplan4eu/up-lpg.git
