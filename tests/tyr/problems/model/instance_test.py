@@ -94,7 +94,7 @@ class TestProblemInstance(ModelTest):
         problem._versions = {"base": Lazy(build_version)}
         with patch.object(problem, "_get_makespan_of_plan") as mock_get_makespan:
             problem.get_quality_of_plan(plan, "base")
-            mock_get_makespan.assert_called_once_with(plan)
+            mock_get_makespan.assert_called_once_with(plan, orig_version)
 
     def test_get_quality_of_plan_multiple_metrics(
         self, problem: ProblemInstance, plan: str
@@ -136,7 +136,11 @@ class TestProblemInstance(ModelTest):
                 problem.get_quality_of_plan(plan, version_name)
                 mock_versions.__getitem__.assert_called_once_with(version_name)
 
-    def test_get_makespan_of_plan_time_triggered_plan(self, problem):
+    def test_get_makespan_of_plan_time_triggered_plan_and_temporal_problem(
+        self, problem
+    ):
+        from unified_planning.shortcuts import DurativeAction
+
         plan = MagicMock(spec=Plan)
         plan.kind = PlanKind.TIME_TRIGGERED_PLAN
         plan.timed_actions = [
@@ -144,20 +148,41 @@ class TestProblemInstance(ModelTest):
             (2, "action2", 6),
             (8, "action3", None),
         ]
-        assert problem._get_makespan_of_plan(plan) == 8.0
+        version = problem.versions["base"].value_factory()
+        version.add_action(DurativeAction("plop"))
+        assert plan.kind == PlanKind.TIME_TRIGGERED_PLAN and (
+            "CONTINUOUS_TIME" in version.kind.features
+            or "DISCRETE_TIME" in version.kind.features
+        )
+        assert problem._get_makespan_of_plan(plan, version) == 8.0
+
+    def test_get_makespan_of_plan_time_triggered_plan_and_non_temporal_problem(
+        self, problem
+    ):
+        plan = MagicMock(spec=Plan)
+        plan.kind = PlanKind.TIME_TRIGGERED_PLAN
+        plan.timed_actions = [
+            (0, "action1", 2),
+            (2, "action2", 6),
+            (8, "action3", None),
+        ]
+        version = problem.versions["base"].value_factory()
+        assert problem._get_makespan_of_plan(plan, version) == 3
 
     def test_get_makespan_of_plan_sequential_plan(self, problem):
         plan = MagicMock(spec=Plan)
         plan.kind = PlanKind.SEQUENTIAL_PLAN
         plan.actions = ["action1", "action2", "action3"]
-        assert problem._get_makespan_of_plan(plan) == 3
+        version = problem.versions["base"].value_factory()
+        assert problem._get_makespan_of_plan(plan, version) == 3
 
     def test_get_makespan_of_plan_schedule(self, problem):
         plan = MagicMock(spec=Plan)
         plan.kind = PlanKind.SCHEDULE
         plan.activities = {Mock(end="1"), Mock(end="2"), Mock(end="3")}
         plan.assignment = {"1": 2.5, "2": 3.0, "3": 1.5}
-        assert problem._get_makespan_of_plan(plan) == 3.0
+        version = problem.versions["base"].value_factory()
+        assert problem._get_makespan_of_plan(plan, version) == 3.0
 
     def test_get_makespan_of_plan_sequential_hierarchical_plan(self, problem):
         plan = MagicMock(spec=Plan)
@@ -165,9 +190,12 @@ class TestProblemInstance(ModelTest):
         plan.action_plan = MagicMock(spec=Plan)
         plan.action_plan.kind = PlanKind.SEQUENTIAL_PLAN
         plan.action_plan.actions = ["action1", "action2", "action3"]
-        assert problem._get_makespan_of_plan(plan) == 3.0
+        version = problem.versions["base"].value_factory()
+        assert problem._get_makespan_of_plan(plan, version) == 3.0
 
     def test_get_makespan_of_plan_timed_hierarchical_plan(self, problem):
+        from unified_planning.shortcuts import DurativeAction
+
         plan = MagicMock(spec=Plan)
         plan.kind = PlanKind.HIERARCHICAL_PLAN
         plan.action_plan = MagicMock(spec=Plan)
@@ -177,9 +205,12 @@ class TestProblemInstance(ModelTest):
             (2, "action2", 6),
             (8, "action3", None),
         ]
-        assert problem._get_makespan_of_plan(plan) == 8.0
+        version = problem.versions["base"].value_factory()
+        version.add_action(DurativeAction("plop"))
+        assert problem._get_makespan_of_plan(plan, version) == 8.0
 
     def test_get_makespan_of_plan_unknown(self, problem):
         plan = MagicMock(spec=Plan)
         plan.kind = "unknown"
-        assert problem._get_makespan_of_plan(plan) is None
+        version = problem.versions["base"].value_factory()
+        assert problem._get_makespan_of_plan(plan, version) is None

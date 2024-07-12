@@ -89,26 +89,37 @@ class ProblemInstance:
         version = self.versions[version_name].value
 
         if (num_metrics := len(version.quality_metrics)) == 0:
-            return self._get_makespan_of_plan(plan)
+            return self._get_makespan_of_plan(plan, version)
         if num_metrics > 1:
             raise ValueError("Multiple quality metrics is not supported")
 
         metric = version.quality_metrics[0]
         if metric.is_minimize_makespan():
-            return self._get_makespan_of_plan(plan)
+            return self._get_makespan_of_plan(plan, version)
         return self.domain.get_quality_of_plan(plan, version)
 
-    def _get_makespan_of_plan(self, plan: Plan) -> Optional[float]:
-        if plan.kind == PlanKind.TIME_TRIGGERED_PLAN:
-            return float(max(s + (d or 0) for (s, _, d) in plan.timed_actions))
-        if plan.kind == PlanKind.SEQUENTIAL_PLAN:
-            return len(plan.actions)
+    def _get_makespan_of_plan(
+        self, plan: Plan, version: AbstractProblem
+    ) -> Optional[float]:
+        if plan.kind == PlanKind.HIERARCHICAL_PLAN:
+            return self._get_makespan_of_plan(plan.action_plan, version)
+
         if plan.kind == PlanKind.SCHEDULE:
             return float(
                 max(float(str(plan.assignment[a.end])) for a in plan.activities)
             )
-        if plan.kind == PlanKind.HIERARCHICAL_PLAN:
-            return self._get_makespan_of_plan(plan.action_plan)
+
+        if plan.kind == PlanKind.TIME_TRIGGERED_PLAN:
+            if (
+                "CONTINUOUS_TIME" in version.kind.features
+                or "DISCRETE_TIME" in version.kind.features
+            ):
+                return float(max(s + (d or 0) for (s, _, d) in plan.timed_actions))
+            return len(plan.timed_actions)
+
+        if plan.kind == PlanKind.SEQUENTIAL_PLAN:
+            return len(plan.actions)
+
         return None
 
 
