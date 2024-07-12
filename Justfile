@@ -89,7 +89,7 @@ install-full: install-pip install-all-planners
 # ================================= Planners ================================= #
 
 # Install all integrated planners
-install-all-planners: install-aries  install-enhsp install-linear-complex install-lpg install-optic install-pandapi install-popf
+install-all-planners: install-aries  install-enhsp install-linear-complex install-lpg install-optic install-panda-pi install-popf
 
 _install-planner-submodule name:
     git submodule update --init --recursive {{ planners_dir }}/{{ name }}
@@ -152,10 +152,10 @@ install-optic:
     @just _register-planner optic
 
 # Install the PandaPi planner
-install-pandapi:
+install-panda-pi:
     @just _install-planner-submodule pandapi
     ./{{ planners_dir }}/pandapi/install.sh
-    @just _register-planner pandapi
+    @just _register-planner panda-pi
 
 # Install the Popf planner
 install-popf:
