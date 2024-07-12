@@ -340,10 +340,20 @@ def cli_bench(
     )
 
     running_modes = merge_running_modes(conf["anytime"], conf["oneshot"])
+    if conf["db_only"] and conf["no_db"]:
+        raise click.BadOptionUsage(
+            "--db-only --no-db",
+            "Cannot use both --db-only and --no-db.",
+        )
     if conf["db_only"] and conf["no_db_load"]:
         raise click.BadOptionUsage(
             "--db-only --no-db-load",
             "Cannot use both --db-only and --no-db-load.",
+        )
+    if conf["db_only"] and conf["no_db-save"]:
+        raise click.BadOptionUsage(
+            "--db-only --no-db-save",
+            "Cannot use both --db-only and --no-db-save.",
         )
 
     solve_config = SolveConfig(
