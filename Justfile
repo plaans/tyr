@@ -83,13 +83,16 @@ install-pip: install-venv
     {{ python }} -m pip install -r requirements/{{ PY_T }}.txt
 alias install := install-pip
 
+# Install Python dependencies and planners
+install-full: install-pip install-all-planners
+
 # ================================= Planners ================================= #
 
 # Install all integrated planners
-install-all-planners: install-aries install-linear-complex install-optic install-pandapi install-popf install-enhsp
+install-all-planners: install-aries  install-enhsp install-linear-complex install-lpg install-optic install-pandapi install-popf
 
 _install-planner-submodule name:
-    git submodule update --init {{ planners_dir }}/{{ name }}
+    git submodule update --init --recursive {{ planners_dir }}/{{ name }}
 
 _register-planner name:
     #!/bin/bash
@@ -110,6 +113,8 @@ _register-planner-aries:
     if ! grep -Fq "$line" "$file"
     then
         echo "- $line" >> "$file"
+        echo "  env:" >> "$file"
+        echo "    ARIES_UP_ASSUME_REALS_ARE_INTS: \"true\"" >> "$file"
         echo "  upf_engine: tyr.planners.planners.aries.planning.unified.plugin.up_aries.Aries" >> "$file"
         echo "aries planner registered."
     else
@@ -124,11 +129,22 @@ install-aries: install-venv
     {{ python }} -m pip install -r {{ planners_dir }}/aries/planning/unified/requirements.txt
     @just _register-planner-aries
 
+# Install the ENHSP planner
+install-enhsp: install-venv
+    {{ python }} -m pip install up-enhsp
+    @just _register-planner enhsp
+
 # Install the LinearComplex planner
 install-linear-complex:
     @just _install-planner-submodule linear-complex
     ./{{ planners_dir }}/linear-complex/install.sh
     @just _register-planner linear-complex
+
+# Install the LPG planner
+install-lpg:
+    @just _install-planner-submodule lpg
+    {{ python }} -m pip install -e {{ planners_dir }}/lpg
+    @just _register-planner lpg
 
 # Install the Optic planner
 install-optic:
@@ -139,17 +155,12 @@ install-optic:
 install-pandapi:
     @just _install-planner-submodule pandapi
     ./{{ planners_dir }}/pandapi/install.sh
-    @just _register-planner panda-pi
+    @just _register-planner pandapi
 
 # Install the Popf planner
 install-popf:
     @just _install-planner-submodule popf
     @just _register-planner popf
-
-# Install the ENHSP planner
-install-enhsp: install-venv
-    {{ python }} -m pip install up-enhsp
-    @just _register-planner enhsp
 
 
 # ============================================================================ #
