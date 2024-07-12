@@ -96,8 +96,12 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
 
         plan_quality = None
         if result.plan is not None:
-            if isinstance(result.plan, TimeTriggeredPlan) and config.unify_epsilons:
-                pb = problem.versions[version_name].value
+            pb = problem.versions[version_name].value
+            is_temp = isinstance(result.plan, TimeTriggeredPlan) and (
+                "CONTINUOUS_TIME" in pb.kind.features
+                or "DISCRETE_TIME" in pb.kind.features
+            )
+            if is_temp and config.unify_epsilons:
                 if pb.epsilon is None:
                     pb.epsilon = Fraction(1, 1000)
                 result.plan = result.plan.convert_to(PlanKind.STN_PLAN, pb).convert_to(
