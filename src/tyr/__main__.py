@@ -41,6 +41,7 @@ DEFAULT_CONFIG = {
     "logs_path": "",
     "memout": 4 * 1024**3,
     "metrics": [],
+    "no_db": False,
     "no_db_load": False,
     "no_db_save": False,
     "nodelist": [],
@@ -157,6 +158,11 @@ metrics_filter = click.option(
     multiple=True,
     help="A list of regex filters on metric names.",
 )
+no_db_option = click.option(
+    "--no-db",
+    is_flag=True,
+    help="Do not use the database for results.",
+)
 no_db_load_option = click.option(
     "--no-db-load",
     is_flag=True,
@@ -268,6 +274,7 @@ def update_context(ctx, verbose, quiet, out, logs_path, db_path, config):
 @anytime_option
 @oneshot_option
 @db_only_option
+@no_db_option
 @no_db_load_option
 @no_db_save_option
 @pass_context
@@ -288,6 +295,7 @@ def cli_bench(
     anytime: bool,
     oneshot: bool,
     db_only: bool,
+    no_db: bool,
     no_db_load: bool,
     no_db_save: bool,
 ):
@@ -307,6 +315,7 @@ def cli_bench(
         "anytime": anytime,
         "oneshot": oneshot,
         "db_only": db_only,
+        "no_db": no_db,
         "no_db_load": no_db_load,
         "no_db_save": no_db_save,
     }
@@ -334,8 +343,8 @@ def cli_bench(
         conf["timeout"],
         conf["timeout_offset"],
         conf["db_only"],
-        conf["no_db_load"],
-        conf["no_db_save"],
+        conf["no_db_load"] or conf["no_db"],
+        conf["no_db_save"] or conf["no_db"],
     )
 
     run_bench(ctx, solve_config, conf["planners"], conf["domains"], running_modes)
