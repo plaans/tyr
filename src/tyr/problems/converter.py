@@ -35,6 +35,26 @@ def get_goals(problem: Problem) -> list:
     return goals
 
 
+def reduce_problem(problem: Problem, number: int) -> Problem:
+    """Reduces the number of goals of the given problem.
+
+    Args:
+        problem (Problem): The problem to reduce.
+        number (int): The number of goals to keep.
+
+    Returns:
+        Problem: The reduces problem version.
+    """
+    result = problem.clone()
+    goals_subset = get_goals(result)[:number]
+
+    result.clear_goals()
+    for goal in goals_subset:
+        result.add_goal(goal)
+
+    return result
+
+
 def reduce_version(problem: ProblemInstance, version: str, number: int) -> Problem:
     """Reduces the number of goals of the given problem.
 
@@ -49,15 +69,7 @@ def reduce_version(problem: ProblemInstance, version: str, number: int) -> Probl
     base = problem.versions[version].value
     if base is None:
         return None
-
-    result = base.clone()
-    goals_subset = get_goals(result)[:number]
-
-    result.clear_goals()
-    for goal in goals_subset:
-        result.add_goal(goal)
-
-    return result
+    return reduce_problem(base, number)
 
 
 def goals_to_tasks(
