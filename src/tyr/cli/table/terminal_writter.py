@@ -61,9 +61,7 @@ class Cell:
             a = (
                 "c"
                 if self.adjust == Adjust.CENTER
-                else "l"
-                if self.adjust == Adjust.LEFT
-                else "r"
+                else "l" if self.adjust == Adjust.LEFT else "r"
             )
             return f"\\multicolumn{{{self.h_span}}}{{{a}}}{{{self.value.strip()}}}"
         if self.adjust == Adjust.CENTER:
@@ -706,9 +704,7 @@ class TableTerminalWritter(Writter):
                 (
                     " "
                     if next_cell.v_span < 0
-                    else "─"
-                    if line_sep is Sep.SIMPLE
-                    else "═"
+                    else "─" if line_sep is Sep.SIMPLE else "═"
                 )
                 * length
             )
@@ -764,9 +760,7 @@ class TableTerminalWritter(Writter):
                     (
                         " "
                         if next_cell.v_span < 0
-                        else "─"
-                        if line_sep is Sep.SIMPLE
-                        else "═"
+                        else "─" if line_sep is Sep.SIMPLE else "═"
                     )
                 )
 

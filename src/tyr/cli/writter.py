@@ -244,9 +244,7 @@ class Writter:
                 else (
                     "save only"
                     if self._solve_config.no_db_load
-                    else "unique source"
-                    if self._solve_config.db_only
-                    else "enabled"
+                    else "unique source" if self._solve_config.db_only else "enabled"
                 )
             )
         )
