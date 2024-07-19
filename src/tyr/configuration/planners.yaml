@@ -5,3 +5,6 @@
 - name: optic
 - name: popf
 - name: enhsp
+- name: linear-complex
+- name: lpg
+- name: panda-pi

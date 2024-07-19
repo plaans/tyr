@@ -26,3 +26,6 @@
 [submodule "src/tyr/planners/planners/lpg"]
 	path = src/tyr/planners/planners/lpg
 	url = https://github.com/aiplan4eu/up-lpg.git
+[submodule "src/tyr/problems/domains/scheduling"]
+	path = src/tyr/problems/domains/scheduling
+	url = https://github.com/plaans/tyr-scheduling-domains.git
