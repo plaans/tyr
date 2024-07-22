@@ -122,6 +122,7 @@ class TestProblemInstance(ModelTest):
     def test_get_unknown_quality_of_plan(self, problem: ProblemInstance, plan: str):
         metric = MagicMock()
         metric.is_minimize_makespan.return_value = False
+        metric.is_minimize_action_costs.return_value = False
         problem.versions["base"].value._metrics = [metric]
         problem.get_quality_of_plan(plan, "base")
         problem.domain.get_quality_of_plan.assert_called_once()
