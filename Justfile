@@ -9,6 +9,7 @@
 #                                   Arguments                                  #
 # ============================================================================ #
 
+
 PY_V := "3.$(python3 -V | cut -d\" \" -f2 | cut -d\".\" -f2)"
 PY_T := "prod"
 PY_D := ".venv"
@@ -42,7 +43,9 @@ _default-args:
 #                                   Constants                                  #
 # ============================================================================ #
 
+
 logs_dir := "logs"
+domains_dir := "src/tyr/problems/domains"
 planners_dir := "src/tyr/planners/planners"
 python := PY_D + "/bin/python"
 
@@ -50,6 +53,7 @@ python := PY_D + "/bin/python"
 # ============================================================================ #
 #                                     Clear                                    #
 # ============================================================================ #
+
 
 # Clear everything
 clear-full: clear-venv clear-cov clear-logs
@@ -83,8 +87,28 @@ install-pip: install-venv
     {{ python }} -m pip install -r requirements/{{ PY_T }}.txt
 alias install := install-pip
 
-# Install Python dependencies and planners
-install-full: install-pip install-all-planners
+# Install Python dependencies, planners, and domains
+install-full: install-pip install-all-planners install-all-domains
+
+# ================================== Domains ================================= #
+
+# Install all integrated domains
+install-all-domains: install-ipc-domains install-scheduling-domains install-custom-domains
+
+_install-domain-submodule name:
+    git submodule update --init --recursive {{ domains_dir }}/{{ name }}
+
+# Install the IPC domains
+install-ipc-domains:
+    @just _install-domain-submodule ipc
+
+# Install the Scheduling domains
+install-scheduling-domains:
+    @just _install-domain-submodule scheduling
+
+# Install the Custom domains
+install-custom-domains:
+    @just _install-domain-submodule custom
 
 # ================================= Planners ================================= #
 
@@ -167,14 +191,19 @@ install-popf:
 #                                     Reset                                    #
 # ============================================================================ #
 
+
 # Reset the python environment
 reset-venv: clear-venv install-pip
 alias reset := reset-venv
+
+# Reset the python environment, planners, and domains
+reset-full: clear-full install-full
 
 
 # ============================================================================ #
 #                                   Container                                  #
 # ============================================================================ #
+
 
 # Build the Apptainer image.
 build-apptainer:
@@ -184,6 +213,7 @@ build-apptainer:
 # ============================================================================ #
 #                                    Linters                                   #
 # ============================================================================ #
+
 
 # Format Justfile.
 fmt-justfile:
@@ -211,6 +241,7 @@ _lint linter folder *args:
 #                                     Tests                                    #
 # ============================================================================ #
 
+
 # Run pytest.
 test-all +args="tests/":
     {{ python }} -m pytest {{ args }}
@@ -226,13 +257,18 @@ cov: (test-all "tests --cov src --cov-report term:skip-covered --cov-report html
 #                                      CI                                      #
 # ============================================================================ #
 
-_install-all-planners-ci: install-aries install-optic install-popf install-enhsp
+
+_install-planners-ci: install-aries
+_install-domains-ci: install-scheduling-domains install-custom-domains
+_install-ci: install-pip _install-planners-ci _install-domains-ci
+_reset-ci: reset-venv _install-planners-ci _install-domains-ci
 _cov-ci: (test-all "tests --cov src --cov-report term --cov-report xml --junitxml report.xml")
 
 
 # ============================================================================ #
 #                                      CLI                                     #
 # ============================================================================ #
+
 
 # Run the tyr module.
 tyr *args:
