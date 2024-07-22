@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Dict, Optional
 
 from unified_planning.plans import Plan, PlanKind
-from unified_planning.shortcuts import AbstractProblem
+from unified_planning.shortcuts import AbstractProblem, MinimizeActionCosts
 
 from tyr.patterns import Lazy
 
@@ -96,7 +96,36 @@ class ProblemInstance:
         metric = version.quality_metrics[0]
         if metric.is_minimize_makespan():
             return self._get_makespan_of_plan(plan, version)
+        if metric.is_minimize_action_costs():
+            return self._get_cost_of_plan(plan, metric)
         return self.domain.get_quality_of_plan(plan, version)
+
+    def _get_cost_of_plan(
+        self, plan: Plan, metric: MinimizeActionCosts
+    ) -> Optional[float]:
+        if plan.kind == PlanKind.HIERARCHICAL_PLAN:
+            return self._get_cost_of_plan(plan.action_plan, metric)
+
+        if plan.kind == PlanKind.SCHEDULE:
+            raise NotImplementedError("Schedules are not supported for cost evaluation")
+
+        if plan.kind == PlanKind.TIME_TRIGGERED_PLAN:
+            raise NotImplementedError(
+                "Time triggered plans are not supported for cost evaluation"
+            )
+
+        if plan.kind == PlanKind.SEQUENTIAL_PLAN:
+            total_cost = 0.0
+            for a in plan.actions:
+                cost = metric.get_action_cost(a.action)
+                if cost is None:
+                    raise ValueError(f"Action {a} has no cost")
+                total_cost += cost.substitute(
+                    dict(zip(a.action.parameters, a.actual_parameters))
+                ).constant_value()
+            return total_cost
+
+        return None
 
     def _get_makespan_of_plan(
         self, plan: Plan, version: AbstractProblem
