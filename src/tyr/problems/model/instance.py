@@ -120,9 +120,11 @@ class ProblemInstance:
                 cost = metric.get_action_cost(a.action)
                 if cost is None:
                     raise ValueError(f"Action {a} has no cost")
-                total_cost += cost.substitute(
-                    dict(zip(a.action.parameters, a.actual_parameters))
-                ).constant_value()
+                total_cost += (
+                    cost.substitute(dict(zip(a.action.parameters, a.actual_parameters)))
+                    .simplify()
+                    .constant_value()
+                )
             return total_cost
 
         return None
