@@ -258,8 +258,10 @@ cov: (test-all "tests --cov src --cov-report term:skip-covered --cov-report html
 # ============================================================================ #
 
 
-_install-planners-ci: install-aries
-_install-domains-ci: install-scheduling-domains install-custom-domains
+_erase-planners-config-ci:
+    rm -f shortcuts/configuration/planners.yaml
+_install-planners-ci: _erase-planners-config-ci install-aries
+_install-domains-ci: install-all-domains
 _install-ci: install-pip _install-planners-ci _install-domains-ci
 _reset-ci: reset-venv _install-planners-ci _install-domains-ci
 _cov-ci: (test-all "tests --cov src --cov-report term --cov-report xml --junitxml report.xml")
