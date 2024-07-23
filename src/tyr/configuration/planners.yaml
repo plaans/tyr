@@ -5,6 +5,7 @@
   problems:
     aaai2025-counters: "ctrl_params"
     aaai2025-depots: "no_div"
+    aaai2025-drone: "ctrl_params"
     aaai2025-rovers: "no_div"
     aaai2025-satellite: "no_float"
     aaai2025-satellite-time-windows: "no_float"
