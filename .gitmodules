@@ -31,4 +31,4 @@
 	url = https://github.com/plaans/tyr-scheduling-domains.git
 [submodule "src/tyr/planners/planners/popcorn"]
 	path = src/tyr/planners/planners/popcorn
-	url = git@github.com:plaans/tyr-popcorn.git
+	url = https://github.com/plaans/tyr-popcorn.git
