@@ -6,7 +6,7 @@ RUN apt update && apt upgrade -y
 RUN apt install -y \
     build-essential \
     curl \
-    git \
+    git git-lfs \
     wget
 
 # Install Python from 3.8 to 3.12
