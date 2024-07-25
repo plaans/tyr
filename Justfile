@@ -113,7 +113,7 @@ install-custom-domains:
 # ================================= Planners ================================= #
 
 # Install all integrated planners
-install-all-planners: install-aries install-enhsp install-linear-complex install-lpg install-optic install-panda-pi install-popf install-tamer
+install-all-planners: install-aries install-enhsp install-linear-complex install-lpg install-optic install-panda-pi install-popcorn install-popf install-tamer
 
 _install-planner-submodule name:
     git submodule update --init --recursive {{ planners_dir }}/{{ name }}
@@ -180,6 +180,12 @@ install-panda-pi:
     @just _install-planner-submodule pandapi
     ./{{ planners_dir }}/pandapi/install.sh
     @just _register-planner panda-pi
+
+# Install the Popcorn planner
+install-popcorn:
+    # @just _install-planner-submodule popcorn
+    ./{{ planners_dir }}/popcorn/install.sh
+    @just _register-planner popcorn
 
 # Install the Popf planner
 install-popf:
