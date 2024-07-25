@@ -113,7 +113,7 @@ install-custom-domains:
 # ================================= Planners ================================= #
 
 # Install all integrated planners
-install-all-planners: install-aries  install-enhsp install-linear-complex install-lpg install-optic install-panda-pi install-popf
+install-all-planners: install-aries install-enhsp install-linear-complex install-lpg install-optic install-panda-pi install-popf install-tamer
 
 _install-planner-submodule name:
     git submodule update --init --recursive {{ planners_dir }}/{{ name }}
@@ -185,6 +185,11 @@ install-panda-pi:
 install-popf:
     @just _install-planner-submodule popf
     @just _register-planner popf
+
+# Install the Tamer planner
+install-tamer: install-venv
+    {{ python }} -m pip install up-tamer
+    @just _register-planner tamer
 
 
 # ============================================================================ #
