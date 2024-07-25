@@ -17,7 +17,7 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
 
     For each problem version, the class must implements the method
     ``` python
-    def build_problem_VERSION(self, problem_id: str) -> Optional[up.AbstractProblem]
+    def build_problem_VERSION(self, problem_id: int) -> Optional[up.AbstractProblem]
     ```
     """
 
@@ -25,7 +25,7 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         super().__init__()
         base_name = self.__class__.__name__[:-6]
         self._name = re.sub(r"([A-Z])", r"-\1", base_name).lower().lstrip("-")
-        self._problems: Dict[str, ProblemInstance] = {}
+        self._problems: Dict[int, ProblemInstance] = {}
 
     @property
     def name(self) -> str:
@@ -36,10 +36,10 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         return self._name
 
     @property
-    def problems(self) -> Dict[str, ProblemInstance]:
+    def problems(self) -> Dict[int, ProblemInstance]:
         """
         Returns:
-            Dict[str, ProblemInstance]: The problems of the domain, indexed by id.
+            Dict[int, ProblemInstance]: The problems of the domain, indexed by id.
         """
         return self._problems
 
@@ -57,11 +57,11 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         """
         return [v[14:] for v in dir(self) if v.startswith("build_problem_")]
 
-    def build_problem(self, problem_id: str) -> Optional[ProblemInstance]:
+    def build_problem(self, problem_id: int) -> Optional[ProblemInstance]:
         """Builds the problem with the given id.
 
         Args:
-            problem_id (str): The id of the problem to create.
+            problem_id (int): The id of the problem to create.
 
         Returns:
             Optional[ProblemInstance]: The generated problem, `None` if it doesn't exist.
@@ -80,11 +80,11 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
 
         return problem
 
-    def get_problem(self, problem_id: str) -> Optional[ProblemInstance]:
+    def get_problem(self, problem_id: int) -> Optional[ProblemInstance]:
         """Builds the problem with the given id.
 
         Args:
-            problem_id (str): The id of the problem to build.
+            problem_id (int): The id of the problem to build.
 
         Returns:
             Optional[ProblemInstance]: The generated problem or `None` if the problem doesn't exist.
@@ -97,18 +97,18 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
 
     def get_problem_version(
         self,
-        problem_id: str,
+        problem_id: int,
         version: str,
     ) -> Optional[AbstractProblem]:
         """Retrieves the requested version with the given id.
 
         Args:
-            problem_id (str): The id of the problem to search.
+            problem_id (int): The id of the problem to search.
             version (str): The requested version of the problem.
 
         Returns:
             Optional[AbstractProblem]: The value of the requested version.
-                `None` if the problem or the version doee not exist.
+                `None` if the problem or the version does not exist.
         """
         problem = self.get_problem(problem_id)
         if problem is None:
@@ -133,21 +133,21 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         """
         return None
 
-    def load_problem_from_cache(self, problem_id: str) -> Optional[AbstractProblem]:
+    def load_problem_from_cache(self, problem_id: int) -> Optional[AbstractProblem]:
         """Loads the problem with the given id from the cache.
 
         Args:
-            problem_id (str): The id of the problem to load
+            problem_id (int): The id of the problem to load
 
         Returns:
             Optional[AbstractProblem]: The cached problem or `None`.
         """
         return self.problems.get(problem_id, None)
 
-    def load_from_files(
+    def load_from_folder(
         self,
         folder_path: Path,
-        problem_id: str,
+        problem_id: int,
     ) -> Optional[AbstractProblem]:
         """
         Builds a unified planning problem based on the files present on the given folder.
@@ -157,7 +157,7 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
 
         Args:
             folder_path (Path): The path of the folder to use to find the files.
-            problem_id (str): The uid of the problem to load.
+            problem_id (int): The uid of the problem to load.
 
         Returns:
             Optional[AbstractProblem]: The optional problem. `None` if no files found.
@@ -174,10 +174,29 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         if domain_file is None or problem_file is None:
             return None
 
-        return PDDLReader().parse_problem(
-            domain_file.as_posix(),
-            problem_file.as_posix(),
-        )
+        return self.load_from_files(problem_file, domain_file)
+
+    def load_from_files(
+        self,
+        problem_file: Path,
+        domain_file: Path,
+    ) -> Optional[AbstractProblem]:
+        """
+        Builds a unified planning problem based on the given files.
+
+        Args:
+            problem_file (Path): The path of the problem file.
+            domain_file (Path): The path of the domain file.
+
+        Returns:
+            Optional[AbstractProblem]: The optional problem. `None` if no files found.
+        """
+        if domain_file.exists() and problem_file.exists():
+            return PDDLReader().parse_problem(
+                domain_file.as_posix(),
+                problem_file.as_posix(),
+            )
+        return None
 
     def save_problem_to_cache(self, problem: Optional[ProblemInstance]) -> None:
         """
@@ -191,4 +210,57 @@ class AbstractDomain(Abstract, Singleton, metaclass=AbstractSingletonMeta):
             self.problems[problem.uid] = problem
 
 
-__all__ = ["AbstractDomain"]
+class FolderAbstractDomain(AbstractDomain):
+    """
+    Represents the base class for all domains created from a structured folder.
+
+    Problem instances reside in the `instances` subdirectory and are of the form
+    `instance-x.pddl` or `instance-x.hddl`, where `x` ≥ 1 (without leading zeros).
+
+    With most domains, there is only one domain description for all instances, `domain.pddl`
+    or `domain.hddl`.
+    In some cases, a proper domain is provided for each instance, in which case the domain
+    descriptions are stored in a `domains` subdirectory.
+    """
+
+    folder: Path
+
+    @property
+    def suffix(self) -> str:
+        """
+        Returns:
+            str: The suffix of the domain and instances.
+        """
+        instance = next(self.instances_folder.iterdir())
+        return instance.suffix
+
+    @property
+    def instances_folder(self) -> Path:
+        """
+        Returns:
+            Path: The path of the instances folder.
+        """
+        return self.folder / "instances"
+
+    def get_domain_path(self, problem_id: int) -> Path:
+        """
+        Returns the path of the domain file for the given problem id.
+        """
+        if (self.folder / f"domain{self.suffix}").exists():
+            return self.folder / f"domain{self.suffix}"
+        return self.folder / "domains" / f"domain-{problem_id}{self.suffix}"
+
+    def get_num_problems(self) -> int:
+        return len(list(self.instances_folder.iterdir()))
+
+    def build_problem_base(self, problem: ProblemInstance) -> Optional[AbstractProblem]:
+        """
+        Builds the base problem for the given instance.
+        """
+        return self.load_from_files(
+            self.instances_folder / f"instance-{problem.uid}{self.suffix}",
+            self.get_domain_path(problem.uid),
+        )
+
+
+__all__ = ["AbstractDomain", "FolderAbstractDomain"]

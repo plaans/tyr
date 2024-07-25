@@ -52,7 +52,7 @@ class TestConverter:
         result = get_goals(problem)
         assert set(result) == {goal2, goal4, goal5, goal6}
 
-    @pytest.mark.parametrize("base_problem", ["01", "02", "03"], indirect=True)
+    @pytest.mark.parametrize("base_problem", ["1", "2", "3"], indirect=True)
     def test_goals_to_tasks(self, base_problem, hier_domain, mapping):
         unified_planning.model.htn.task._task_id_counter = 0
         hier_instance = hier_domain.parent / f"instance-{base_problem[0]}.hddl"
@@ -66,13 +66,13 @@ class TestConverter:
 
         assert str(result) == str(hier_pb)
 
-    @pytest.mark.parametrize("base_problem", ["01", "02", "03"], indirect=True)
+    @pytest.mark.parametrize("base_problem", ["1", "2", "3"], indirect=True)
     def test_goals_to_tasks_wrong_domain(self, base_problem, hier_domain, mapping):
         base_domain = hier_domain.parent.parent / "pddl/domain.pddl"
         with pytest.raises(ValueError):
             goals_to_tasks(base_problem[1], base_domain, mapping)
 
-    @pytest.mark.parametrize("base_problem", ["01", "02", "03"], indirect=True)
+    @pytest.mark.parametrize("base_problem", ["1", "2", "3"], indirect=True)
     def test_goals_are_copied(self, base_problem, hier_domain, mapping):
         assert len(base_problem[1].goals) > 0
         goals_to_tasks(base_problem[1], hier_domain, mapping)

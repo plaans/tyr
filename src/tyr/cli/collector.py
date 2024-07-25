@@ -125,7 +125,7 @@ def collect_problems(*filters: str) -> CollectionResult[ProblemInstance]:
         CollectionResult[Planner]: The collected problems for the benchmark.
     """
     all_problems = [
-        d.get_problem(f"{p+1:0>2}")
+        d.get_problem(p + 1)
         for d in domain_scanner.get_all_domains()
         for p in range(d.get_num_problems())
     ]

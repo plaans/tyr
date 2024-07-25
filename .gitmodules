@@ -1,3 +1,34 @@
 [submodule "libs/aries"]
 	path = src/tyr/planners/planners/aries
 	url = https://github.com/plaans/aries.git
+[submodule "src/tyr/planners/planners/optic"]
+	path = src/tyr/planners/planners/optic
+	url = https://github.com/plaans/tyr-optic.git
+	branch = master
+[submodule "src/tyr/planners/planners/pandapi"]
+	path = src/tyr/planners/planners/pandapi
+	url = https://github.com/plaans/tyr-pandapi.git
+	branch = master
+[submodule "src/tyr/planners/planners/popf"]
+	path = src/tyr/planners/planners/popf
+	url = https://github.com/plaans/tyr-popf.git
+	branch = master
+[submodule "src/tyr/planners/planners/linear-complex"]
+	path = src/tyr/planners/planners/linear-complex
+	url = https://github.com/plaans/tyr-linear-complex.git
+	branch = master
+[submodule "src/tyr/problems/domains/ipc"]
+	path = src/tyr/problems/domains/ipc
+	url = https://github.com/plaans/tyr-ipc-domains.git
+[submodule "src/tyr/problems/domains/custom"]
+	path = src/tyr/problems/domains/custom
+	url = https://github.com/plaans/tyr-custom-domains.git
+[submodule "src/tyr/planners/planners/lpg"]
+	path = src/tyr/planners/planners/lpg
+	url = https://github.com/aiplan4eu/up-lpg.git
+[submodule "src/tyr/problems/domains/scheduling"]
+	path = src/tyr/problems/domains/scheduling
+	url = https://github.com/plaans/tyr-scheduling-domains.git
+[submodule "src/tyr/planners/planners/popcorn"]
+	path = src/tyr/planners/planners/popcorn
+	url = https://github.com/plaans/tyr-popcorn.git

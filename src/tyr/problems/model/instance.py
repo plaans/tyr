@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Dict, Optional
 
 from unified_planning.plans import Plan, PlanKind
-from unified_planning.shortcuts import AbstractProblem
+from unified_planning.shortcuts import AbstractProblem, MinimizeActionCosts
 
 from tyr.patterns import Lazy
 
@@ -17,16 +17,16 @@ class ProblemInstance:
     The value of this versions are lazy, so the unified planning problem is only build when needed.
     """
 
-    def __init__(self, domain: "AbstractDomain", uid: str) -> None:
+    def __init__(self, domain: "AbstractDomain", uid: int) -> None:
         self._uid = uid
         self._domain = domain
         self._versions: Dict[str, Lazy[AbstractProblem]] = {}
 
     @property
-    def uid(self) -> str:
+    def uid(self) -> int:
         """
         Returns:
-            str: The id of the problem.
+            int: The id of the problem.
         """
         return self._uid
 
@@ -89,26 +89,68 @@ class ProblemInstance:
         version = self.versions[version_name].value
 
         if (num_metrics := len(version.quality_metrics)) == 0:
-            return self._get_makespan_of_plan(plan)
+            return self._get_makespan_of_plan(plan, version)
         if num_metrics > 1:
             raise ValueError("Multiple quality metrics is not supported")
 
         metric = version.quality_metrics[0]
         if metric.is_minimize_makespan():
-            return self._get_makespan_of_plan(plan)
+            return self._get_makespan_of_plan(plan, version)
+        if metric.is_minimize_action_costs():
+            return self._get_cost_of_plan(plan, metric)
         return self.domain.get_quality_of_plan(plan, version)
 
-    def _get_makespan_of_plan(self, plan: Plan) -> Optional[float]:
+    def _get_cost_of_plan(
+        self, plan: Plan, metric: MinimizeActionCosts
+    ) -> Optional[float]:
+        if plan.kind == PlanKind.HIERARCHICAL_PLAN:
+            return self._get_cost_of_plan(plan.action_plan, metric)
+
+        if plan.kind == PlanKind.SCHEDULE:
+            raise NotImplementedError("Schedules are not supported for cost evaluation")
+
         if plan.kind == PlanKind.TIME_TRIGGERED_PLAN:
-            return float(max(s + (d or 0) for (s, _, d) in plan.timed_actions))
+            raise NotImplementedError(
+                "Time triggered plans are not supported for cost evaluation"
+            )
+
         if plan.kind == PlanKind.SEQUENTIAL_PLAN:
-            return len(plan.actions)
+            total_cost = 0.0
+            for a in plan.actions:
+                cost = metric.get_action_cost(a.action)
+                if cost is None:
+                    raise ValueError(f"Action {a} has no cost")
+                total_cost += (
+                    cost.substitute(dict(zip(a.action.parameters, a.actual_parameters)))
+                    .simplify()
+                    .constant_value()
+                )
+            return total_cost
+
+        return None
+
+    def _get_makespan_of_plan(
+        self, plan: Plan, version: AbstractProblem
+    ) -> Optional[float]:
+        if plan.kind == PlanKind.HIERARCHICAL_PLAN:
+            return self._get_makespan_of_plan(plan.action_plan, version)
+
         if plan.kind == PlanKind.SCHEDULE:
             return float(
                 max(float(str(plan.assignment[a.end])) for a in plan.activities)
             )
-        if plan.kind == PlanKind.HIERARCHICAL_PLAN:
-            return self._get_makespan_of_plan(plan.action_plan)
+
+        if plan.kind == PlanKind.TIME_TRIGGERED_PLAN:
+            if (
+                "CONTINUOUS_TIME" in version.kind.features
+                or "DISCRETE_TIME" in version.kind.features
+            ):
+                return float(max(s + (d or 0) for (s, _, d) in plan.timed_actions))
+            return len(plan.timed_actions)
+
+        if plan.kind == PlanKind.SEQUENTIAL_PLAN:
+            return len(plan.actions)
+
         return None
 
 

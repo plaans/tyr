@@ -109,8 +109,8 @@ class Planner:
             Optional[AbstractProblem]: The version to solve and its name.
                 `None` for both if it is not supported.
         """
+        version_name = self.config.problems.get(problem.domain.name, "base")
         try:
-            version_name = self.config.problems[problem.domain.name]
             return version_name, problem.versions[version_name].value
         except KeyError:
             return None, None
@@ -381,12 +381,6 @@ class Planner:
         config: SolveConfig,
         times: Tuple[float, float],
     ) -> PlannerResult:
-        if upf_result is not None:
-            # Save the plan in logs
-            plan_path = self.get_log_file(problem, "plan", running_mode)
-            with open(plan_path, "w", encoding="utf-8") as log_file:
-                log_file.write(str(upf_result.plan))
-
         # Convert the result into inner format and set computation time if not present.
         result = PlannerResult.from_upf(
             planner_name,
@@ -398,6 +392,12 @@ class Planner:
         )
         if result.computation_time is None:
             result.computation_time = times[1] - times[0]
+
+        if upf_result is not None:
+            # Save the plan in logs
+            plan_path = self.get_log_file(problem, "plan", running_mode)
+            with open(plan_path, "w", encoding="utf-8") as log_file:
+                log_file.write(str(upf_result.plan))
 
         if upf_result is not None and upf_result.plan is not None:
             splitted = str(upf_result.plan).strip().split("\n")

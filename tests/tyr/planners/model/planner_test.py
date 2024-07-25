@@ -67,7 +67,7 @@ class TestPlanner(ModelTest):
     @staticmethod
     @pytest.fixture()
     def problem(domain: AbstractDomain):
-        yield domain.get_problem("01")
+        yield domain.get_problem("1")
 
     @staticmethod
     @pytest.fixture()
@@ -80,6 +80,7 @@ class TestPlanner(ModelTest):
             db_only=False,
             no_db_load=False,
             no_db_save=True,
+            unify_epsilons=False,
         )
 
     # ============================================================================ #
@@ -120,7 +121,7 @@ class TestPlanner(ModelTest):
 
     # =============================== Get log file =============================== #
 
-    @pytest.mark.parametrize("problem_id", ["01", "06"])
+    @pytest.mark.parametrize("problem_id", [1, 6])
     @pytest.mark.parametrize("domain_name", ["domain1", "domain2"])
     @pytest.mark.parametrize("planner_name", ["planner1", "planner2"])
     @pytest.mark.parametrize("file_name", ["solve", "error", "warning"])
@@ -131,7 +132,7 @@ class TestPlanner(ModelTest):
         problem: ProblemInstance,
         planner_name: str,
         domain_name: str,
-        problem_id: str,
+        problem_id: int,
         file_name: str,
         running_mode: RunningMode,
     ):
@@ -175,8 +176,8 @@ class TestPlanner(ModelTest):
     ):
         planner.config.problems.clear()
         name, version = planner.get_version(problem)
-        assert name is None
-        assert version is None
+        assert name == "base"
+        assert version.uid == problem.uid * 3
 
     # ================================= Database ================================= #
 
@@ -343,7 +344,8 @@ class TestPlanner(ModelTest):
         problem: ProblemInstance,
         solve_config: SolveConfig,
     ):
-        planner.config.problems.clear()
+        planner.config.problems["foo"] = "bar"
+        problem.domain._name = "foo"
         expected = PlannerResult.unsupported(
             problem,
             planner,

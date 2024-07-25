@@ -41,6 +41,7 @@ DEFAULT_CONFIG = {
     "logs_path": "",
     "memout": 4 * 1024**3,
     "metrics": [],
+    "no_db": False,
     "no_db_load": False,
     "no_db_save": False,
     "nodelist": [],
@@ -53,6 +54,7 @@ DEFAULT_CONFIG = {
     "quiet": 0,
     "timeout": 5,
     "timeout_offset": 10,
+    "unify_epsilons": False,
     "user_mail": None,
     "verbose": 0,
 }
@@ -157,6 +159,11 @@ metrics_filter = click.option(
     multiple=True,
     help="A list of regex filters on metric names.",
 )
+no_db_option = click.option(
+    "--no-db",
+    is_flag=True,
+    help="Do not use the database for results.",
+)
 no_db_load_option = click.option(
     "--no-db-load",
     is_flag=True,
@@ -210,6 +217,11 @@ timeout_offset_option = click.option(
     type=int,
     help=f"Additional seconds on timeout for planner to timeout by themselves.\
         Default to {DEFAULT_CONFIG['timeout_offset']}s.",
+)
+unify_epsilons_option = click.option(
+    "--unify-epsilons",
+    is_flag=True,
+    help="Unify epsilon values of the planners.",
 )
 verbose_option = click.option(
     "-v",
@@ -268,8 +280,10 @@ def update_context(ctx, verbose, quiet, out, logs_path, db_path, config):
 @anytime_option
 @oneshot_option
 @db_only_option
+@no_db_option
 @no_db_load_option
 @no_db_save_option
+@unify_epsilons_option
 @pass_context
 def cli_bench(
     ctx: CliContext,
@@ -288,8 +302,10 @@ def cli_bench(
     anytime: bool,
     oneshot: bool,
     db_only: bool,
+    no_db: bool,
     no_db_load: bool,
     no_db_save: bool,
+    unify_epsilons: bool,
 ):
     config = config or ctx.config
     cli_config = {
@@ -307,8 +323,10 @@ def cli_bench(
         "anytime": anytime,
         "oneshot": oneshot,
         "db_only": db_only,
+        "no_db": no_db,
         "no_db_load": no_db_load,
         "no_db_save": no_db_save,
+        "unify_epsilons": unify_epsilons,
     }
     conf = merge_configs(cli_config, yaml_config(config, "bench"), DEFAULT_CONFIG)
     update_context(
@@ -322,10 +340,20 @@ def cli_bench(
     )
 
     running_modes = merge_running_modes(conf["anytime"], conf["oneshot"])
+    if conf["db_only"] and conf["no_db"]:
+        raise click.BadOptionUsage(
+            "--db-only --no-db",
+            "Cannot use both --db-only and --no-db.",
+        )
     if conf["db_only"] and conf["no_db_load"]:
         raise click.BadOptionUsage(
             "--db-only --no-db-load",
             "Cannot use both --db-only and --no-db-load.",
+        )
+    if conf["db_only"] and conf["no_db-save"]:
+        raise click.BadOptionUsage(
+            "--db-only --no-db-save",
+            "Cannot use both --db-only and --no-db-save.",
         )
 
     solve_config = SolveConfig(
@@ -334,8 +362,9 @@ def cli_bench(
         conf["timeout"],
         conf["timeout_offset"],
         conf["db_only"],
-        conf["no_db_load"],
-        conf["no_db_save"],
+        conf["no_db_load"] or conf["no_db"],
+        conf["no_db_save"] or conf["no_db"],
+        conf["unify_epsilons"],
     )
 
     run_bench(ctx, solve_config, conf["planners"], conf["domains"], running_modes)
@@ -504,6 +533,7 @@ def cli_slurm(
         db_only=False,
         no_db_load=False,
         no_db_save=False,
+        unify_epsilons=False,
     )
 
     run_slurm(
@@ -603,6 +633,7 @@ def cli_solve(
         db_only=False,
         no_db_load=True,
         no_db_save=conf["no_db_save"],
+        unify_epsilons=False,
     )
     run_solve(ctx, solve_config, conf["planner"], conf["problem"], running_mode)
 

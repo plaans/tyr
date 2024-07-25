@@ -100,37 +100,37 @@ class TestAbstractDomain(AbstractSingletonModelTest):
 
     # =============================== Build problem ============================== #
 
-    @pytest.mark.parametrize("problem_id", ["01", "05", "-02"])
-    def test_build_problem_version_names(self, domain: AbstractDomain, problem_id: str):
+    @pytest.mark.parametrize("problem_id", [1, 5, -2])
+    def test_build_problem_version_names(self, domain: AbstractDomain, problem_id: int):
         problem = domain.build_problem(problem_id)
         assert list(problem.versions.keys()) == ["base", "no_speed"]
 
-    @pytest.mark.parametrize("problem_id", ["01", "05", "-02"])
+    @pytest.mark.parametrize("problem_id", [1, 5, -2])
     @pytest.mark.parametrize("version", ["base", "no_speed"])
     def test_build_problem_version_values(
         self,
         domain: AbstractDomain,
-        problem_id: str,
+        problem_id: int,
         version: str,
     ):
         problem = domain.build_problem(problem_id)
-        if problem_id == "-02":
+        if problem_id == -2:
             assert problem.versions[version].value is None
         else:
             assert isinstance(problem.versions[version].value, MagicMock)
 
-    @pytest.mark.parametrize("problem_id", ["01", "05", "-02"])
+    @pytest.mark.parametrize("problem_id", [1, 5, -2])
     def test_build_problem_no_factories(
         self,
         empty_domain: AbstractDomain,
-        problem_id: str,
+        problem_id: int,
     ):
         problem = empty_domain.build_problem(problem_id)
         assert problem is None
 
     # =============================== Save to cache ============================== #
 
-    @pytest.mark.parametrize("problem", ["01", "05", "-02"], indirect=True)
+    @pytest.mark.parametrize("problem", [1, 5, -2], indirect=True)
     def test_save_problem_to_empty_cache(
         self,
         domain: AbstractDomain,
@@ -142,7 +142,7 @@ class TestAbstractDomain(AbstractSingletonModelTest):
         domain.save_problem_to_cache(problem)
         assert domain._problems == {problem.uid: problem}
 
-    @pytest.mark.parametrize("problem", ["01", "05", "-02"], indirect=True)
+    @pytest.mark.parametrize("problem", [1, 5, -2], indirect=True)
     def test_save_problem_to_non_empty_cache(
         self,
         domain: AbstractDomain,
@@ -159,7 +159,7 @@ class TestAbstractDomain(AbstractSingletonModelTest):
 
     # ============================== Load from cache ============================= #
 
-    @pytest.mark.parametrize("problem", ["01", "05", "-02"], indirect=True)
+    @pytest.mark.parametrize("problem", [1, 5, -2], indirect=True)
     def test_get_present_problem_from_cache(
         self,
         domain: AbstractDomain,
@@ -169,11 +169,11 @@ class TestAbstractDomain(AbstractSingletonModelTest):
         result = domain.load_problem_from_cache(problem.uid)
         assert result == problem
 
-    @pytest.mark.parametrize("problem_id", ["01", "05", "-02"])
+    @pytest.mark.parametrize("problem_id", [1, 5, -2])
     def test_get_absent_problem_from_cache(
         self,
         domain: AbstractDomain,
-        problem_id: str,
+        problem_id: int,
     ):
         result = domain.load_problem_from_cache(problem_id)
         assert result is None
@@ -190,7 +190,7 @@ class TestAbstractDomain(AbstractSingletonModelTest):
 
     # ================================ Get problem =============================== #
 
-    @pytest.mark.parametrize("problem", ["01", "05", "-02"], indirect=True)
+    @pytest.mark.parametrize("problem", [1, 5, -2], indirect=True)
     def test_get_problem_load_from_cache(
         self,
         tracked_domain: AbstractDomain,
@@ -200,7 +200,7 @@ class TestAbstractDomain(AbstractSingletonModelTest):
         tracked_domain.get_problem(problem.uid)
         tracked_domain.load_problem_from_cache.assert_called_once_with(problem.uid)
 
-    @pytest.mark.parametrize("problem", ["01", "05", "-02"], indirect=True)
+    @pytest.mark.parametrize("problem", [1, 5, -2], indirect=True)
     def test_get_problem_save_to_cache(
         self,
         tracked_domain: AbstractDomain,
@@ -210,7 +210,7 @@ class TestAbstractDomain(AbstractSingletonModelTest):
         tracked_domain.get_problem(problem.uid)
         tracked_domain.save_problem_to_cache.assert_called_once()
 
-    @pytest.mark.parametrize("problem", ["01", "05", "-02"], indirect=True)
+    @pytest.mark.parametrize("problem", [1, 5, -2], indirect=True)
     def test_get_present_problem(
         self,
         tracked_domain: AbstractDomain,
@@ -224,7 +224,7 @@ class TestAbstractDomain(AbstractSingletonModelTest):
         assert result == problem
         tracked_domain.build_problem.assert_not_called()
 
-    @pytest.mark.parametrize("problem", ["01", "05", "-02"], indirect=True)
+    @pytest.mark.parametrize("problem", [1, 5, -2], indirect=True)
     def test_get_absent_problem(
         self,
         tracked_domain: AbstractDomain,
@@ -238,23 +238,23 @@ class TestAbstractDomain(AbstractSingletonModelTest):
         assert result is not None
         tracked_domain.build_problem.assert_called_once_with(problem.uid)
 
-    @pytest.mark.parametrize("problem_id", ["01", "05", "-02"])
+    @pytest.mark.parametrize("problem_id", [1, 5, -2])
     def test_get_problem_versions_are_lazy(
         self,
         domain: AbstractDomain,
-        problem_id: str,
+        problem_id: int,
     ):
         result = domain.get_problem(problem_id)
         assert all(isinstance(v, Lazy) for v in result.versions.values())
 
     # ============================ Get problem version =========================== #
 
-    @pytest.mark.parametrize("problem_id", ["01", "05", "-02"])
+    @pytest.mark.parametrize("problem_id", [1, 5, -2])
     @pytest.mark.parametrize("version", ["base", "no_speed"])
     def test_get_problem_version_call_get_problem(
         self,
         tracked_domain_version: AbstractDomain,
-        problem_id: str,
+        problem_id: int,
         version: str,
     ):
         # Raises a ParseException because of the mock of get_problem
@@ -262,7 +262,7 @@ class TestAbstractDomain(AbstractSingletonModelTest):
             tracked_domain_version.get_problem_version(problem_id, version)
             tracked_domain_version.get_problem.assert_called_once_with(problem_id)
 
-    @pytest.mark.parametrize("problem", ["01", "05", "-02"], indirect=True)
+    @pytest.mark.parametrize("problem", [1, 5, -2], indirect=True)
     @pytest.mark.parametrize("version", ["base", "no_speed"])
     def test_get_problem_version_value(
         self,
@@ -276,19 +276,19 @@ class TestAbstractDomain(AbstractSingletonModelTest):
         result = tracked_domain_version.get_problem_version(problem.uid, version)
         assert result == problem.versions[version].value
 
-    @pytest.mark.parametrize("problem_id", ["01", "05", "-02"])
+    @pytest.mark.parametrize("problem_id", [1, 5, -2])
     @pytest.mark.parametrize("version", ["base", "no_speed"])
     def test_get_problem_version_of_null_problem(
         self,
         tracked_domain_version: AbstractDomain,
-        problem_id: str,
+        problem_id: int,
         version: str,
     ):
         tracked_domain_version.get_problem.return_value = None
         result = tracked_domain_version.get_problem_version(problem_id, version)
         assert result is None
 
-    @pytest.mark.parametrize("problem", ["01", "05", "-02"], indirect=True)
+    @pytest.mark.parametrize("problem", [1, 5, -2], indirect=True)
     @pytest.mark.parametrize("version", ["not_present", "inexistant"])
     def test_get_problem_version_inexistant(
         self,
@@ -304,7 +304,7 @@ class TestAbstractDomain(AbstractSingletonModelTest):
 
     def test_get_plan_quality_returns_None_by_default(self, domain: AbstractDomain):
         plan = MagicMock()
-        version = domain.get_problem_version("01", "base")
+        version = domain.get_problem_version("1", "base")
         result = domain.get_quality_of_plan(plan, version)
         assert result is None
 
@@ -313,19 +313,19 @@ class TestAbstractDomain(AbstractSingletonModelTest):
     @patch("builtins.open")
     @pytest.mark.parametrize("problem_id", [str(i).zfill(2) for i in range(15)])
     @pytest.mark.parametrize("files_path", ["hddl", "pddl"], indirect=True)
-    def test_load_from_files_reads_domain(
+    def test_load_from_folder_reads_domain(
         self,
         mock_open: Mock,
         domain: AbstractDomain,
         files_path: Path,
-        problem_id: str,
+        problem_id: int,
     ):
         extension = files_path.name
         domain_file = (files_path / f"domain.{extension}").resolve()
 
         # Raises a ParseException because of the patch of builtins.open
         try:
-            domain.load_from_files(files_path, problem_id)
+            domain.load_from_folder(files_path, problem_id)
             mock_open.assert_not_called()
         except ParseException:
             mock_open.assert_any_call(domain_file.as_posix(), "r")
@@ -333,37 +333,37 @@ class TestAbstractDomain(AbstractSingletonModelTest):
     @patch("builtins.open")
     @pytest.mark.parametrize("problem_id", [str(i).zfill(2) for i in range(15)])
     @pytest.mark.parametrize("files_path", ["hddl", "pddl"], indirect=True)
-    def test_load_from_files_reads_problem(
+    def test_load_from_folder_reads_problem(
         self,
         mock_open: Mock,
         domain: AbstractDomain,
         files_path: Path,
-        problem_id: str,
+        problem_id: int,
     ):
         extension = files_path.name
         problem_file = (files_path / f"instance-{problem_id}.{extension}").resolve()
 
         # Raises a ParseException because of the patch of builtins.open
         try:
-            domain.load_from_files(files_path, problem_id)
+            domain.load_from_folder(files_path, problem_id)
             mock_open.assert_not_called()
         except ParseException:
             mock_open.assert_any_call(problem_file.as_posix(), "r")
 
     @pytest.mark.parametrize(
         ["problem_id", "is_none"],
-        [(f"{i:0>2}", not (0 < i <= 3)) for i in range(15)],
-        ids=[f"{i:0>2}-{'Some' if (0 < i <= 3) else 'None'}" for i in range(15)],
+        [(str(i), not (0 < i <= 3)) for i in range(15)],
+        ids=[f"{i}-{'Some' if (0 < i <= 3) else 'None'}" for i in range(15)],
     )
     @pytest.mark.parametrize("files_path", ["hddl", "pddl"], indirect=True)
-    def test_load_from_files_result(
+    def test_load_from_folder_result(
         self,
         domain: AbstractDomain,
         files_path: Path,
-        problem_id: str,
+        problem_id: int,
         is_none: bool,
     ):
-        result = domain.load_from_files(files_path, problem_id)
+        result = domain.load_from_folder(files_path, problem_id)
         assert (result is None) == is_none
         if not is_none:
             assert isinstance(result, AbstractProblem)

@@ -44,6 +44,8 @@ class BenchResult:
 class BenchTerminalWritter(Writter):
     """Utility class to write content of the benchmark on the terminal."""
 
+    _default_version_name = "base"
+
     _status_map: Dict[PlannerResultStatus, Tuple[str, str]] = {
         PlannerResultStatus.SOLVED: (".", "green"),
         PlannerResultStatus.UNSOLVABLE: ("U", "red"),
@@ -257,7 +259,9 @@ class BenchTerminalWritter(Writter):
         Raises:
             ValueError: When new current domain is registered.
         """
-        current_version = planner.config.problems.get(domain.name, "none")
+        current_version = planner.config.problems.get(
+            domain.name, self._default_version_name
+        )
         if not self.verbose and self._solve_config.jobs == 1:
             self.write("    " + planner.name + ":" + current_version + " ", flush=True)
 
@@ -294,7 +298,9 @@ class BenchTerminalWritter(Writter):
             if self.current_line_width + len(" [100%]") > self._fullwidth:
                 self.report_progress()
         else:
-            current_version = planner.config.problems.get(domain.name, "none")
+            current_version = planner.config.problems.get(
+                domain.name, self._default_version_name
+            )
             if self._solve_config.jobs == 1:
                 self.rewrite(
                     f"{planner.name} - {result.problem.name}:{current_version}"
@@ -337,7 +343,9 @@ class BenchTerminalWritter(Writter):
             problem (ProblemInstance): The problem to solve.
         """
         if self.verbose and self._solve_config.jobs == 1:
-            current_version = planner.config.problems.get(domain.name, "none")
+            current_version = planner.config.problems.get(
+                domain.name, self._default_version_name
+            )
             current_date = self.markup(time.strftime("%Y-%m-%d %H:%M:%S"), purple=True)
             self.write(
                 f"{planner.name} - {problem.name}:{current_version} started at {current_date}",

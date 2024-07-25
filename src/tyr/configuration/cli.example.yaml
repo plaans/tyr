@@ -38,7 +38,7 @@ solve:
   # quiet: 0
   # timeout: 10
   # planner: "aries"
-  # problem: "rovers-hierarchical:01"
+  # problem: "rovers-hierarchical:1"
   # fs: False
 
 table:

@@ -1,5 +1,6 @@
+from collections import OrderedDict
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
 from unified_planning.io import PDDLReader
 from unified_planning.model.htn import HierarchicalProblem
@@ -8,12 +9,22 @@ from unified_planning.model.types import _IntType
 from unified_planning.shortcuts import (
     GE,
     LE,
+    LT,
+    DurationInterval,
     DurativeAction,
     EffectKind,
     EndTiming,
+    Equals,
+    Fluent,
+    FNode,
+    InstantaneousAction,
+    Minus,
     Not,
+    Parameter,
+    Plus,
     Problem,
     StartTiming,
+    UserType,
 )
 
 from tyr.problems.model.instance import ProblemInstance
@@ -35,6 +46,26 @@ def get_goals(problem: Problem) -> list:
     return goals
 
 
+def reduce_problem(problem: Problem, number: int) -> Problem:
+    """Reduces the number of goals of the given problem.
+
+    Args:
+        problem (Problem): The problem to reduce.
+        number (int): The number of goals to keep.
+
+    Returns:
+        Problem: The reduces problem version.
+    """
+    result = problem.clone()
+    goals_subset = get_goals(result)[:number]
+
+    result.clear_goals()
+    for goal in goals_subset:
+        result.add_goal(goal)
+
+    return result
+
+
 def reduce_version(problem: ProblemInstance, version: str, number: int) -> Problem:
     """Reduces the number of goals of the given problem.
 
@@ -49,15 +80,178 @@ def reduce_version(problem: ProblemInstance, version: str, number: int) -> Probl
     base = problem.versions[version].value
     if base is None:
         return None
+    return reduce_problem(base, number)
 
-    result = base.clone()
-    goals_subset = get_goals(result)[:number]
 
-    result.clear_goals()
-    for goal in goals_subset:
-        result.add_goal(goal)
+def remove_user_typing(problem: Problem) -> Problem:
+    # pylint: disable = too-many-locals, too-many-branches, too-many-statements
+    """Remove all user typing from the given problem.
 
-    return result
+    Args:
+        problem (Problem): The problem to remove user typing from.
+
+    Returns:
+        Problem: The problem without user typing.
+    """
+
+    def convert_fnode(fn: FNode):
+        # pylint: disable = too-many-return-statements
+        if fn.is_bool_constant() or fn.is_int_constant() or fn.is_real_constant():
+            return fn
+        if fn.is_fluent_exp():
+            nf = fluent_map[fn.fluent()]
+            na = [convert_fnode(a) for a in fn.args]
+            return nf(*na)
+        if fn.is_object_exp():
+            return new_pb.object(fn.object().name)
+        if fn.is_parameter_exp():
+            return Parameter(fn.parameter().name, obj_tpe, env)
+        if fn.is_not():
+            return Not(convert_fnode(fn.args[0]))
+        if fn.is_equals():
+            return Equals(convert_fnode(fn.args[0]), convert_fnode(fn.args[1]))
+        if fn.is_le():
+            return LE(convert_fnode(fn.args[0]), convert_fnode(fn.args[1]))
+        if fn.is_lt():
+            return LT(convert_fnode(fn.args[0]), convert_fnode(fn.args[1]))
+        if fn.is_plus():
+            return Plus(*[convert_fnode(a) for a in fn.args])
+        if fn.is_minus():
+            assert len(fn.args) == 2  # nosec: B101
+            return Minus(convert_fnode(fn.args[0]), convert_fnode(fn.args[1]))
+        raise NotImplementedError(f"Unsupported fluent node: {fn}")
+
+    env = problem.environment
+    tm = env.type_manager
+    new_pb = Problem(problem.name, env)
+
+    obj_tpe = UserType("tyr_object")
+    types_hierarchy: Dict[str, str] = {}
+    types_fluents: Dict[str, Fluent] = {}
+
+    # Create the hierarchy of types and create the corresponding fluents
+    for parent, children in problem.user_types_hierarchy.items():
+        for child in children:
+            types_hierarchy[child.name] = parent.name if parent else obj_tpe.name
+            types_fluents[child.name] = new_pb.add_fluent(
+                Fluent(f"is_{child.name}", tm.BoolType(), None, env, o=obj_tpe)
+            )
+
+    # Add all objects and initialize their type fluents
+    for obj in problem.all_objects:
+        new_obj = new_pb.add_object(obj.name, obj_tpe)
+        tpe = obj.type.name
+        while tpe != obj_tpe.name:
+            new_pb.set_initial_value(types_fluents[tpe](new_obj), True)
+            tpe = types_hierarchy[tpe]
+
+    # Copy all fluents with adapted signature
+    fluent_map: Dict[Fluent, Fluent] = {}
+    for fluent in problem.fluents:
+        new_sign = [Parameter(param.name, obj_tpe, env) for param in fluent.signature]
+        nf = new_pb.add_fluent(Fluent(fluent.name, fluent.type, new_sign, env))
+        fluent_map[fluent] = nf
+
+    # Copy all initial values
+    for f, v in problem.initial_values.items():
+        new_pb.set_initial_value(convert_fnode(f), v)
+
+    # Copy all timed effects
+    for t, el in problem.timed_effects.items():
+        for e in el:
+            new_pb.add_timed_effect(
+                t,
+                convert_fnode(e.fluent),
+                convert_fnode(e.value),
+                e.condition,
+                e.forall,
+            )
+
+    # Copy all actions with adapted parameters
+    for action in problem.actions:
+        # pylint: disable = protected-access
+        new_params = OrderedDict(((p.name, obj_tpe) for p in action.parameters))
+        if isinstance(action, InstantaneousAction):
+            new_action: Union[
+                InstantaneousAction, DurativeAction
+            ] = InstantaneousAction(action.name, new_params, env)
+            for op, np in zip(action.parameters, new_action.parameters):
+                new_action.add_precondition(types_fluents[op.type.name](np))
+            for p in action.preconditions:
+                new_action.add_precondition(convert_fnode(p))
+            for e in action.effects:
+                fluent = convert_fnode(e.fluent)
+                if e.is_assignment():
+                    new_action.add_effect(
+                        fluent, convert_fnode(e.value), e.condition, e.forall
+                    )
+                elif e.is_increase():
+                    new_action.add_increase_effect(
+                        fluent, convert_fnode(e.value), e.condition, e.forall
+                    )
+                elif e.is_decrease():
+                    new_action.add_decrease_effect(
+                        fluent, convert_fnode(e.value), e.condition, e.forall
+                    )
+                else:
+                    raise NotImplementedError(f"Unsupported effect kind: {e.kind}")
+            if action.simulated_effect is not None:
+                raise NotImplementedError("Simulated effects are not supported")
+        elif isinstance(action, DurativeAction):
+            new_action = DurativeAction(action.name, new_params, env)
+            for op, np in zip(action.parameters, new_action.parameters):
+                new_action.add_condition(StartTiming(), types_fluents[op.type.name](np))
+            for i, cl in action.conditions.items():
+                for c in cl:
+                    new_action.add_condition(i, convert_fnode(c))
+            for t, el in action.effects.items():
+                for e in el:
+                    fluent = convert_fnode(e.fluent)
+                    if e.is_assignment():
+                        new_action.add_effect(
+                            t, fluent, convert_fnode(e.value), e.condition, e.forall
+                        )
+                    elif e.is_increase():
+                        new_action.add_increase_effect(
+                            t, fluent, convert_fnode(e.value), e.condition, e.forall
+                        )
+                    elif e.is_decrease():
+                        new_action.add_decrease_effect(
+                            t, fluent, convert_fnode(e.value), e.condition, e.forall
+                        )
+                    else:
+                        raise NotImplementedError(f"Unsupported effect kind: {e.kind}")
+            for t, _se in action.simulated_effects.items():
+                raise NotImplementedError("Simulated effects are not supported")
+            new_duration = DurationInterval(
+                convert_fnode(action.duration.lower),
+                convert_fnode(action.duration.upper),
+                action.duration.is_left_open(),
+                action.duration.is_right_open(),
+            )
+            new_action.set_duration_constraint(new_duration)
+        else:
+            raise NotImplementedError(f"Unsupported action type: {action}")
+        new_pb.add_action(new_action)
+
+    # Copy all goals
+    for g in problem.goals:
+        new_pb.add_goal(convert_fnode(g))
+
+    # Copy all timed goals
+    for i, gl in problem.timed_goals.items():
+        for g in gl:
+            new_pb.add_timed_goal(i, convert_fnode(g))
+
+    # Copy all trajectory constraints
+    for t in problem.trajectory_constraints:
+        raise NotImplementedError("Trajectory constraints are not supported")
+
+    # Copy all quality metrics
+    for m in problem.quality_metrics:
+        new_pb.add_quality_metric(m)
+
+    return new_pb
 
 
 def goals_to_tasks(
@@ -184,7 +378,7 @@ def scheduling_to_actions(schd_pb: SchedulingProblem) -> Problem:
         pddl_pb.add_action(action)
 
     # Add constraints between the actions
-    for (constraint, _act) in schd_pb.all_constraints():
+    for constraint, _act in schd_pb.all_constraints():
         # Only support `<=` constraints
         assert constraint.is_le()  # nosec: B101
 
