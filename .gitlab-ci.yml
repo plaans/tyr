@@ -133,5 +133,9 @@ semantic-release:
   image: node:latest
   before_script:
     - npm install --save-dev conventional-changelog-conventionalcommits semantic-release @semantic-release/changelog @semantic-release/exec @semantic-release/git @semantic-release/gitlab-config
+    # https://gitlab.com/gitlab-org/gitlab-runner/-/issues/2245
+    - git lfs pull
+    - rm .git/hooks/post-checkout || true
+
   script:
     - npx semantic-release
