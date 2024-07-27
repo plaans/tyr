@@ -6,8 +6,13 @@ RUN apt update && apt upgrade -y
 RUN apt install -y \
     build-essential \
     curl \
-    git git-lfs \
+    git \
     wget
+
+# Install Git-LFS
+RUN curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
+RUN apt update
+RUN apt install git-lfs
 
 # Install Python from 3.8 to 3.12
 RUN apt install -y software-properties-common
