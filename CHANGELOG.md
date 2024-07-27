@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [1.19.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.18.0...v1.19.0) (2024-07-27)
+
+
+### Bug Fixes
+
+* **just:** panda-pi registration ([4aab468](https://gitlab.laas.fr/rgodet1/tyr/commit/4aab4680f282860c84ee4b28f3a4a5674dd14663))
+* popcorn submodule url ([fd2ba92](https://gitlab.laas.fr/rgodet1/tyr/commit/fd2ba921cc5fe646c97e5fdf359ad37b77bb29ae))
+* **problem:** makespan computation for non temporal problem but time triggered plan ([7363098](https://gitlab.laas.fr/rgodet1/tyr/commit/7363098d7a4626f41f26ae8fb34d0678ee0c20fb))
+* **problems:** calculate action cost of plan ([4a0e812](https://gitlab.laas.fr/rgodet1/tyr/commit/4a0e8127cd5728ee8c03d4b05d798d25a1cc72c3))
+* **result:** check problem is temporal before unify epsilons ([0a77991](https://gitlab.laas.fr/rgodet1/tyr/commit/0a77991029dcc17340dc83b000071e32be3d573f))
+
+
+### Features
+
+* **bench:** can unify temporal epsilon ([2a59e5b](https://gitlab.laas.fr/rgodet1/tyr/commit/2a59e5b6d5b872b53c67ab98e5cba443d86fcf2e))
+* **converter:** new one to remove user typing ([44426f4](https://gitlab.laas.fr/rgodet1/tyr/commit/44426f420a062fef5158667caa9076b3dc94cdb7))
+* **domains:** add ipc submodule ([4306578](https://gitlab.laas.fr/rgodet1/tyr/commit/4306578c8b5f8fe537732aa540e4b83dddba2289))
+* **planners:** add popcorn ([72e6e69](https://gitlab.laas.fr/rgodet1/tyr/commit/72e6e696564f24ae8cdaf2bee7674cbc0db3b1d5))
+* **planners:** add tamer ([4d9e461](https://gitlab.laas.fr/rgodet1/tyr/commit/4d9e461229acdfd8607db990b8fedb66b66e09af))
+* **problems:** calculate action cost of plan ([0506b7c](https://gitlab.laas.fr/rgodet1/tyr/commit/0506b7c60c2bc4fa943355f56d7c7d39e4fa5eb1))
+
+
+### Reverts
+
+* **docker:** remove apptainer ([c80392f](https://gitlab.laas.fr/rgodet1/tyr/commit/c80392fb4a7ca65a2640e788a2b0d53c233ddc71))
+
 # [1.18.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.17.0...v1.18.0) (2024-06-21)
 
 
