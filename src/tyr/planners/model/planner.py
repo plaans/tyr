@@ -12,6 +12,8 @@ from typing import Generator, Optional, Tuple
 import unified_planning.shortcuts as upf
 from unified_planning.engines import PlanGenerationResult, PlanGenerationResultStatus
 from unified_planning.environment import get_environment
+from unified_planning.exceptions import UPException
+from unified_planning.io.pddl_writer import PDDLWriter
 from unified_planning.shortcuts import AbstractProblem, Engine
 
 from tyr.core.paths import TyrPaths
@@ -77,6 +79,7 @@ class Planner:
         problem: ProblemInstance,
         file_name: str,
         running_mode: RunningMode,
+        extension: str = "log",
     ) -> Path:
         """The file where the planner can write its logs for the given problem.
 
@@ -84,6 +87,7 @@ class Planner:
             problem (ProblemInstance): The problem concerned by the logs.
             file_name (str): The name of the file to write in.
             running_mode (RunningMode): The mode used for the resolution.
+            extension (str, optional): The extension of the log file. Defaults to "log".
 
         Returns:
             Path: The path of the log file.
@@ -95,7 +99,7 @@ class Planner:
             / f"{problem.uid}-{running_mode.name.lower()}"
         )
         folder.mkdir(parents=True, exist_ok=True)
-        return folder / f"{file_name}.log"
+        return folder / f"{file_name}.{extension}"
 
     def get_version(
         self, problem: ProblemInstance
@@ -222,15 +226,16 @@ class Planner:
             yield PlannerResult.unsupported(problem, self, config, running_mode)
             return
 
+        # Clear the logs and logs the version to solve.
+        shutil.rmtree(self.get_log_file(problem, "", running_mode).parent, True)
+        self._log_problem_version(problem, version, running_mode)
+
         # Limits the virtual memory of the current process.
         resource.setrlimit(resource.RLIMIT_AS, (config.memout, resource.RLIM_INFINITY))
 
         # Set the environment variables specified in the planner config.
         for env_name, env_value in self.config.env.items():
             os.environ[env_name] = env_value
-
-        # Clear the logs.
-        shutil.rmtree(self.get_log_file(problem, "", running_mode).parent, True)
 
         # Start recording time in case the second `start` is not reached because of an error.
         start = time.time()
@@ -329,6 +334,21 @@ class Planner:
                 result = replace(result, status=special_status)
             yield result
             return
+
+    def _log_problem_version(
+        self,
+        problem: ProblemInstance,
+        version: AbstractProblem,
+        running_mode: RunningMode,
+    ) -> None:
+        try:
+            dom_path = self.get_log_file(problem, "domain", running_mode, "pddl")
+            prb_path = self.get_log_file(problem, "problem", running_mode, "pddl")
+            PDDLWriter(version, needs_requirements=True).write_domain(dom_path)
+            PDDLWriter(version, needs_requirements=True).write_problem(prb_path)
+        except UPException as error:
+            err_path = self.get_log_file(problem, "pddl_export_error", running_mode)
+            err_path.write_text(str(error))
 
     def _solve_anytime(
         self,
