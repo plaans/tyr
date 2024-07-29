@@ -241,7 +241,7 @@ class Planner:
                 # Disable compatibility checking.
                 planner.skip_checks = True
                 # Get the log file.
-                log_path = self.get_log_file(problem, "solve", running_mode)
+                log_path = self.get_log_file(problem, "output", running_mode)
                 with open(log_path, "w", encoding="utf-8") as log_file:
                     try:
                         end = start + config.timeout
@@ -324,7 +324,7 @@ class Planner:
                 traceback.format_exc(),
             )
             # Check if a special status can be found in the logs.
-            log_path = self.get_log_file(problem, "solve", running_mode)
+            log_path = self.get_log_file(problem, "output", running_mode)
             if special_status := self._check_special_status_from_logs(log_path):
                 result = replace(result, status=special_status)
             yield result
@@ -413,7 +413,7 @@ class Planner:
             result.status = PlannerResultStatus.SOLVED
 
         # Check if a special status can be found in the logs if the result is not solved.
-        log_path = self.get_log_file(problem, "solve", running_mode)
+        log_path = self.get_log_file(problem, "output", running_mode)
         if (
             status := self._check_special_status_from_logs(log_path)
         ) is not None and result.status != PlannerResultStatus.SOLVED:
