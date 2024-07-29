@@ -383,7 +383,7 @@ class TestPlanner(ModelTest):
         assert solve_kwargs["timeout"] == timeout
         assert (
             solve_kwargs["output_stream"].name
-            == planner.get_log_file(problem, "solve", RunningMode.ONESHOT).as_posix()
+            == planner.get_log_file(problem, "output", RunningMode.ONESHOT).as_posix()
         )
 
     @pytest.mark.parametrize("timeout", [1, 15, 6])
@@ -414,7 +414,7 @@ class TestPlanner(ModelTest):
         assert solve_kwargs["timeout"] == timeout
         assert (
             solve_kwargs["output_stream"].name
-            == planner.get_log_file(problem, "solve", RunningMode.ANYTIME).as_posix()
+            == planner.get_log_file(problem, "output", RunningMode.ANYTIME).as_posix()
         )
 
     @patch("unified_planning.shortcuts.OneshotPlanner", autospec=True)
