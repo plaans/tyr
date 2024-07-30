@@ -13,6 +13,7 @@ import unified_planning.shortcuts as upf
 from unified_planning.engines import PlanGenerationResult, PlanGenerationResultStatus
 from unified_planning.environment import get_environment
 from unified_planning.exceptions import UPException
+from unified_planning.grpc.proto_writer import ProtobufWriter
 from unified_planning.io.pddl_writer import PDDLWriter
 from unified_planning.shortcuts import AbstractProblem, Engine
 
@@ -341,6 +342,7 @@ class Planner:
         version: AbstractProblem,
         running_mode: RunningMode,
     ) -> None:
+        # Export the problem in PDDL format.
         try:
             dom_path = self.get_log_file(problem, "domain", running_mode, "pddl")
             prb_path = self.get_log_file(problem, "problem", running_mode, "pddl")
@@ -349,6 +351,10 @@ class Planner:
         except UPException as error:
             err_path = self.get_log_file(problem, "pddl_export_error", running_mode)
             err_path.write_text(str(error))
+
+        # Export the problem in UPF binary format.
+        bin_path = self.get_log_file(problem, "problem", running_mode, "binpb")
+        bin_path.write_bytes(ProtobufWriter().convert(version).SerializeToString())
 
     def _solve_anytime(
         self,
