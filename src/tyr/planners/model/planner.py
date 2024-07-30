@@ -341,6 +341,7 @@ class Planner:
         version: AbstractProblem,
         running_mode: RunningMode,
     ) -> None:
+        # Export the problem in PDDL format.
         try:
             dom_path = self.get_log_file(problem, "domain", running_mode, "pddl")
             prb_path = self.get_log_file(problem, "problem", running_mode, "pddl")
@@ -349,6 +350,10 @@ class Planner:
         except UPException as error:
             err_path = self.get_log_file(problem, "pddl_export_error", running_mode)
             err_path.write_text(str(error))
+
+        # Export the problem in TXT format.
+        txt_path = self.get_log_file(problem, "problem", running_mode, "txt")
+        txt_path.write_text(str(version))
 
     def _solve_anytime(
         self,
