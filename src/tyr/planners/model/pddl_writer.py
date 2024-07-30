@@ -18,7 +18,6 @@ from unified_planning.model import (
     DurativeAction,
     InstantaneousAction,
     MinimizeActionCosts,
-    StartTiming,
     Type,
 )
 from unified_planning.model.htn import HierarchicalProblem
@@ -309,48 +308,14 @@ class TyrPDDLWriter(PDDLWriter):
                     continue
                 out.write(f" (:action {self._get_mangled_name(a)}")
                 out.write("\n  :parameters (")
-                controls = []
                 for ap in a.parameters:
                     if ap.type.is_user_type():
                         out.write(
                             f" {self._get_mangled_name(ap)} - {self._get_mangled_name(ap.type)}"
                         )
-                    elif control_support or all_support:
-                        if (
-                            ap.type.is_bool_type()
-                            or ap.type.is_int_type()
-                            or ap.type.is_real_type()
-                        ):
-                            controls.append(ap)
-                        else:
-                            raise UPTypeError(
-                                "PDDL supports only user/bool/int/real type parameters"
-                            )
                     else:
                         raise UPTypeError("PDDL supports only user type parameters")
                 out.write(")")
-                if len(controls) > 0:
-                    out.write("\n  :control (")
-                    for ap in controls:
-                        if ap.type.is_bool_type():
-                            out.write(f" {self._get_mangled_name(ap)} - bool")
-                        elif ap.type.is_int_type():
-                            out.write(f" {self._get_mangled_name(ap)} - integer")
-                            if ap.type.lower_bound is not None:
-                                a.add_precondition(em.GE(ap, ap.type.lower_bound))
-                            if ap.type.upper_bound is not None:
-                                a.add_precondition(em.LE(ap, ap.type.upper_bound))
-                        elif ap.type.is_real_type():
-                            out.write(f" {self._get_mangled_name(ap)} - number")
-                            if ap.type.lower_bound is not None:
-                                a.add_precondition(em.GE(ap, ap.type.lower_bound))
-                            if ap.type.upper_bound is not None:
-                                a.add_precondition(em.LE(ap, ap.type.upper_bound))
-                        else:
-                            raise UPTypeError(
-                                "Control Parameters supports only bool/int/real type parameters"
-                            )
-                    out.write(")")
                 if len(a.preconditions) > 0:
                     precond_str = []
                     for p in (c.simplify() for c in a.preconditions):
@@ -393,7 +358,7 @@ class TyrPDDLWriter(PDDLWriter):
                         out.write(
                             f" {self._get_mangled_name(ap)} - {self._get_mangled_name(ap.type)}"
                         )
-                    elif control_support or all_support:
+                    elif control_support:
                         if (
                             ap.type.is_bool_type()
                             or ap.type.is_int_type()
@@ -402,35 +367,26 @@ class TyrPDDLWriter(PDDLWriter):
                             controls.append(ap)
                         else:
                             raise UPTypeError(
-                                "PDDL supports only user/bool/int/real type parameters"
+                                "PDDL supports only user/bool/num type parameters"
                             )
                     else:
                         raise UPTypeError("PDDL supports only user type parameters")
                 out.write(")")
+                bound_conditions = []
                 if len(controls) > 0:
                     out.write("\n  :control (")
                     for ap in controls:
                         if ap.type.is_bool_type():
                             out.write(f" {self._get_mangled_name(ap)} - bool")
-                        elif ap.type.is_int_type():
-                            out.write(f" {self._get_mangled_name(ap)} - integer")
-                            if ap.type.lower_bound is not None:
-                                a.add_condition(
-                                    StartTiming(), em.GE(ap, ap.type.lower_bound)
-                                )
-                            if ap.type.upper_bound is not None:
-                                a.add_condition(
-                                    StartTiming(), em.LE(ap, ap.type.upper_bound)
-                                )
-                        elif ap.type.is_real_type():
+                        elif ap.type.is_int_type() or ap.type.is_real_type():
                             out.write(f" {self._get_mangled_name(ap)} - number")
                             if ap.type.lower_bound is not None:
-                                a.add_condition(
-                                    StartTiming(), em.GE(ap, ap.type.lower_bound)
+                                bound_conditions.append(
+                                    f"(at start (>= ?{ap.name} {ap.type.lower_bound}))"
                                 )
                             if ap.type.upper_bound is not None:
-                                a.add_condition(
-                                    StartTiming(), em.LE(ap, ap.type.upper_bound)
+                                bound_conditions.append(
+                                    f"(at start (<= ?{ap.name} {ap.type.upper_bound}))"
                                 )
                         else:
                             raise UPTypeError(
@@ -451,8 +407,10 @@ class TyrPDDLWriter(PDDLWriter):
                     else:
                         out.write(f"(<= ?duration {converter.convert(r)})")
                     out.write(")")
-                if len(a.conditions) > 0:
+                if len(a.conditions) > 0 or len(bound_conditions) > 0:
                     out.write("\n  :condition (and ")
+                    for bc in bound_conditions:
+                        out.write(bc)
                     for interval, cl in a.conditions.items():
                         for c in (cond.simplify() for cond in cl):
                             if c.is_true():
