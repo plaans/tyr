@@ -284,7 +284,8 @@ class TyrPDDLWriter(PDDLWriter):
                 self._write_task_network(m, out, converter)
                 out.write(")\n")
 
-        for a in self.problem.actions:
+        for oa in self.problem.actions:
+            a = oa.clone()
             if isinstance(a, InstantaneousAction):
                 if any(p.simplify().is_false() for p in a.preconditions):
                     continue
@@ -355,9 +356,9 @@ class TyrPDDLWriter(PDDLWriter):
                             self._get_mangled_name,
                         )
 
-                    if a in costs:
+                    if oa in costs:
                         out.write(
-                            f" (increase (total-cost) {converter.convert(costs[a])})"
+                            f" (increase (total-cost) {converter.convert(costs[oa])})"
                         )
                     out.write(")")
                 out.write(")\n")
@@ -464,9 +465,9 @@ class TyrPDDLWriter(PDDLWriter):
                                 self.rewrite_bool_assignments,
                                 self._get_mangled_name,
                             )
-                    if a in costs:
+                    if oa in costs:
                         out.write(
-                            f" (at end (increase (total-cost) {converter.convert(costs[a])}))"
+                            f" (at end (increase (total-cost) {converter.convert(costs[oa])}))"
                         )
                     out.write(")")
                 out.write(")\n")
