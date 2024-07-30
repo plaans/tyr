@@ -1,3 +1,4 @@
+import sys
 from typing import IO, List, cast
 
 from unified_planning.exceptions import (
@@ -17,6 +18,7 @@ from unified_planning.model import (
     DurativeAction,
     InstantaneousAction,
     MinimizeActionCosts,
+    StartTiming,
     Type,
 )
 from unified_planning.model.htn import HierarchicalProblem
@@ -24,13 +26,49 @@ from unified_planning.model.types import _UserType
 
 
 class TyrPDDLWriter(PDDLWriter):
+    # pylint: disable=arguments-renamed
+
     """This class is a copy of the original PDDLWriter with some changes.
 
     Changes:
         - Support of control parameters.
     """
 
-    def _write_domain(self, out: IO[str]):
+    def print_domain(
+        self,
+        /,
+        control_support: bool = False,
+        all_support: bool = False,
+    ):
+        """Prints to std output the `PDDL` domain.
+
+        Args:
+            control_support (bool): If True, the domain will be printed with control parameters.
+            all_support (bool): If True, the domain will be printed with supported changes.
+        """
+        self._write_domain(sys.stdout, control_support, all_support)
+
+    def write_domain(
+        self,
+        filename: str,
+        /,
+        control_support: bool = False,
+        all_support: bool = False,
+    ):
+        """Dumps to file the `PDDL` domain.
+
+        Args:
+            control_support (bool): If True, the domain will be printed with control parameters.
+            all_support (bool): If True, the domain will be printed with supported changes."""
+        with open(filename, "w", encoding="utf-8") as f:
+            self._write_domain(f, control_support, all_support)
+
+    def _write_domain(
+        self,
+        out: IO[str],
+        control_support: bool = False,
+        all_support: bool = False,
+    ):
         # pylint: disable=too-many-branches, too-many-statements, too-many-locals, line-too-long, too-many-nested-blocks # noqa: E501
         if self.problem_kind.has_intermediate_conditions_and_effects():
             raise UPProblemDefinitionError(
@@ -252,20 +290,48 @@ class TyrPDDLWriter(PDDLWriter):
                     continue
                 out.write(f" (:action {self._get_mangled_name(a)}")
                 out.write("\n  :parameters (")
+                controls = []
                 for ap in a.parameters:
                     if ap.type.is_user_type():
                         out.write(
                             f" {self._get_mangled_name(ap)} - {self._get_mangled_name(ap.type)}"
                         )
-                    elif ap.type.is_bool_type():
-                        out.write(f" {self._get_mangled_name(ap)} - bool")
-                    elif ap.type.is_int_type():
-                        out.write(f" {self._get_mangled_name(ap)} - integer")
-                    elif ap.type.is_real_type():
-                        out.write(f" {self._get_mangled_name(ap)} - number")
+                    elif control_support or all_support:
+                        if (
+                            ap.type.is_bool_type()
+                            or ap.type.is_int_type()
+                            or ap.type.is_real_type()
+                        ):
+                            controls.append(ap)
+                        else:
+                            raise UPTypeError(
+                                "PDDL supports only user/bool/int/real type parameters"
+                            )
                     else:
                         raise UPTypeError("PDDL supports only user type parameters")
                 out.write(")")
+                if len(controls) > 0:
+                    out.write("\n  :control (")
+                    for ap in controls:
+                        if ap.type.is_bool_type():
+                            out.write(f" {self._get_mangled_name(ap)} - bool")
+                        elif ap.type.is_int_type():
+                            out.write(f" {self._get_mangled_name(ap)} - integer")
+                            if ap.type.lower_bound is not None:
+                                a.add_precondition(em.GE(ap, ap.type.lower_bound))
+                            if ap.type.upper_bound is not None:
+                                a.add_precondition(em.LE(ap, ap.type.upper_bound))
+                        elif ap.type.is_real_type():
+                            out.write(f" {self._get_mangled_name(ap)} - number")
+                            if ap.type.lower_bound is not None:
+                                a.add_precondition(em.GE(ap, ap.type.lower_bound))
+                            if ap.type.upper_bound is not None:
+                                a.add_precondition(em.LE(ap, ap.type.upper_bound))
+                        else:
+                            raise UPTypeError(
+                                "Control Parameters supports only bool/int/real type parameters"
+                            )
+                    out.write(")")
                 if len(a.preconditions) > 0:
                     precond_str = []
                     for p in (c.simplify() for c in a.preconditions):
@@ -302,14 +368,56 @@ class TyrPDDLWriter(PDDLWriter):
                     continue
                 out.write(f" (:durative-action {self._get_mangled_name(a)}")
                 out.write("\n  :parameters (")
+                controls = []
                 for ap in a.parameters:
                     if ap.type.is_user_type():
                         out.write(
                             f" {self._get_mangled_name(ap)} - {self._get_mangled_name(ap.type)}"
                         )
+                    elif control_support or all_support:
+                        if (
+                            ap.type.is_bool_type()
+                            or ap.type.is_int_type()
+                            or ap.type.is_real_type()
+                        ):
+                            controls.append(ap)
+                        else:
+                            raise UPTypeError(
+                                "PDDL supports only user/bool/int/real type parameters"
+                            )
                     else:
                         raise UPTypeError("PDDL supports only user type parameters")
                 out.write(")")
+                if len(controls) > 0:
+                    out.write("\n  :control (")
+                    for ap in controls:
+                        if ap.type.is_bool_type():
+                            out.write(f" {self._get_mangled_name(ap)} - bool")
+                        elif ap.type.is_int_type():
+                            out.write(f" {self._get_mangled_name(ap)} - integer")
+                            if ap.type.lower_bound is not None:
+                                a.add_condition(
+                                    StartTiming(), em.GE(ap, ap.type.lower_bound)
+                                )
+                            if ap.type.upper_bound is not None:
+                                a.add_condition(
+                                    StartTiming(), em.LE(ap, ap.type.upper_bound)
+                                )
+                        elif ap.type.is_real_type():
+                            out.write(f" {self._get_mangled_name(ap)} - number")
+                            if ap.type.lower_bound is not None:
+                                a.add_condition(
+                                    StartTiming(), em.GE(ap, ap.type.lower_bound)
+                                )
+                            if ap.type.upper_bound is not None:
+                                a.add_condition(
+                                    StartTiming(), em.LE(ap, ap.type.upper_bound)
+                                )
+                        else:
+                            raise UPTypeError(
+                                "Control Parameters supports only bool/int/real type parameters"
+                            )
+                    out.write(")")
                 l, r = a.duration.lower, a.duration.upper
                 if l == r:
                     out.write(f"\n  :duration (= ?duration {converter.convert(l)})")

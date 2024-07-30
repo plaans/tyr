@@ -348,7 +348,9 @@ class Planner:
         try:
             dom_path = self.get_log_file(problem, "domain", running_mode, "pddl")
             prb_path = self.get_log_file(problem, "problem", running_mode, "pddl")
-            TyrPDDLWriter(version, needs_requirements=True).write_domain(dom_path)
+            TyrPDDLWriter(version, needs_requirements=True).write_domain(
+                dom_path.as_posix(), all_support=True
+            )
             TyrPDDLWriter(version, needs_requirements=True).write_problem(prb_path)
         except UPException as error:
             err_path = self.get_log_file(problem, "pddl_export_error", running_mode)
