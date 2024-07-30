@@ -361,6 +361,10 @@ class Planner:
             err_path = self.get_log_file(problem, "bin_export_error", running_mode)
             err_path.write_text(str(error))
 
+        # Export the problem in TXT format.
+        txt_path = self.get_log_file(problem, "problem", running_mode, "txt")
+        txt_path.write_text(str(version))
+
     def _solve_anytime(
         self,
         planner: Engine,
