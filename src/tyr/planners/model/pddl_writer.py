@@ -38,38 +38,52 @@ class TyrPDDLWriter(PDDLWriter):
         self,
         /,
         control_support: bool = False,
+        force_predicate: bool = False,
         all_support: bool = False,
     ):
         """Prints to std output the `PDDL` domain.
 
         Args:
             control_support (bool): If True, the domain will be printed with control parameters.
+            force_predicate (bool): If True, the domain will be printed with at least one predicate.
             all_support (bool): If True, the domain will be printed with supported changes.
         """
-        self._write_domain(sys.stdout, control_support, all_support)
+        self._write_domain(sys.stdout, control_support, force_predicate, all_support)
 
     def write_domain(
         self,
         filename: str,
         /,
         control_support: bool = False,
+        force_predicate: bool = False,
         all_support: bool = False,
     ):
         """Dumps to file the `PDDL` domain.
 
         Args:
             control_support (bool): If True, the domain will be printed with control parameters.
+            force_predicate (bool): If True, the domain will be printed with at least one predicate.
             all_support (bool): If True, the domain will be printed with supported changes."""
         with open(filename, "w", encoding="utf-8") as f:
-            self._write_domain(f, control_support, all_support)
+            self._write_domain(f, control_support, force_predicate, all_support)
 
     def _write_domain(
         self,
         out: IO[str],
-        control_support: bool = False,
-        all_support: bool = False,
+        control_support: bool,
+        force_predicate: bool,
+        all_support: bool,
     ):
-        # pylint: disable=too-many-branches, too-many-statements, too-many-locals, line-too-long, too-many-nested-blocks # noqa: E501
+        """
+        Args:
+            control_support (bool): If True, the domain will be printed with control parameters.
+            force_predicate (bool): If True, the domain will be printed with at least one predicate.
+            all_support (bool): If True, the domain will be printed with supported changes.
+        """
+        # pylint: disable=too-many-branches, too-many-statements, too-many-locals, line-too-long, too-many-nested-blocks, arguments-differ # noqa: E501
+        control_support = control_support or all_support
+        force_predicate = force_predicate or all_support
+
         if self.problem_kind.has_intermediate_conditions_and_effects():
             raise UPProblemDefinitionError(
                 "PDDL does not support ICE.\nICE are Intermediate Conditions and Effects therefore when an Effect (or Condition) are not at StartTIming(0) or EndTIming(0)."  # noqa: E501
@@ -212,9 +226,13 @@ class TyrPDDLWriter(PDDLWriter):
                 raise UPTypeError("PDDL supports only boolean and numerical fluents")
         if self.problem.kind.has_actions_cost() or self.problem.kind.has_plan_length():
             functions.append("(total-cost)")
-        out.write(
-            f' (:predicates {" ".join(predicates)})\n' if len(predicates) > 0 else ""
-        )
+        if len(predicates) > 0 or force_predicate:
+            out.write(" (:predicates ")
+            if len(predicates) > 0:
+                out.write(" ".join(predicates))
+            elif force_predicate:
+                out.write(" (dummy-predicate)")
+            out.write(")\n")
         out.write(
             f' (:functions {" ".join(functions)})\n' if len(functions) > 0 else ""
         )
