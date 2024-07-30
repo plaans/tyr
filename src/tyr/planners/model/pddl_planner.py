@@ -108,6 +108,12 @@ class TyrPDDLPlanner(PDDLAnytimePlanner):
             logs.append(LogMessage(LogLevel.INFO, "".join(proc_out)))
             logs.append(LogMessage(LogLevel.ERROR, "".join(proc_err)))
             if os.path.isfile(plan_filename):
+                if output_stream is not None:
+                    with open(plan_filename, "r", encoding="utf-8") as plan_file:
+                        if isinstance(output_stream, tuple):
+                            output_stream[0].write(plan_file.read())
+                        else:
+                            output_stream.write(plan_file.read())
                 plan = self._plan_from_file(
                     problem,
                     plan_filename,
