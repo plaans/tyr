@@ -12,8 +12,8 @@ from typing import Generator, Optional, Tuple
 import unified_planning.shortcuts as upf
 from unified_planning.engines import PlanGenerationResult, PlanGenerationResultStatus
 from unified_planning.environment import get_environment
-from unified_planning.grpc.proto_writer import ProtobufWriter
 from unified_planning.exceptions import UPException
+from unified_planning.grpc.proto_writer import ProtobufWriter
 from unified_planning.shortcuts import AbstractProblem, Engine
 
 from tyr.core.paths import TyrPaths
