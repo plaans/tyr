@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.19.2](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.19.1...v1.19.2) (2024-07-30)
+
+
+### Bug Fixes
+
+* **logs:** catch errors on log export ([21053a4](https://gitlab.laas.fr/rgodet1/tyr/commit/21053a44e0079b06f4825191529f74efcc0ac57d))
+
 ## [1.19.1](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.19.0...v1.19.1) (2024-07-29)
 
 # [1.19.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.18.0...v1.19.0) (2024-07-27)
