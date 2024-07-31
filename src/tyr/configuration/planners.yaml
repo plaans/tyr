@@ -4,6 +4,18 @@
     GRPC_VERBOSITY: "ERROR"
   upf_engine: tyr.planners.planners.aries.planning.unified.plugin.up_aries.Aries
   problems:
+    aaai2025-depots: "no_div"
+    aaai2025-match-cellar-ice: "pddl"
+    aaai2025-rovers: "no_div"
+    aaai2025-satellite: "no_float"
+    aaai2025-satellite-time-windows: "no_float"
+
+- name: aries-plus
+  env:
+    ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
+    GRPC_VERBOSITY: "ERROR"
+  upf_engine: tyr.planners.planners.aries.planning.unified.plugin.up_aries.Aries
+  problems:
     aaai2025-counters: "ctrl_params"
     aaai2025-depots: "no_div"
     aaai2025-drone: "ctrl_params"
