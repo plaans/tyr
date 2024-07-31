@@ -1,6 +1,7 @@
 - name: aries
   env:
     ARIES_UP_ASSUME_REALS_ARE_INTS: "true"
+    GRPC_VERBOSITY: "ERROR"
   upf_engine: tyr.planners.planners.aries.planning.unified.plugin.up_aries.Aries
   problems:
     aaai2025-counters: "ctrl_params"

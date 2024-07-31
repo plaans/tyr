@@ -139,6 +139,7 @@ _register-planner-aries:
         echo "- $line" >> "$file"
         echo "  env:" >> "$file"
         echo "    ARIES_UP_ASSUME_REALS_ARE_INTS: \"true\"" >> "$file"
+        echo "    GRPC_VERBOSITY: \"ERROR\"" >> "$file"
         echo "  upf_engine: tyr.planners.planners.aries.planning.unified.plugin.up_aries.Aries" >> "$file"
         echo "aries planner registered."
     else
