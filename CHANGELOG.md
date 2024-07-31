@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.19.3](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.19.2...v1.19.3) (2024-07-31)
+
+
+### Bug Fixes
+
+* **cli:** add GRPC_VERBOSITY env to aries in order to silence grpc warning ([1305f8f](https://gitlab.laas.fr/rgodet1/tyr/commit/1305f8f6f5018c8b401a712456311681bcbc0ef5))
+
 ## [1.19.2](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.19.1...v1.19.2) (2024-07-30)
 
 
