@@ -41,7 +41,7 @@ class TyrPDDLPlanner(PDDLAnytimePlanner):
         return None
 
     def _get_plan(self, proc_out: List[str]) -> str:
-        raise NotImplementedError()
+        return "\n".join(proc_out)
 
     def _get_write_domain_options(self) -> Dict[str, bool]:
         return {}
@@ -72,7 +72,7 @@ class TyrPDDLPlanner(PDDLAnytimePlanner):
         ext = self._file_extension()
         domain_filename = os.path.join(output_dir, f"domain.{ext}")
         problem_filename = os.path.join(output_dir, f"problem.{ext}")
-        plan_filename = os.path.join(output_dir, "output.log")
+        plan_filename = os.path.join(output_dir, "output.plan")
         domain_options = self._get_write_domain_options()
         self._writer.write_domain(domain_filename, **domain_options)
         self._writer.write_problem(problem_filename)

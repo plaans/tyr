@@ -39,17 +39,13 @@ class ApptainerPlanner(TyrPDDLPlanner):
     ) -> List[str]:
         return self._get_cmd(domain_filename, problem_filename, plan_filename)
 
-    def _get_plan(self, proc_out: List[str]) -> str:
-        # Apptainer planners should write the plan to the file specified in the command line.
-        # If this method is called, it means that the file was not found, so there is no plan.
-        self._plan_found = False
-        return ""
-
     def _plan_from_str(self, problem: Problem, plan_str: str, get_item_named: Callable):
         lines = plan_str.split("\n")
         plan: List[str] = []
         parsing = False
         for line in lines:
+            if line.strip() == "":
+                continue
             if line.startswith(self._starting_plan_str()):
                 parsing = True
                 continue
