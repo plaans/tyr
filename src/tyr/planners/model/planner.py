@@ -3,13 +3,13 @@ import resource
 import shutil
 import time
 import traceback
+import warnings
 from dataclasses import replace
 from io import TextIOWrapper
 from multiprocessing import Process, Queue
 from pathlib import Path
 from queue import Empty
 from typing import Generator, Optional, Tuple
-import warnings
 
 import unified_planning.shortcuts as upf
 from unified_planning.engines import PlanGenerationResult, PlanGenerationResultStatus
@@ -24,7 +24,6 @@ from tyr.planners.model.config import PlannerConfig, RunningMode, SolveConfig
 from tyr.planners.model.pddl_writer import TyrPDDLWriter
 from tyr.planners.model.result import PlannerResult, PlannerResultStatus
 from tyr.problems import ProblemInstance
-
 
 warnings.filterwarnings("ignore", category=UserWarning)
 
