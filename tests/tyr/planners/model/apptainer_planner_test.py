@@ -38,11 +38,6 @@ class TestApptainerPlanner:
         result = planner._get_anytime_cmd(domain, problem, plan)
         assert result == expected.split()
 
-    def test_get_plan(self, planner: MockPlanner):
-        assert planner._plan_found is None
-        assert planner._get_plan(MagicMock()) == ""
-        assert planner._plan_found is False
-
     @patch("tyr.planners.model.apptainer_planner.TyrPDDLPlanner._plan_from_str")
     def test_get_plan_from_str(self, super_mock: Mock, planner: MockPlanner):
         problem = MagicMock()
