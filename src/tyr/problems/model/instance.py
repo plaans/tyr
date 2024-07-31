@@ -110,24 +110,23 @@ class ProblemInstance:
             raise NotImplementedError("Schedules are not supported for cost evaluation")
 
         if plan.kind == PlanKind.TIME_TRIGGERED_PLAN:
-            raise NotImplementedError(
-                "Time triggered plans are not supported for cost evaluation"
+            actions = [a[1] for a in plan.timed_actions]
+        elif plan.kind == PlanKind.SEQUENTIAL_PLAN:
+            actions = plan.actions
+        else:
+            return None
+
+        total_cost = 0.0
+        for a in actions:
+            cost = metric.get_action_cost(a.action)
+            if cost is None:
+                raise ValueError(f"Action {a} has no cost")
+            total_cost += (
+                cost.substitute(dict(zip(a.action.parameters, a.actual_parameters)))
+                .simplify()
+                .constant_value()
             )
-
-        if plan.kind == PlanKind.SEQUENTIAL_PLAN:
-            total_cost = 0.0
-            for a in plan.actions:
-                cost = metric.get_action_cost(a.action)
-                if cost is None:
-                    raise ValueError(f"Action {a} has no cost")
-                total_cost += (
-                    cost.substitute(dict(zip(a.action.parameters, a.actual_parameters)))
-                    .simplify()
-                    .constant_value()
-                )
-            return total_cost
-
-        return None
+        return total_cost
 
     def _get_makespan_of_plan(
         self, plan: Plan, version: AbstractProblem

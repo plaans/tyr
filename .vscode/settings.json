@@ -6,6 +6,7 @@
     },
     "cSpell.words": [
         "Justfile",
+        "precond",
         "venv"
     ],
     "material-icon-theme.files.associations": {
