@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.19.5](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.19.4...v1.19.5) (2024-07-31)
+
+
+### Bug Fixes
+
+* **planners:** use multiprocessing to force the timeout ([3b8627b](https://gitlab.laas.fr/rgodet1/tyr/commit/3b8627bb0e1c62ecba3ea25c9f9d9cf7965c8cce))
+
 ## [1.19.4](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.19.3...v1.19.4) (2024-07-31)
 
 
