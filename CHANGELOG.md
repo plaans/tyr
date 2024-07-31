@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.19.4](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.19.3...v1.19.4) (2024-07-31)
+
+
+### Bug Fixes
+
+* **pddl:** use a clone of the original action to preserve original cost ([8a48938](https://gitlab.laas.fr/rgodet1/tyr/commit/8a489385328e92905819a7359f41231e6f491312))
+* **planners:** pddl and apptainer plan parsing ([0d5f88e](https://gitlab.laas.fr/rgodet1/tyr/commit/0d5f88ef951cb8b32ff0ba8e7cb30875ce3f1a25))
+* **planners:** save output of PDDL planners in logs ([68b527a](https://gitlab.laas.fr/rgodet1/tyr/commit/68b527a43a2c8eb496cbc0a33b5ada439a92e72a))
+
 ## [1.19.3](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.19.2...v1.19.3) (2024-07-31)
 
 
