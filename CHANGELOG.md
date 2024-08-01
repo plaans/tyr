@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.19.6](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.19.5...v1.19.6) (2024-08-01)
+
+
+### Bug Fixes
+
+* **planners:** catch errors and handle writer as output_stream for PDDL planners ([2bb8b7e](https://gitlab.laas.fr/rgodet1/tyr/commit/2bb8b7e5582b44a87b4ee4d820c2f581aff6f0f2))
+* **planners:** ensure log file creation ([1617771](https://gitlab.laas.fr/rgodet1/tyr/commit/1617771bc1bb2211e6cb8fbdcd9dfbfaab71eb77))
+* **planners:** filter timeout results in anytime ([b2af334](https://gitlab.laas.fr/rgodet1/tyr/commit/b2af33488190897c72b639718a960aa8e5d96412))
+* **planners:** timeout on self stopped process without plan ([896b4b6](https://gitlab.laas.fr/rgodet1/tyr/commit/896b4b6915e8ffcf1dd431146b3dfc1909c6c08b))
+* **table:** load empty config ([af9a016](https://gitlab.laas.fr/rgodet1/tyr/commit/af9a01636c8ecc2c228c3b17728880daacd0808d))
+
 ## [1.19.5](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.19.4...v1.19.5) (2024-07-31)
 
 
