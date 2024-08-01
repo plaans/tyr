@@ -416,15 +416,13 @@ class Planner:
         try:
             # Record time and try the solve the problem.
             start = time.time()
-            final_result = None
             for result in planner.get_solutions(
                 version,
                 timeout=timeout,
                 output_stream=log_file,
             ):
-                final_result = result
-                queue.put((result, start, time.time()))
-            queue.put((final_result, start, time.time()))
+                if result.status != PlanGenerationResultStatus.TIMEOUT:
+                    queue.put((result, start, time.time()))
         except Exception as error:  # pylint: disable=broad-exception-caught
             queue.put(error)
 
