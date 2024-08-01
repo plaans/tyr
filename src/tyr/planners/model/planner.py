@@ -333,6 +333,15 @@ class Planner:
                             )
                             return
 
+            if self.last_upf_result is None:
+                # No result was found.
+                yield PlannerResult.timeout(
+                    problem,
+                    self,
+                    config,
+                    running_mode,
+                )
+                return
             yield self._handle_upf_result(
                 self.last_upf_result,
                 self.name,
