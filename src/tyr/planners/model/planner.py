@@ -95,7 +95,7 @@ class Planner:
             extension (str, optional): The extension of the log file. Defaults to "log".
 
         Returns:
-            Path: The path of the log file.
+            Path: The path of the log file, created if it does not exist.
         """
         folder = (
             TyrPaths().logs
@@ -104,7 +104,9 @@ class Planner:
             / f"{problem.uid}-{running_mode.name.lower()}"
         )
         folder.mkdir(parents=True, exist_ok=True)
-        return folder / f"{file_name}.{extension}"
+        file = folder / f"{file_name}.{extension}"
+        file.touch()
+        return file
 
     def get_version(
         self, problem: ProblemInstance
