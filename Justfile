@@ -146,6 +146,19 @@ _register-planner-aries:
         echo "aries planner already registered."
     fi
 
+_register-planner-lpg:
+    #!/bin/bash
+    file="shortcuts/configuration/planners.yaml"
+    line="name: lpg"
+    if ! grep -Fq "$line" "$file"
+    then
+        echo "- $line" >> "$file"
+        echo "  anytime_name: lpg-anytime" >> "$file"
+        echo "lpg planner registered."
+    else
+        echo "lpg planner already registered."
+    fi
+
 # Install the Aries planner
 install-aries: install-venv
     @just _install-planner-submodule aries
@@ -169,7 +182,7 @@ install-linear-complex:
 install-lpg:
     @just _install-planner-submodule lpg
     {{ python }} -m pip install -e {{ planners_dir }}/lpg
-    @just _register-planner lpg
+    @just _register-planner-lpg
 
 # Install the Optic planner
 install-optic:

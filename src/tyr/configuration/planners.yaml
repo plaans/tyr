@@ -34,6 +34,7 @@
     aaai2025-satellite-time-windows: "no_float"
 
 - name: lpg
+  anytime_name: lpg-anytime
   problems:
     aaai2025-depots: "no_div"
     aaai2025-match-cellar-ice: "pddl"
