@@ -6,6 +6,7 @@ from unified_planning.shortcuts import OneshotPlanner
 import tests.integration.planners as planner_module
 import tests.tyr.planners.fixtures.configuration as config_module
 from tyr import Planner, get_all_planners, register_all_planners
+from tyr.planners.model.config import RunningMode
 
 
 class TestLoader:
@@ -22,7 +23,7 @@ class TestLoader:
 
     @pytest.mark.parametrize(
         "planner",
-        get_all_planners(),
+        [p for p in get_all_planners() if p.supports_running_mode(RunningMode.ONESHOT)],
         ids=lambda x: x.oneshot_name if isinstance(x, Planner) else None,
     )
     def test_real_planner_upf_registration_oneshot(self, planner: Planner):
@@ -32,7 +33,7 @@ class TestLoader:
 
     @pytest.mark.parametrize(
         "planner",
-        get_all_planners(),
+        [p for p in get_all_planners() if p.supports_running_mode(RunningMode.ANYTIME)],
         ids=lambda x: x.anytime_name if isinstance(x, Planner) else None,
     )
     def test_real_planner_upf_registration_anytime(self, planner: Planner):
