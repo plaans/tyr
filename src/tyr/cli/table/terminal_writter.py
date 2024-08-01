@@ -238,7 +238,7 @@ class TableTerminalWritter(Writter):
         """Prints a table of metrics based on results."""
 
         # Get the table configuration from the configuration file.
-        conf = load_config("", self._config).get("table", {})
+        conf = load_config("", self._config).get("table", {}) or {}
         default_ordering = "lambda x: (x == ' ', str(x))"
         conf_col_headers = conf.get("column_headers", [])
         if not conf_col_headers:
