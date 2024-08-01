@@ -43,6 +43,7 @@
     aaai2025-satellite-time-windows: "no_float"
 
 - name: tamer
+  anytime_name: unsupported-mode
   problems:
     aaai2025-counters: "ctrl_params"
     aaai2025-depots: "no_div_flat"

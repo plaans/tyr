@@ -126,6 +126,23 @@ class Planner:
         except KeyError:
             return None, None
 
+    def supports_running_mode(self, running_mode: RunningMode) -> bool:
+        """
+        Checks if the planner supports the given running mode.
+
+        Args:
+            running_mode (RunningMode): The mode to check.
+
+        Returns:
+            bool: `True` if the planner supports the mode, `False` otherwise.
+        """
+        unsupported_name = "unsupported-mode"
+        if running_mode == RunningMode.ONESHOT:
+            return self.oneshot_name != unsupported_name
+        if running_mode == RunningMode.ANYTIME:
+            return self.anytime_name != unsupported_name
+        raise NotImplementedError(f"Running mode {running_mode} is not supported.")
+
     def solve(
         self,
         problem: ProblemInstance,
@@ -185,6 +202,7 @@ class Planner:
         return list(self.solve(problem, config, running_mode)).pop()
 
     # pylint: disable = too-many-locals, too-many-branches, too-many-statements
+    # pylint: disable = too-many-return-statements
     def _solve(
         self,
         problem: ProblemInstance,
@@ -201,6 +219,11 @@ class Planner:
         Returns:
             Generator[PlannerResult, None, None]: The results of the resolution.
         """
+        # Check if the planner supports the running mode.
+        if not self.supports_running_mode(running_mode):
+            yield PlannerResult.unsupported(problem, self, config, running_mode)
+            return
+
         # Get the planner based on the running mode.
         if running_mode == RunningMode.ONESHOT:
             builder = upf.OneshotPlanner
