@@ -2,6 +2,7 @@
 
 # Mypy types
 types-PyYAML
+types-toml
 
 # Linters
 bandit
