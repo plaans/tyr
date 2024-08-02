@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.19.7](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.19.6...v1.19.7) (2024-08-02)
+
+
+### Bug Fixes
+
+* **domains:** aaai25 empty plan quality for drone and counters ([9b12585](https://gitlab.laas.fr/rgodet1/tyr/commit/9b12585f4c6e157913d375d68ef4953b6218ef18))
+
 ## [1.19.6](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.19.5...v1.19.6) (2024-08-01)
 
 
