@@ -4,6 +4,7 @@
 click
 joblib
 plotly
+toml
 
 # Numpy is a dependency requires numpy as "anything new than certain version of numpy".
 # An error occured with numpy 2.0.0 released on June 16th 2024.

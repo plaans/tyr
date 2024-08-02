@@ -1,4 +1,5 @@
 from . import cli, configuration, core, metrics, patterns, planners, plotters, problems
+from .__version__ import __version__
 from .cli import *
 from .configuration import *
 from .core import *
@@ -17,4 +18,5 @@ __all__ = (
     + planners.__all__
     + plotters.__all__
     + problems.__all__
+    + ["__version__"]
 )

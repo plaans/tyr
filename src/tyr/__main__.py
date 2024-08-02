@@ -14,6 +14,7 @@ from tyr import (  # type: ignore
     run_solve,
     run_table,
 )
+from tyr.__version__ import __version__
 from tyr.cli.plot.runner import run_plot
 from tyr.cli.slurm.runner import run_slurm
 from tyr.core.paths import TyrPaths
@@ -237,6 +238,7 @@ verbose_option = click.option(
 
 
 @click.group()
+@click.version_option(version=__version__, prog_name="Tyr")
 @verbose_option
 @quiet_option
 @out_option
