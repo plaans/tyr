@@ -2,13 +2,16 @@ Bootstrap: docker
 From: python:3.12-slim
 
 %files
+    .git/* .git/
+    .gitmodules
     requirements/* requirements/
     src/* src/
     tests/* tests/
+    Justfile
     pyproject.toml
 
 %post
-    # Remove unnecessary configuration files
+    # Remove example configuration files
     ls -d src/tyr/configuration/* | grep yaml | grep -v example | xargs -r rm
 
     # Install Apptainer (Apptainer-ception !)
@@ -24,14 +27,14 @@ From: python:3.12-slim
     curl https://sh.rustup.rs | sh -s -- --no-modify-path -y
     . "$HOME/.cargo/env"
 
-    # Compile Aries
-    cargo build --release --bin up-server --manifest-path src/tyr/planners/planners/aries/Cargo.toml
-    cp src/tyr/planners/planners/aries/target/release/up-server src/tyr/planners/planners/aries/planning/unified/plugin/up_aries/bin/up-aries_linux_amd64
-    cargo clean --manifest-path src/tyr/planners/planners/aries/Cargo.toml
+    # Install Just
+    cargo install just
 
-    # Install Python dependencies
+    # Install Tyr
     apt install -y git
-    pip install -r requirements/dev.txt
+    just --set PY_D . --set PY_T dev install-full
+    VERSION="$(just --set PY_D . tyr --version)"
+    echo "VERSION: $VERSION" >> "$APPTAINER_LABELS"
 
 %runscript
     exec python -m tyr "$@"
@@ -40,4 +43,5 @@ From: python:3.12-slim
     python -m pytest tests/
 
 %labels
-    Author Roland Godet <rgodet@laas.fr>
+    Author: Roland Godet <rgodet@laas.fr>
+    Name: tyr

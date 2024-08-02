@@ -47,7 +47,7 @@ _default-args:
 logs_dir := "logs"
 domains_dir := "src/tyr/problems/domains"
 planners_dir := "src/tyr/planners/planners"
-python := PY_D + "/bin/python"
+python := if PY_D != "." { PY_D + "/bin/python" } else { "python" }
 
 
 # ============================================================================ #
