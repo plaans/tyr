@@ -67,6 +67,8 @@ class BenchTerminalWritter(Writter):
         super().__init__(solve_config, out, verbosity, config)
         self._no_summary = no_summary
         self._num_to_run = 0
+        self._planner_max_length = 0
+        self._problem_max_length = 0
         self._main_color = "green"
         self._results: List[BenchResult] = []
         self._starttime = 0
@@ -249,6 +251,13 @@ class BenchTerminalWritter(Writter):
         self._num_to_run = (
             len(planners.selected) * len(problems.selected) * len(running_modes)
         )
+        self._planner_max_length = max(len(p.name) for p in planners.selected)
+        self._problem_max_length = max(
+            len(pb.name) + len(pl.get_version(pb)[0]) + 1  # type: ignore
+            for pb in problems.selected
+            for pl in planners.selected
+            if pl.get_version(pb)[0] is not None
+        )
 
         self.rewrite("")
         self.report_collected(planners, "planner")
@@ -326,29 +335,36 @@ class BenchTerminalWritter(Writter):
             current_version = planner.config.problems.get(
                 domain.name, self._default_version_name
             )
+            versioned_problem = f"{result.problem.name}:{current_version}"
             if self._solve_config.jobs == 1:
                 self.rewrite(
-                    f"{planner.name} - {result.problem.name}:{current_version}"
+                    f"{planner.name: <{self._planner_max_length}}    \
+{versioned_problem: <{self._problem_max_length}}"
                 )
             else:
                 self.write(
-                    f"{planner.name} - {result.running_mode.name.lower()} - \
-{result.problem.name}:{current_version}"
+                    f"{planner.name: <{self._planner_max_length}}    \
+{result.running_mode.name.lower(): <7}    {versioned_problem: <{self._problem_max_length}}"
                 )
-            self.write(" ")
+            self.write("    ")
             self.write(result.status.name, **markup)
+            self.write(" " * (11 - len(result.status.name)))
 
             if (comp_time := result.computation_time) is not None and (
                 result.status
                 not in [PlannerResultStatus.TIMEOUT, PlannerResultStatus.UNSUPPORTED]
             ):
-                self.write(" " + self.format_seconds(int(comp_time)), purple=True)
+                self.write("    ")
+                self.write(self.format_seconds(int(comp_time)), purple=True)
+                self.write(" " * (4 - len(self.format_seconds(int(comp_time)))))
 
             if (
                 result.status is PlannerResultStatus.SOLVED
                 and result.plan_quality is not None
             ):
-                self.write(f" {result.plan_quality}", cyan=True)
+                self.write("    ")
+                self.write(str(result.plan_quality), cyan=True)
+                self.write(" " * (8 - len(str(result.plan_quality))))
 
             self.report_progress()
 
@@ -371,9 +387,11 @@ class BenchTerminalWritter(Writter):
             current_version = planner.config.problems.get(
                 domain.name, self._default_version_name
             )
+            versioned_problem = f"{problem.name}:{current_version}"
             current_date = self.markup(time.strftime("%Y-%m-%d %H:%M:%S"), purple=True)
             self.write(
-                f"{planner.name} - {problem.name}:{current_version} started at {current_date}",
+                f"{planner.name: <{self._planner_max_length}}    \
+{versioned_problem: <{self._problem_max_length}}    started at {current_date}",
                 flush=True,
             )
 
