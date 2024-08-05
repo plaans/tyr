@@ -12,6 +12,9 @@ class RelativeQualityScoreMetric(Metric):
     def abbrev(self) -> str:
         return "RS"
 
+    def is_reversed_order(self) -> bool:
+        return True
+
     # pylint: disable=protected-access
     def _evaluate(
         self, results: List[PlannerResult], all_results: List[PlannerResult]

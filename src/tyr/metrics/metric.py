@@ -33,6 +33,10 @@ class Metric(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         """The maximum value of the metric."""
         return 100
 
+    def is_reversed_order(self) -> bool:
+        """Whether the metric is in reversed order, i.e., the lower the better."""
+        return False
+
     def _evaluate(
         self,
         results: List[PlannerResult],
