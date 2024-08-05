@@ -10,7 +10,7 @@ from tyr.configuration.loader import load_config
 from tyr.metrics.metric import Metric
 from tyr.planners.model.config import SolveConfig
 from tyr.planners.model.planner import Planner
-from tyr.planners.model.result import PlannerResult, PlannerResultStatus
+from tyr.planners.model.result import PlannerResult
 from tyr.problems.model.domain import AbstractDomain
 from tyr.problems.model.instance import ProblemInstance
 
@@ -395,12 +395,9 @@ class TableTerminalWritter(Writter):
                 candidates = {
                     candidate
                     for candidate in candidates
-                    if all(
-                        result.status != PlannerResultStatus.UNSUPPORTED
-                        for result in self._results
-                        if result.problem.domain == candidate[0]
-                        and result.planner_name == candidate[1].name
-                    )
+                    for result in self._results
+                    if result.problem.domain == candidate[0]
+                    and result.planner_name == candidate[1].name
                 }
 
                 if len(candidates) > 1:
