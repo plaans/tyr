@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.19.8](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.19.7...v1.19.8) (2024-08-05)
+
+
+### Bug Fixes
+
+* **table:** do not filter unsupported results ([c5be423](https://gitlab.laas.fr/rgodet1/tyr/commit/c5be4234eb8f93c2ab39b9ddaad8fec84e92b8c7))
+* **table:** final row with multiple columns ([f52d59c](https://gitlab.laas.fr/rgodet1/tyr/commit/f52d59c68a91f2d586e4e2be0f07a98b0203c7a9))
+
 ## [1.19.7](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.19.6...v1.19.7) (2024-08-02)
 
 
