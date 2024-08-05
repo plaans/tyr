@@ -272,8 +272,8 @@ class TableTerminalWritter(Writter):
             ]
         final_column = conf.get("final_column", None)
         final_row = conf.get("final_row", None)
-        auto_best = conf.get("auto_best", False)
-        auto_worst = conf.get("auto_worst", False)
+        auto_best_row = conf.get("auto_best", False)
+        auto_worst_row = conf.get("auto_worst", False)
 
         # Get all domains.
         domains = {p.domain for p in self._problems}
@@ -496,7 +496,7 @@ class TableTerminalWritter(Writter):
 
         # Set the best and worst cells per row.
         # XXX: This assums that each "planner" has the same number of "metrics".
-        if auto_best or auto_worst:
+        if auto_best_row or auto_worst_row:
             for line in table.lines:
                 line_values: List[List[float]] = [[] for _ in range(col_modulo)]
                 metrics: List[Optional[Metric]] = [None for _ in range(col_modulo)]
@@ -518,9 +518,9 @@ class TableTerminalWritter(Writter):
                     worst.append(sorted_vals[0])
                 for j, cell in enumerate(line.cells):
                     if cell.is_float:
-                        if auto_best:
+                        if auto_best_row:
                             cell.is_best = float(cell.value) == best[j % col_modulo]
-                        if auto_worst:
+                        if auto_worst_row:
                             cell.is_worst = float(cell.value) == worst[j % col_modulo]
 
         # Add the padding to the cells.
