@@ -87,47 +87,53 @@ def run_bench(
 
     # Perform resolution.
     results: List[BenchResult] = []
-    if solve_config.jobs == 1:
-        for running_mode in running_modes:
-            tw.report_running_mode(running_mode)
+    try:  # pylint: disable = too-many-nested-blocks
+        if solve_config.jobs == 1:
+            for running_mode in running_modes:
+                tw.report_running_mode(running_mode)
 
-            for domain in srtd_domains:
-                tw.report_domain(domain)
+                for domain in srtd_domains:
+                    tw.report_domain(domain)
 
-                for planner in srtd_planners:
-                    tw.report_planner(domain, planner)
+                    for planner in srtd_planners:
+                        tw.report_planner(domain, planner)
 
-                    for problem in pb_by_dom[domain]:
-                        _solve(
-                            tw,
-                            results,
-                            planner,
-                            problem,
-                            solve_config,
-                            running_mode,
-                        )
-                    tw.report_planner_finished()
+                        for problem in pb_by_dom[domain]:
+                            _solve(
+                                tw,
+                                results,
+                                planner,
+                                problem,
+                                solve_config,
+                                running_mode,
+                            )
+                        tw.report_planner_finished()
 
-    else:
-        tw.line()
+        else:
+            tw.line()
 
-        with multiprocessing.Manager() as manager:
-            shared_results = manager.list(results)
-            Parallel(n_jobs=solve_config.jobs)(
-                delayed(_solve)(
-                    tw,
-                    shared_results,
-                    planner,
-                    problem,
-                    solve_config,
-                    running_mode,
+            with multiprocessing.Manager() as manager:
+                shared_results = manager.list(results)
+                Parallel(n_jobs=solve_config.jobs)(
+                    delayed(_solve)(
+                        tw,
+                        shared_results,
+                        planner,
+                        problem,
+                        solve_config,
+                        running_mode,
+                    )
+                    for running_mode in running_modes
+                    for domain in srtd_domains
+                    for planner in srtd_planners
+                    for problem in pb_by_dom[domain]
                 )
-                for running_mode in running_modes
-                for domain in srtd_domains
-                for planner in srtd_planners
-                for problem in pb_by_dom[domain]
-            )
-            results = shared_results[:]
+                results = shared_results[:]
+    except KeyboardInterrupt:
+        tw.line()
+        tw.line()
+        tw.separator("!", "KeyboardInterrupt", bold=True)
+        tw.write("The benchmark has been interrupted.", red=True)
 
     # End the session.
     tw.set_results(results)
