@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.20.1](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.20.0...v1.20.1) (2024-08-05)
+
+
+### Bug Fixes
+
+* **just:** update popcorn submodule during install ([7d6bf58](https://gitlab.laas.fr/rgodet1/tyr/commit/7d6bf58308f8138b45cf47309b1728045cf754e6))
+
 # [1.20.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.19.8...v1.20.0) (2024-08-05)
 
 
