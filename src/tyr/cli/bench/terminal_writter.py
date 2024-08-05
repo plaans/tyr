@@ -56,14 +56,16 @@ class BenchTerminalWritter(Writter):
         PlannerResultStatus.NOT_RUN: ("N", "purple"),
     }
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         solve_config: SolveConfig,
         out: Union[Optional[TextIO], List[TextIO]] = None,
         verbosity: int = 0,
         config: Optional[Path] = None,
+        no_summary: bool = True,
     ) -> None:
         super().__init__(solve_config, out, verbosity, config)
+        self._no_summary = no_summary
         self._num_to_run = 0
         self._main_color = "green"
         self._results: List[BenchResult] = []
@@ -112,6 +114,9 @@ class BenchTerminalWritter(Writter):
 
     def summary_errors(self):
         """Prints a summary about the errors that occurred."""
+        if self._no_summary:
+            return
+
         error_results = [
             result
             for result in self._results
@@ -128,6 +133,9 @@ class BenchTerminalWritter(Writter):
 
     def summary_short(self):
         """Prints a short summary about the errors and the unsolved problems."""
+        if self._no_summary:
+            return
+
         results = [
             result
             for result in self._results
