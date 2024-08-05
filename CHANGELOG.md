@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [1.20.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.19.8...v1.20.0) (2024-08-05)
+
+
+### Features
+
+* **table:** can auto bold best and worst result per row ([fcd5896](https://gitlab.laas.fr/rgodet1/tyr/commit/fcd5896a16b6ef5cd9670018dc61a8640fb9fef2))
+
 ## [1.19.8](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.19.7...v1.19.8) (2024-08-05)
 
 
