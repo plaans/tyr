@@ -125,6 +125,14 @@ class BenchTerminalWritter(Writter):
         if len(error_results) == 0:
             return
 
+        error_results.sort(
+            key=lambda r: (
+                r.planner_name,
+                r.problem_name,
+                r.running_mode.name,
+            )
+        )
+
         self.separator("=", "ERRORS")
         for result in error_results:
             self.separator("_", self.summary_result_header(result), red=True)
@@ -144,6 +152,15 @@ class BenchTerminalWritter(Writter):
         ]
         if len(results) == 0:
             return
+
+        results.sort(
+            key=lambda r: (
+                r.status.name,
+                r.planner_name,
+                r.problem_name,
+                r.running_mode.name,
+            )
+        )
 
         fullwidth = self._fullwidth
         max_header_length = max(len(self.summary_result_header(r)) for r in results)
