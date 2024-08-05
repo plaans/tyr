@@ -49,6 +49,7 @@ def run_bench(
     planner_filters: List[str],
     domain_filters: List[str],
     running_modes: List[RunningMode],
+    no_summary: bool,
 ):
     """Compares a set of planners over a bench of problems.
 
@@ -59,10 +60,13 @@ def run_bench(
         planner_filters (List[str]): A list of regex filters on planner names.
         domains_filters (List[str]): A list of regex filters on problems names.
         running_modes (List[RunningMode]): A list of mode to run planner resolutions.
+        no_summary (bool): If True, the summary will not be displayed.
     """
 
     # Create the writter and start the session.
-    tw = BenchTerminalWritter(solve_config, ctx.out, ctx.verbosity, ctx.config)
+    tw = BenchTerminalWritter(
+        solve_config, ctx.out, ctx.verbosity, ctx.config, no_summary
+    )
     tw.session_starts()
 
     # Collect the planners and the problems to use for the benchmark.

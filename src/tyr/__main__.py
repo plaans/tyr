@@ -45,6 +45,7 @@ DEFAULT_CONFIG = {
     "no_db": False,
     "no_db_load": False,
     "no_db_save": False,
+    "no_summary": True,
     "nodelist": [],
     "oneshot": False,
     "out": [],
@@ -129,6 +130,11 @@ domains_filter = click.option(
     type=str,
     multiple=True,
     help="A list of regex filters on domain names. A domain name is of the form DOMAIN:UID.",
+)
+no_summary_option = click.option(
+    "--no-summary",
+    is_flag=True,
+    help="Disable the bench summary.",
 )
 jobs_option = click.option(
     "-j",
@@ -286,6 +292,7 @@ def update_context(ctx, verbose, quiet, out, logs_path, db_path, config):
 @no_db_load_option
 @no_db_save_option
 @unify_epsilons_option
+@no_summary_option
 @pass_context
 def cli_bench(
     ctx: CliContext,
@@ -308,6 +315,7 @@ def cli_bench(
     no_db_load: bool,
     no_db_save: bool,
     unify_epsilons: bool,
+    no_summary: bool,
 ):
     config = config or ctx.config
     cli_config = {
@@ -329,6 +337,7 @@ def cli_bench(
         "no_db_load": no_db_load,
         "no_db_save": no_db_save,
         "unify_epsilons": unify_epsilons,
+        "no_summary": no_summary,
     }
     conf = merge_configs(cli_config, yaml_config(config, "bench"), DEFAULT_CONFIG)
     update_context(
@@ -369,7 +378,14 @@ def cli_bench(
         conf["unify_epsilons"],
     )
 
-    run_bench(ctx, solve_config, conf["planners"], conf["domains"], running_modes)
+    run_bench(
+        ctx,
+        solve_config,
+        conf["planners"],
+        conf["domains"],
+        running_modes,
+        conf["no_summary"],
+    )
 
 
 # ============================================================================ #
