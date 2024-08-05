@@ -197,7 +197,7 @@ install-panda-pi:
 
 # Install the Popcorn planner
 install-popcorn:
-    # @just _install-planner-submodule popcorn
+    @just _install-planner-submodule popcorn
     ./{{ planners_dir }}/popcorn/install.sh
     @just _register-planner popcorn
 
