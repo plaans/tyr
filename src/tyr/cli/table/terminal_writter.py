@@ -444,12 +444,16 @@ class TableTerminalWritter(Writter):
         if final_row is not None:
             table.append(CellRow([Sep.DOUBLE]))
             name = final_row["name"]
-            table[-1].append(Cell(name, Adjust.CENTER, len(flat_row_headers[-1][-1])))
+            table[-1].append(Cell(name, Adjust.RIGHT, len(flat_row_headers[-1][-1])))
             table[-1].append(Sep.DOUBLE)
-            for col_vals in col_values:
+            for j, col_vals in enumerate(col_values):
                 final_row_val = eval(final_row["value"])(col_vals)  # nosec: B307
                 table[-1].append(Cell(f"{final_row_val:.2f}", Adjust.RIGHT))
-                table[-1].append(Sep.DOUBLE)
+                # XXX: This assums that each "planner" has the same number of "metrics".
+                if j % col_modulo < col_modulo - 1:
+                    table[-1].append(Sep.SIMPLE)
+                else:
+                    table[-1].append(Sep.DOUBLE)
             if final_column is not None:
                 table[-1].append(Cell("", Adjust.CENTER))
                 table[-1].append(Sep.DOUBLE)
