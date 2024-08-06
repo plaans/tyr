@@ -272,8 +272,8 @@ class TableTerminalWritter(Writter):
             ]
         final_column = conf.get("final_column", None)
         final_row = conf.get("final_row", None)
-        auto_best_row = conf.get("auto_best", False)
-        auto_worst_row = conf.get("auto_worst", False)
+        auto_best_row = conf.get("auto_best_row", False)
+        auto_worst_row = conf.get("auto_worst_row", False)
 
         # Get all domains.
         domains = {p.domain for p in self._problems}
