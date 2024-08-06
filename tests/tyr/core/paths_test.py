@@ -17,7 +17,7 @@ class TestPaths:
         try:
             paths = TyrPaths()
             paths.logs = "new_logs"
-            assert paths.logs == Path("new_logs")
+            assert paths.logs == Path("new_logs").absolute()
         finally:
             # Reset the default logs path
             paths._logs = TyrPaths().ROOT_DIR / "logs"
@@ -26,7 +26,7 @@ class TestPaths:
         try:
             paths = TyrPaths()
             paths.db = "new_db.sqlite3"
-            assert paths.db == Path("new_db.sqlite3")
+            assert paths.db == Path("new_db.sqlite3").absolute()
         finally:
             # Reset the default logs path
             paths._db = TyrPaths().ROOT_DIR / "db.sqlite3"
