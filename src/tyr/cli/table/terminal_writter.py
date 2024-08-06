@@ -29,7 +29,7 @@ class Sep(Enum):
     SIMPLE = auto()
     DOUBLE = auto()
 
-    def fmt(self, latex: bool) -> str:
+    def fmt(self, latex: bool, _: bool) -> str:
         """Returns the string representation of the separator."""
         if self is Sep.SIMPLE:
             return "&" if latex else "│"
@@ -38,7 +38,7 @@ class Sep(Enum):
         raise NotImplementedError(f"{self} is not supported to print a separator")
 
     def __str__(self) -> str:
-        return self.fmt(False)
+        return self.fmt(False, False)
 
 
 @dataclass
@@ -63,7 +63,7 @@ class Cell:  # pylint: disable = too-many-instance-attributes
         """Returns whether the value of the cell is a float."""
         return self.value.replace(".", "").isdigit() and self.metric is not None
 
-    def fmt(self, latex: bool) -> str:
+    def fmt(self, latex: bool, colored: bool) -> str:
         """Returns the string representation of the cell."""
         if latex:
             a = (
@@ -73,11 +73,16 @@ class Cell:  # pylint: disable = too-many-instance-attributes
                 if self.adjust == Adjust.LEFT
                 else "r"
             )
-            val = (
-                f"\\textbf{{{self.value.strip()}}}"
-                if self.is_best
-                else self.value.strip()
-            )
+            val = self.value.strip()
+            if colored:
+                if self.is_best:
+                    val = f"{{\\color{{best_color}} {val}}}"
+                elif self.is_worst:
+                    val = f"\\textbf{{\\color{{worst_color}} {val}}}"
+            if self.is_best:
+                val = f"\\textbf{{{val}}}"
+            if self.h_span == 1 and a == "r":
+                return f"{{{val}}}"
             return f"\\multicolumn{{{self.h_span}}}{{{a}}}{{{val}}}"
 
         val = (
@@ -87,14 +92,17 @@ class Cell:  # pylint: disable = too-many-instance-attributes
             if self.adjust == Adjust.LEFT
             else self.value.rjust(self.length)
         )
+        if colored:
+            if self.is_best:
+                val = f"\033[32m{val}\033[0m"
+            elif self.is_worst:
+                val = f"\033[1m\033[31m{val}\033[0m"
         if self.is_best:
-            val = f"\033[1m\033[32m{val}\033[0m"
-        elif self.is_worst:
-            val = f"\033[1m\033[31m{val}\033[0m"
+            val = f"\033[1m{val}\033[0m"
         return val
 
     def __str__(self) -> str:
-        return self.fmt(False)
+        return self.fmt(False, False)
 
 
 @dataclass
@@ -184,6 +192,7 @@ class TableTerminalWritter(Writter):
         out: Union[Optional[TextIO], List[TextIO]] = None,
         verbosity: int = 0,
         config: Optional[Path] = None,
+        colored: bool = False,
         latex: bool = False,
         latex_array_stretch: float = 1.2,
         latex_caption: str = "",
@@ -197,6 +206,7 @@ class TableTerminalWritter(Writter):
         self._planners: List[Planner] = []
         self._problems: List[ProblemInstance] = []
         self._metrics: List[Metric] = []
+        self._colored = colored
         self._latex = latex
         self._latex_array_stretch = latex_array_stretch
         self._latex_caption = latex_caption
@@ -599,8 +609,11 @@ class TableTerminalWritter(Writter):
         self.line(f"\\{self._latex_font_size}")
         self.line(f"\\renewcommand{{\\arraystretch}}{{{self._latex_array_stretch}}}")
         self.line(f"\\def\\hs{{\\hspace{{{self._latex_horizontal_space}cm}}}}")
+        if self._colored:
+            self.line("\\definecolor{best_color}{HTML}{137b19}")
+            self.line("\\definecolor{worst_color}{HTML}{dc3545}")
         num_col = max(col_length) + 1 + len([i for i in table[-2] if i is Sep.DOUBLE])
-        self.line("\\begin{tabular}{" + "@{\\hs}c" * num_col + "@{}}")
+        self.line("\\begin{tabular}{" + "@{\\hs}r" * num_col + "@{}}")
         self.line("\\toprule")
 
         num_row_headers = len(row_headers[-1][-1])
@@ -608,7 +621,7 @@ class TableTerminalWritter(Writter):
             line, sep = table[line_idx], table[line_idx + 1]
             for item_idx, item in enumerate(line):
                 if item_idx not in [0, len(line) - 1]:
-                    self.write(item.fmt(self._latex))
+                    self.write(item.fmt(self._latex, self._colored))
             if sep is Sep.DOUBLE:
                 if line_idx // 2 == len(col_headers) - 1:
                     self.line("\\\\\\midrule")
@@ -655,7 +668,7 @@ class TableTerminalWritter(Writter):
             line, sep = table[line_idx], table[line_idx - 1]
             self.horizontal_separator(prev_line, line, col_length, sep)
             for item in line:
-                self.write(item.fmt(self._latex))
+                self.write(item.fmt(self._latex, self._colored))
             prev_line = line
         self.horizontal_separator(prev_line, None, col_length, table[-1])
 

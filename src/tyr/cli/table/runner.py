@@ -16,6 +16,7 @@ def run_table(
     planner_filters: List[str],
     domain_filters: List[str],
     metric_filters: List[str],
+    colored: bool,
     latex: bool,
     latex_array_stretch: float,
     latex_caption: str,
@@ -33,6 +34,7 @@ def run_table(
         planner_filters (List[str]): A list of regex filters on planner names.
         domains_filters (List[str]): A list of regex filters on problems names.
         metric_filters (List[str]): A list of regex filters on metric names.
+        colored (bool): Whether to use colored output.
         latex (bool): Whether to print the table in LaTeX format.
         latex_array_stretch (float): The stretch factor to use for the LaTeX array.
         latex_caption (str): The caption to use for the LaTeX table.
@@ -50,6 +52,7 @@ def run_table(
         ctx.out,
         ctx.verbosity,
         ctx.config,
+        colored,
         latex,
         latex_array_stretch,
         latex_caption,

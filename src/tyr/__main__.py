@@ -35,6 +35,7 @@ DEFAULT_CONFIG = {
     "latex": False,
     "latex_array_stretch": 1.2,
     "latex_caption": "Table of metrics.",
+    "colored": False,
     "latex_font_size": "footnotesize",
     "latex_horizontal_space": 0.35,
     "latex_pos": "htb",
@@ -676,6 +677,11 @@ def cli_solve(
 @planners_filter
 @domains_filter
 @metrics_filter
+@click.option(
+    "--colored",
+    is_flag=True,
+    help="Whether to use colored output.",
+)
 @latex_option
 @click.option(
     "--latex-array-stretch",
@@ -727,6 +733,7 @@ def cli_table(
     latex: bool,
     latex_array_stretch: float,
     latex_caption: str,
+    colored: bool,
     latex_font_size: str,
     latex_horizontal_space: float,
     latex_pos: str,
@@ -747,6 +754,7 @@ def cli_table(
         "latex": latex,
         "latex_array_stretch": latex_array_stretch,
         "latex_caption": latex_caption,
+        "colored": colored,
         "latex_font_size": latex_font_size,
         "latex_horizontal_space": latex_horizontal_space,
         "latex_pos": latex_pos,
@@ -770,6 +778,7 @@ def cli_table(
         conf["planners"],
         conf["domains"],
         conf["metrics"],
+        conf["colored"],
         conf["latex"],
         conf["latex_array_stretch"],
         conf["latex_caption"],
