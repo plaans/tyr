@@ -52,16 +52,12 @@ class Cell:  # pylint: disable = too-many-instance-attributes
     length: int = -1
     is_best: bool = False
     is_worst: bool = False
+    raw_value: Optional[float] = None
     metric: Optional[Metric] = None
 
     def __post_init__(self):
         if self.length == -1:
             self.length = len(self.value)
-
-    @property
-    def is_float(self) -> bool:
-        """Returns whether the value of the cell is a float."""
-        return self.value.replace(".", "").isdigit() and self.metric is not None
 
     def fmt(self, latex: bool, colored: bool) -> str:
         """Returns the string representation of the cell."""
@@ -280,6 +276,9 @@ class TableTerminalWritter(Writter):
             conf_row_headers = [
                 {"mapping": "lambda d, p, m: d.name"},
             ]
+        post_process_value = conf.get(
+            "post_process_value", "lambda d, p, m, vr, vs: vs"
+        )
         final_column = conf.get("final_column", None)
         final_row = conf.get("final_row", None)
         auto_best_row = conf.get("auto_best_row", False)
@@ -363,7 +362,7 @@ class TableTerminalWritter(Writter):
             head_empty = Cell("", Adjust.CENTER, len(flat_row_headers), v_span)
             tail_empty = Cell("", Adjust.CENTER, v_span=v_span)
             table.append(CellRow([Sep.DOUBLE, head_empty, Sep.DOUBLE]))
-            # XXX: This assums that each "planner" has the same number of "metrics".
+            # XXX: This assumes that each "planner" has the same number of "metrics".
             col_modulo = int(len(col_headers) / len(flat_col_headers[-2]))
             for j, col_header in enumerate(col_headers):
                 span = sum(
@@ -446,28 +445,37 @@ class TableTerminalWritter(Writter):
                         for result in self._results
                         if result.problem.domain == d and result.planner_name == p.name
                     ]
-                    value = m.evaluate(results, self._results)
                     raw_value = m.evaluate_raw(results, self._results)
+                    value = eval(post_process_value)(  # nosec: B307
+                        d, p, m, raw_value, m.evaluate(results, self._results)
+                    )
                     row_values[i].append(raw_value)
                     row_metrics[i].append(m)
                     col_values[j].append(raw_value)
                     col_metrics[j].append(m)
 
-                table[-1].append(Cell(value, Adjust.RIGHT, metric=m))
-                # XXX: This assums that each "planner" has the same number of "metrics".
+                table[-1].append(
+                    Cell(value, Adjust.RIGHT, raw_value=raw_value, metric=m)
+                )
+                # XXX: This assumes that each "planner" has the same number of "metrics".
                 if j % col_modulo < col_modulo - 1:
                     table[-1].append(Sep.SIMPLE)
                 else:
                     table[-1].append(Sep.DOUBLE)
             if final_column is not None:
                 eval_value = eval(final_column["value"])  # nosec: B307
-                final_row_val = eval_value(row_values[i])
+                final_col_val = eval_value(row_values[i])
                 metric = (
                     None
                     if set(row_metrics[i]) != {row_metrics[i][0]}
                     else row_metrics[i][0]
                 )
-                col_val = Cell(f"{final_row_val:.2f}", Adjust.RIGHT, metric=metric)
+                col_val = Cell(
+                    f"{final_col_val:.2f}",
+                    Adjust.RIGHT,
+                    raw_value=final_col_val,
+                    metric=metric,
+                )
                 table[-1].append(col_val)
                 table[-1].append(Sep.DOUBLE)
             is_last_header = i == len(flat_row_headers[-1]) - 1 or any(
@@ -492,9 +500,14 @@ class TableTerminalWritter(Writter):
                     if set(col_metrics[j]) != {col_metrics[j][0]}
                     else col_metrics[j][0]
                 )
-                row_val = Cell(f"{final_row_val:.2f}", Adjust.RIGHT, metric=metric)
+                row_val = Cell(
+                    f"{final_row_val:.2f}",
+                    Adjust.RIGHT,
+                    raw_value=final_row_val,
+                    metric=metric,
+                )
                 table[-1].append(row_val)
-                # XXX: This assums that each "planner" has the same number of "metrics".
+                # XXX: This assumes that each "planner" has the same number of "metrics".
                 if j % col_modulo < col_modulo - 1:
                     table[-1].append(Sep.SIMPLE)
                 else:
@@ -505,14 +518,14 @@ class TableTerminalWritter(Writter):
             table.append(Sep.DOUBLE)
 
         # Set the best and worst cells per row.
-        # XXX: This assums that each "planner" has the same number of "metrics".
+        # XXX: This assumes that each "planner" has the same number of "metrics".
         if auto_best_row or auto_worst_row:
             for line in table.lines:
                 line_values: List[List[float]] = [[] for _ in range(col_modulo)]
                 metrics: List[Optional[Metric]] = [None for _ in range(col_modulo)]
                 for j, cell in enumerate(line.cells):
-                    if cell.is_float:
-                        line_values[j % col_modulo].append(float(cell.value))
+                    if cell.raw_value is not None and cell.metric is not None:
+                        line_values[j % col_modulo].append(cell.raw_value)
                         if metrics[j % col_modulo] is None:
                             metrics[j % col_modulo] = cell.metric
                         elif metrics[j % col_modulo] != cell.metric:
@@ -527,11 +540,11 @@ class TableTerminalWritter(Writter):
                     best.append(sorted_vals[-1])
                     worst.append(sorted_vals[0])
                 for j, cell in enumerate(line.cells):
-                    if cell.is_float:
+                    if cell.raw_value is not None and cell.metric is not None:
                         if auto_best_row:
-                            cell.is_best = float(cell.value) == best[j % col_modulo]
+                            cell.is_best = cell.raw_value == best[j % col_modulo]
                         if auto_worst_row:
-                            cell.is_worst = float(cell.value) == worst[j % col_modulo]
+                            cell.is_worst = cell.raw_value == worst[j % col_modulo]
 
         # Add the padding to the cells.
         for line in table.lines:
