@@ -463,13 +463,13 @@ class TableTerminalWritter(Writter):
                 else:
                     table[-1].append(Sep.DOUBLE)
             if final_column is not None:
-                eval_value = eval(final_column["value"])  # nosec: B307
-                final_col_val = eval_value(row_values[i])
                 metric = (
                     None
                     if set(row_metrics[i]) != {row_metrics[i][0]}
                     else row_metrics[i][0]
                 )
+                eval_value = eval(final_column["value"])  # nosec: B307
+                final_col_val = eval_value(metric, row_values[i])
                 col_val = Cell(
                     f"{final_col_val:.2f}",
                     Adjust.RIGHT,
@@ -494,12 +494,13 @@ class TableTerminalWritter(Writter):
             table[-1].append(Cell(name, Adjust.RIGHT, len(flat_row_headers[-1][-1])))
             table[-1].append(Sep.DOUBLE)
             for j, col_vals in enumerate(col_values):
-                final_row_val = eval(final_row["value"])(col_vals)  # nosec: B307
                 metric = (
                     None
                     if set(col_metrics[j]) != {col_metrics[j][0]}
                     else col_metrics[j][0]
                 )
+                eval_value = eval(final_row["value"])  # nosec: B307
+                final_row_val = eval_value(metric, col_vals)
                 row_val = Cell(
                     f"{final_row_val:.2f}",
                     Adjust.RIGHT,
