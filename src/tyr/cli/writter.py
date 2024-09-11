@@ -250,7 +250,7 @@ class Writter:
                 )
             )
         )
-        self.line(f"database: {TyrPaths().db} -- {db_status}")
+        self.line(f"database: {TyrPaths().db.resolve().absolute()} -- {db_status}")
 
         # Timeout
         timeout = self.format_seconds(self._solve_config.timeout)
@@ -289,8 +289,8 @@ class Writter:
         msg = f"platform {sys.platform} -- Python {platform.python_version()} -- {sys.executable}"
         self.line(msg)
         self.line(f"rootdir: {os.getcwd()} -- verbosity: {self.verbosity}")
-        self.line(f"config: {self._config}")
-        self.line(f"logs: {TyrPaths().logs}")
+        self.line(f"config: {self._config.resolve().absolute()}")
+        self.line(f"logs: {TyrPaths().logs.resolve().absolute()}")
         self.report_solve_config()
         self.report_collecting()
 

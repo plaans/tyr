@@ -29,7 +29,7 @@ class Sep(Enum):
     SIMPLE = auto()
     DOUBLE = auto()
 
-    def fmt(self, latex: bool) -> str:
+    def fmt(self, latex: bool, _: bool) -> str:
         """Returns the string representation of the separator."""
         if self is Sep.SIMPLE:
             return "&" if latex else "│"
@@ -38,7 +38,7 @@ class Sep(Enum):
         raise NotImplementedError(f"{self} is not supported to print a separator")
 
     def __str__(self) -> str:
-        return self.fmt(False)
+        return self.fmt(False, False)
 
 
 @dataclass
@@ -52,18 +52,14 @@ class Cell:  # pylint: disable = too-many-instance-attributes
     length: int = -1
     is_best: bool = False
     is_worst: bool = False
+    raw_value: Optional[float] = None
     metric: Optional[Metric] = None
 
     def __post_init__(self):
         if self.length == -1:
             self.length = len(self.value)
 
-    @property
-    def is_float(self) -> bool:
-        """Returns whether the value of the cell is a float."""
-        return self.value.replace(".", "").isdigit() and self.metric is not None
-
-    def fmt(self, latex: bool) -> str:
+    def fmt(self, latex: bool, colored: bool) -> str:
         """Returns the string representation of the cell."""
         if latex:
             a = (
@@ -73,11 +69,16 @@ class Cell:  # pylint: disable = too-many-instance-attributes
                 if self.adjust == Adjust.LEFT
                 else "r"
             )
-            val = (
-                f"\\textbf{{{self.value.strip()}}}"
-                if self.is_best
-                else self.value.strip()
-            )
+            val = self.value.strip()
+            if colored:
+                if self.is_best:
+                    val = f"{{\\color{{best_color}} {val}}}"
+                elif self.is_worst:
+                    val = f"\\textbf{{\\color{{worst_color}} {val}}}"
+            if self.is_best:
+                val = f"\\textbf{{{val}}}"
+            if self.h_span == 1 and a == "r":
+                return f"{{{val}}}"
             return f"\\multicolumn{{{self.h_span}}}{{{a}}}{{{val}}}"
 
         val = (
@@ -87,14 +88,17 @@ class Cell:  # pylint: disable = too-many-instance-attributes
             if self.adjust == Adjust.LEFT
             else self.value.rjust(self.length)
         )
+        if colored:
+            if self.is_best:
+                val = f"\033[32m{val}\033[0m"
+            elif self.is_worst:
+                val = f"\033[1m\033[31m{val}\033[0m"
         if self.is_best:
-            val = f"\033[1m\033[32m{val}\033[0m"
-        elif self.is_worst:
-            val = f"\033[1m\033[31m{val}\033[0m"
+            val = f"\033[1m{val}\033[0m"
         return val
 
     def __str__(self) -> str:
-        return self.fmt(False)
+        return self.fmt(False, False)
 
 
 @dataclass
@@ -184,6 +188,7 @@ class TableTerminalWritter(Writter):
         out: Union[Optional[TextIO], List[TextIO]] = None,
         verbosity: int = 0,
         config: Optional[Path] = None,
+        colored: bool = False,
         latex: bool = False,
         latex_array_stretch: float = 1.2,
         latex_caption: str = "",
@@ -197,6 +202,7 @@ class TableTerminalWritter(Writter):
         self._planners: List[Planner] = []
         self._problems: List[ProblemInstance] = []
         self._metrics: List[Metric] = []
+        self._colored = colored
         self._latex = latex
         self._latex_array_stretch = latex_array_stretch
         self._latex_caption = latex_caption
@@ -270,10 +276,13 @@ class TableTerminalWritter(Writter):
             conf_row_headers = [
                 {"mapping": "lambda d, p, m: d.name"},
             ]
+        post_process_value = conf.get(
+            "post_process_value", "lambda d, p, m, vr, vs: vs"
+        )
         final_column = conf.get("final_column", None)
         final_row = conf.get("final_row", None)
-        auto_best_row = conf.get("auto_best", False)
-        auto_worst_row = conf.get("auto_worst", False)
+        auto_best_row = conf.get("auto_best_row", False)
+        auto_worst_row = conf.get("auto_worst_row", False)
 
         # Get all domains.
         domains = {p.domain for p in self._problems}
@@ -353,7 +362,7 @@ class TableTerminalWritter(Writter):
             head_empty = Cell("", Adjust.CENTER, len(flat_row_headers), v_span)
             tail_empty = Cell("", Adjust.CENTER, v_span=v_span)
             table.append(CellRow([Sep.DOUBLE, head_empty, Sep.DOUBLE]))
-            # XXX: This assums that each "planner" has the same number of "metrics".
+            # XXX: This assumes that each "planner" has the same number of "metrics".
             col_modulo = int(len(col_headers) / len(flat_col_headers[-2]))
             for j, col_header in enumerate(col_headers):
                 span = sum(
@@ -436,28 +445,37 @@ class TableTerminalWritter(Writter):
                         for result in self._results
                         if result.problem.domain == d and result.planner_name == p.name
                     ]
-                    value = m.evaluate(results, self._results)
                     raw_value = m.evaluate_raw(results, self._results)
+                    value = eval(post_process_value)(  # nosec: B307
+                        d, p, m, raw_value, m.evaluate(results, self._results)
+                    )
                     row_values[i].append(raw_value)
                     row_metrics[i].append(m)
                     col_values[j].append(raw_value)
                     col_metrics[j].append(m)
 
-                table[-1].append(Cell(value, Adjust.RIGHT, metric=m))
-                # XXX: This assums that each "planner" has the same number of "metrics".
+                table[-1].append(
+                    Cell(value, Adjust.RIGHT, raw_value=raw_value, metric=m)
+                )
+                # XXX: This assumes that each "planner" has the same number of "metrics".
                 if j % col_modulo < col_modulo - 1:
                     table[-1].append(Sep.SIMPLE)
                 else:
                     table[-1].append(Sep.DOUBLE)
             if final_column is not None:
-                eval_value = eval(final_column["value"])  # nosec: B307
-                final_row_val = eval_value(row_values[i])
                 metric = (
                     None
                     if set(row_metrics[i]) != {row_metrics[i][0]}
                     else row_metrics[i][0]
                 )
-                col_val = Cell(f"{final_row_val:.2f}", Adjust.RIGHT, metric=metric)
+                eval_value = eval(final_column["value"])  # nosec: B307
+                final_col_val = eval_value(metric, row_values[i])
+                col_val = Cell(
+                    f"{final_col_val:.2f}",
+                    Adjust.RIGHT,
+                    raw_value=final_col_val,
+                    metric=metric,
+                )
                 table[-1].append(col_val)
                 table[-1].append(Sep.DOUBLE)
             is_last_header = i == len(flat_row_headers[-1]) - 1 or any(
@@ -476,15 +494,21 @@ class TableTerminalWritter(Writter):
             table[-1].append(Cell(name, Adjust.RIGHT, len(flat_row_headers[-1][-1])))
             table[-1].append(Sep.DOUBLE)
             for j, col_vals in enumerate(col_values):
-                final_row_val = eval(final_row["value"])(col_vals)  # nosec: B307
                 metric = (
                     None
                     if set(col_metrics[j]) != {col_metrics[j][0]}
                     else col_metrics[j][0]
                 )
-                row_val = Cell(f"{final_row_val:.2f}", Adjust.RIGHT, metric=metric)
+                eval_value = eval(final_row["value"])  # nosec: B307
+                final_row_val = eval_value(metric, col_vals)
+                row_val = Cell(
+                    f"{final_row_val:.2f}",
+                    Adjust.RIGHT,
+                    raw_value=final_row_val,
+                    metric=metric,
+                )
                 table[-1].append(row_val)
-                # XXX: This assums that each "planner" has the same number of "metrics".
+                # XXX: This assumes that each "planner" has the same number of "metrics".
                 if j % col_modulo < col_modulo - 1:
                     table[-1].append(Sep.SIMPLE)
                 else:
@@ -495,14 +519,14 @@ class TableTerminalWritter(Writter):
             table.append(Sep.DOUBLE)
 
         # Set the best and worst cells per row.
-        # XXX: This assums that each "planner" has the same number of "metrics".
+        # XXX: This assumes that each "planner" has the same number of "metrics".
         if auto_best_row or auto_worst_row:
             for line in table.lines:
                 line_values: List[List[float]] = [[] for _ in range(col_modulo)]
                 metrics: List[Optional[Metric]] = [None for _ in range(col_modulo)]
                 for j, cell in enumerate(line.cells):
-                    if cell.is_float:
-                        line_values[j % col_modulo].append(float(cell.value))
+                    if cell.raw_value is not None and cell.metric is not None:
+                        line_values[j % col_modulo].append(cell.raw_value)
                         if metrics[j % col_modulo] is None:
                             metrics[j % col_modulo] = cell.metric
                         elif metrics[j % col_modulo] != cell.metric:
@@ -517,11 +541,11 @@ class TableTerminalWritter(Writter):
                     best.append(sorted_vals[-1])
                     worst.append(sorted_vals[0])
                 for j, cell in enumerate(line.cells):
-                    if cell.is_float:
+                    if cell.raw_value is not None and cell.metric is not None:
                         if auto_best_row:
-                            cell.is_best = float(cell.value) == best[j % col_modulo]
+                            cell.is_best = cell.raw_value == best[j % col_modulo]
                         if auto_worst_row:
-                            cell.is_worst = float(cell.value) == worst[j % col_modulo]
+                            cell.is_worst = cell.raw_value == worst[j % col_modulo]
 
         # Add the padding to the cells.
         for line in table.lines:
@@ -599,8 +623,11 @@ class TableTerminalWritter(Writter):
         self.line(f"\\{self._latex_font_size}")
         self.line(f"\\renewcommand{{\\arraystretch}}{{{self._latex_array_stretch}}}")
         self.line(f"\\def\\hs{{\\hspace{{{self._latex_horizontal_space}cm}}}}")
+        if self._colored:
+            self.line("\\definecolor{best_color}{HTML}{137b19}")
+            self.line("\\definecolor{worst_color}{HTML}{dc3545}")
         num_col = max(col_length) + 1 + len([i for i in table[-2] if i is Sep.DOUBLE])
-        self.line("\\begin{tabular}{" + "@{\\hs}c" * num_col + "@{}}")
+        self.line("\\begin{tabular}{" + "@{\\hs}r" * num_col + "@{}}")
         self.line("\\toprule")
 
         num_row_headers = len(row_headers[-1][-1])
@@ -608,7 +635,7 @@ class TableTerminalWritter(Writter):
             line, sep = table[line_idx], table[line_idx + 1]
             for item_idx, item in enumerate(line):
                 if item_idx not in [0, len(line) - 1]:
-                    self.write(item.fmt(self._latex))
+                    self.write(item.fmt(self._latex, self._colored))
             if sep is Sep.DOUBLE:
                 if line_idx // 2 == len(col_headers) - 1:
                     self.line("\\\\\\midrule")
@@ -655,7 +682,7 @@ class TableTerminalWritter(Writter):
             line, sep = table[line_idx], table[line_idx - 1]
             self.horizontal_separator(prev_line, line, col_length, sep)
             for item in line:
-                self.write(item.fmt(self._latex))
+                self.write(item.fmt(self._latex, self._colored))
             prev_line = line
         self.horizontal_separator(prev_line, None, col_length, table[-1])
 
