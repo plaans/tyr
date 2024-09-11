@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.20.2](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.20.1...v1.20.2) (2024-09-11)
+
+
+### Bug Fixes
+
+* **domains:** drone ([0c81728](https://gitlab.laas.fr/rgodet1/tyr/commit/0c817282415fb1210630f3045b16acecc4a6777b))
+* **paths:** use absolute path for logs and db ([67ee157](https://gitlab.laas.fr/rgodet1/tyr/commit/67ee1576f291c6e817904d10dd5887afad55af2c))
+* **table:** auto_best/worst variable getting ([20cff34](https://gitlab.laas.fr/rgodet1/tyr/commit/20cff342ec6d559da84480f0b7662a5ad7cd539a))
+* tests on paths ([fb563f0](https://gitlab.laas.fr/rgodet1/tyr/commit/fb563f0c68979f4de688e49f2d3857df3bea2209))
+
 ## [1.20.1](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.20.0...v1.20.1) (2024-08-05)
 
 
