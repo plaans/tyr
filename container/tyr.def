@@ -12,7 +12,7 @@ From: python:3.12-slim
 
 %post
     # Remove example configuration files
-    ls -d src/tyr/configuration/* | grep yaml | grep -v example | xargs -r rm
+    ls -d src/tyr/configuration/* | grep yaml | grep example | xargs -r rm
 
     # Install Apptainer (Apptainer-ception !)
     apt update && apt install -y wget
