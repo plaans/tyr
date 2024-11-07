@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.20.3](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.20.2...v1.20.3) (2024-11-07)
+
+
+### Bug Fixes
+
+* **apptainer:** removal of example configuration files ([d8ad21d](https://gitlab.laas.fr/rgodet1/tyr/commit/d8ad21d2926eae1e93ef311430c1e071e56afca3))
+* **slurm:** usage of nodes ([9ae61c2](https://gitlab.laas.fr/rgodet1/tyr/commit/9ae61c257cbcecbd117b91077eb1a0d517cd244b))
+
 ## [1.20.2](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.20.1...v1.20.2) (2024-09-11)
 
 
