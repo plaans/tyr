@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [1.21.0-dev.1](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.20.3...v1.21.0-dev.1) (2024-11-07)
+
+
+### Bug Fixes
+
+* **config:** convert str to path when getting config file ([e3650e2](https://gitlab.laas.fr/rgodet1/tyr/commit/e3650e26c349e8f4b4097c04962d2d11391b6d67))
+
+
+### Features
+
+* **cli:** add a Virtual Best Planner analysis ([1ef0aec](https://gitlab.laas.fr/rgodet1/tyr/commit/1ef0aec2485c88ceda214a2b6cda608c55292abd))
+
 ## [1.20.3](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.20.2...v1.20.3) (2024-11-07)
 
 
