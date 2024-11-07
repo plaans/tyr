@@ -1,0 +1,904 @@
+from collections import defaultdict
+from dataclasses import dataclass
+from enum import Enum, auto
+from pathlib import Path
+from typing import Dict, Generator, List, Optional, Set, TextIO, Tuple, Union
+
+from tyr.cli.collector import CollectionResult
+from tyr.cli.writter import Writter
+from tyr.configuration.loader import load_config
+from tyr.metrics.metric import Metric
+from tyr.planners.model.config import SolveConfig
+from tyr.planners.model.planner import Planner
+from tyr.planners.model.result import PlannerResult
+from tyr.problems.model.domain import AbstractDomain
+from tyr.problems.model.instance import ProblemInstance
+
+
+class Adjust(Enum):
+    """Enumeration of the possible horizontal adjustments for a cell value."""
+
+    CENTER = auto()
+    LEFT = auto()
+    RIGHT = auto()
+
+
+class Sep(Enum):
+    """Enumeration of the possible separators for a table."""
+
+    SIMPLE = auto()
+    DOUBLE = auto()
+
+    def fmt(self, latex: bool, _: bool) -> str:
+        """Returns the string representation of the separator."""
+        if self is Sep.SIMPLE:
+            return "&" if latex else "│"
+        if self is Sep.DOUBLE:
+            return "& &" if latex else "║"
+        raise NotImplementedError(f"{self} is not supported to print a separator")
+
+    def __str__(self) -> str:
+        return self.fmt(False, False)
+
+
+@dataclass
+class Cell:  # pylint: disable = too-many-instance-attributes
+    """Data class representing a cell in a table."""
+
+    value: str
+    adjust: Adjust
+    h_span: int = 1
+    v_span: int = 1
+    length: int = -1
+    is_best: bool = False
+    is_worst: bool = False
+    raw_value: Optional[float] = None
+    metric: Optional[Metric] = None
+
+    def __post_init__(self):
+        if self.length == -1:
+            self.length = len(self.value)
+
+    def fmt(self, latex: bool, colored: bool) -> str:
+        """Returns the string representation of the cell."""
+        if latex:
+            a = (
+                "c"
+                if self.adjust == Adjust.CENTER
+                else "l"
+                if self.adjust == Adjust.LEFT
+                else "r"
+            )
+            val = self.value.strip()
+            if colored:
+                if self.is_best:
+                    val = f"{{\\color{{best_color}} {val}}}"
+                elif self.is_worst:
+                    val = f"\\textbf{{\\color{{worst_color}} {val}}}"
+            if self.is_best:
+                val = f"\\textbf{{{val}}}"
+            if self.h_span == 1 and a == "r":
+                return f"{{{val}}}"
+            return f"\\multicolumn{{{self.h_span}}}{{{a}}}{{{val}}}"
+
+        val = (
+            self.value.center(self.length)
+            if self.adjust == Adjust.CENTER
+            else self.value.ljust(self.length)
+            if self.adjust == Adjust.LEFT
+            else self.value.rjust(self.length)
+        )
+        if colored:
+            if self.is_best:
+                val = f"\033[32m{val}\033[0m"
+            elif self.is_worst:
+                val = f"\033[1m\033[31m{val}\033[0m"
+        if self.is_best:
+            val = f"\033[1m{val}\033[0m"
+        return val
+
+    def __str__(self) -> str:
+        return self.fmt(False, False)
+
+
+@dataclass
+class CellRow:
+    """Data class representing a row in a table."""
+
+    row: List[Union[Cell, Sep]]
+
+    @property
+    def cells(self) -> Generator[Cell, None, None]:
+        """Yields the cells in the row."""
+        yield from (cell for cell in self.row if isinstance(cell, Cell))
+
+    def append(self, item: Union[Cell, Sep]):
+        """Appends an item to the row."""
+        self.row.append(item)
+
+    def pop(self):
+        """Pops the last item from the row."""
+        self.row.pop()
+
+    def column_of(self, cell: Cell):
+        """Returns the column of a cell in the row."""
+        col = 0
+        for item in self.cells:
+            if item is cell:
+                return col
+            col += item.h_span
+        raise ValueError(f"{cell} is not in the row.")
+
+    def index(self, item: Union[Cell, Sep], start: int = 0):
+        """Returns the index of an item in the row."""
+        return self.row.index(item, start)
+
+    @property
+    def num_columns(self) -> int:
+        """Returns the number of columns in the row."""
+        return sum(cell.h_span for cell in self.cells)
+
+    def __iter__(self):
+        return self.row.__iter__()
+
+    def __getitem__(self, idx):
+        return self.row[idx]
+
+    def __len__(self):
+        return len(self.row)
+
+
+@dataclass
+class CellTable:
+    """Data class representing a table of cells."""
+
+    rows: List[Union[CellRow, Sep]]
+
+    @property
+    def lines(self) -> Generator[CellRow, None, None]:
+        """Yields the rows in the table."""
+        yield from (line for line in self.rows if isinstance(line, CellRow))
+
+    def append(self, item: Union[CellRow, Sep]):
+        """Appends an item to the table."""
+        self.rows.append(item)
+
+    def pop(self):
+        """Pops the last item from the table."""
+        self.rows.pop()
+
+    def __iter__(self):
+        return self.rows.__iter__()
+
+    def __getitem__(self, idx):
+        return self.rows[idx]
+
+    def __len__(self):
+        return len(self.rows)
+
+
+# pylint: disable = too-many-instance-attributes
+class VbpTerminalWritter(Writter):
+    """Terminal writter for the analysis command."""
+
+    # pylint: disable = too-many-arguments, too-many-positional-arguments
+    def __init__(
+        self,
+        solve_config: SolveConfig,
+        out: Union[Optional[TextIO], List[TextIO]] = None,
+        verbosity: int = 0,
+        config: Optional[Path] = None,
+        colored: bool = False,
+        latex: bool = False,
+        latex_array_stretch: float = 1.2,
+        latex_caption: str = "",
+        latex_font_size: str = "footnotesize",
+        latex_horizontal_space: float = 0.35,
+        latex_pos: str = "htb",
+        latex_star: bool = False,
+    ) -> None:
+        super().__init__(solve_config, out, verbosity, config)
+        self._results: List[List[PlannerResult]] = []
+        self._groups: List[Tuple[Planner, ...]] = []
+        self._problems: List[ProblemInstance] = []
+        self._metrics: List[Metric] = []
+        self._colored = colored
+        self._latex = latex
+        self._latex_array_stretch = latex_array_stretch
+        self._latex_caption = latex_caption
+        self._latex_font_size = latex_font_size
+        self._latex_horizontal_space = latex_horizontal_space
+        self._latex_pos = latex_pos
+        self._latex_star = latex_star
+
+    # =============================== Manipulation =============================== #
+
+    def set_results(self, results: List[List[PlannerResult]]):
+        """Modifies the stored results.
+
+        Args:
+            results (List[Optional[PlannerResult]]): The results to store.
+        """
+        self._results = [PlannerResult.merge_all(res) for res in results]
+
+        if not self.quiet:
+            for i, group in enumerate(self._results):
+                self.write(f"Group {i + 1}: ", bold=True)
+                total = len(group)
+                msg = f"collected {total} result" + ("" if total <= 1 else "s")
+                self.line(msg, bold=True)
+
+    # ================================== Report ================================== #
+
+    def report_collect(
+        self,
+        planner_groups: List[CollectionResult[Planner]],
+        problems: CollectionResult[ProblemInstance],
+        metrics: CollectionResult[Metric],
+    ) -> None:
+        """Prints a report about the collection of planners and problems.
+
+        Args:
+            planner_groups (List[CollectionResult[Planner]]): The collection result on groups.
+            problems (CollectionResult[ProblemInstance]): The collection result on problems.
+            metrics (CollectionResult[Metric]): The collection result on metrics.
+        """
+        self.rewrite("")
+        for i, group in enumerate(planner_groups):
+            self.write(f"Group {i + 1}: ", bold=True)
+            self.report_collected(group, "planner")
+        self.report_collected(problems, "problem")
+        self.report_collected(metrics, "metric")
+
+        self._groups = [
+            tuple(sorted(group.selected, key=lambda p: p.name))
+            for group in planner_groups
+        ]
+        self._problems = sorted(problems.selected, key=lambda p: p.name)
+        self._metrics = sorted(metrics.selected, key=lambda m: m.name)
+
+    # ================================== Session ================================= #
+
+    def session_name(self) -> str:
+        return "table"
+
+    # ================================== Analyse ================================= #
+
+    # pylint: disable = too-many-branches, too-many-locals, eval-used
+    # pylint: disable = too-many-statements, too-many-nested-blocks, fixme
+    def analyse(self) -> None:
+        """Prints a table of metrics based on results."""
+
+        # Get the vbp configuration from the configuration file.
+        conf = load_config("", self._config).get("vbp", {}) or {}
+        default_ordering = "lambda x: (x == ' ', str(x))"
+        conf_col_headers = conf.get("column_headers", [])
+        if not conf_col_headers:
+            conf_col_headers = [
+                {"mapping": "lambda d, gi, g, m: f'Group {gi + 1}'"},
+                {"mapping": "lambda d, gi, g, m: m.abbrev()"},
+            ]
+        conf_row_headers = conf.get("row_headers", [])
+        if not conf_row_headers:
+            conf_row_headers = [
+                {"mapping": "lambda d, gi, g, m: d.name"},
+            ]
+        post_process_value = conf.get(
+            "post_process_value", "lambda d, p, m, vr, vs: vs"
+        )
+        final_column = conf.get("final_column", None)
+        final_row = conf.get("final_row", None)
+        auto_best_row = conf.get("auto_best_row", False)
+        auto_worst_row = conf.get("auto_worst_row", False)
+
+        # Get all domains.
+        domains = {p.domain for p in self._problems}
+
+        # Get all headers.
+        raw_col_headers: Dict[
+            str,
+            Union[Dict, Set[Tuple[AbstractDomain, int, Tuple[Planner, ...], Metric]]],
+        ] = {}
+        raw_row_headers: Dict[
+            str,
+            Union[Dict, Set[Tuple[AbstractDomain, int, Tuple[Planner, ...], Metric]]],
+        ] = {}
+        for d in domains:
+            if d is None:
+                continue
+            for gi, g in enumerate(self._groups):
+                for m in self._metrics:
+                    crt_col_header = raw_col_headers
+                    for i, conf_header in enumerate(conf_col_headers):
+                        col_header = eval(conf_header["mapping"])(  # nosec: B307
+                            d, gi, g, m
+                        )
+                        if col_header not in crt_col_header:
+                            if i == len(conf_col_headers) - 1:
+                                crt_col_header[col_header] = {(d, gi, g, m)}
+                            else:
+                                crt_col_header[col_header] = {}
+                        elif i == len(conf_col_headers) - 1:
+                            crt_col_header[col_header].add((d, gi, g, m))  # type: ignore
+                        crt_col_header = crt_col_header[col_header]  # type: ignore
+
+                    crt_row_header = raw_row_headers
+                    for i, conf_header in enumerate(conf_row_headers):
+                        col_header = eval(conf_header["mapping"])(  # nosec: B307
+                            d, gi, g, m
+                        )
+                        if col_header not in crt_row_header:
+                            if i == len(conf_row_headers) - 1:
+                                crt_row_header[col_header] = {(d, gi, g, m)}
+                            else:
+                                crt_row_header[col_header] = {}
+                        elif i == len(conf_row_headers) - 1:
+                            crt_row_header[col_header].add((d, gi, g, m))  # type: ignore
+                        crt_row_header = crt_row_header[col_header]  # type: ignore
+
+        # Order the headers.
+        def get_lvl(
+            d: Union[Dict, Set],
+            lvl: int,
+            conf: List,
+            crt_lvl: int = 0,
+        ) -> Generator[Tuple[str, ...], None, None]:
+            if isinstance(d, set):
+                return
+            ordering = conf[crt_lvl].get("ordering", default_ordering)
+            for key in sorted(d.keys(), key=eval(ordering)):  # nosec: B307
+                if lvl == 0:
+                    yield (key,)
+                else:
+                    for val in get_lvl(d[key], lvl - 1, conf, crt_lvl + 1):
+                        yield (key, *val)
+
+        flat_col_headers = [
+            list(get_lvl(raw_col_headers, i, conf_col_headers))
+            for i in range(len(conf_col_headers))
+        ]
+        flat_row_headers = [
+            list(get_lvl(raw_row_headers, i, conf_row_headers))
+            for i in range(len(conf_row_headers))
+        ]
+
+        # Create the table.
+        table = CellTable([Sep.DOUBLE])
+
+        # Create the column headers.
+        for i, col_headers in enumerate(flat_col_headers):
+            v_span = len(flat_col_headers) * (1 if i == 0 else -1)
+            head_empty = Cell("", Adjust.CENTER, len(flat_row_headers), v_span)
+            tail_empty = Cell("", Adjust.CENTER, v_span=v_span)
+            table.append(CellRow([Sep.DOUBLE, head_empty, Sep.DOUBLE]))
+            # XXX: This assumes that each "planner" has the same number of "metrics".
+            col_modulo = int(len(col_headers) / len(flat_col_headers[-2]))
+            for j, col_header in enumerate(col_headers):
+                span = sum(
+                    1
+                    for col_subheader in flat_col_headers[-1]
+                    if all(
+                        col_header[k] == col_subheader[k]
+                        for k in range(len(col_header))
+                    )
+                )
+                table[-1].append(Cell(col_header[-1], Adjust.CENTER, span))
+                if span == 1 and j % col_modulo < col_modulo - 1:
+                    table[-1].append(Sep.SIMPLE)
+                else:
+                    table[-1].append(Sep.DOUBLE)
+            if final_column is not None:
+                if i == 0:
+                    name = final_column["name"]
+                    table[-1].append(Cell(name, Adjust.CENTER, v_span=v_span))
+                else:
+                    table[-1].append(tail_empty)
+                table[-1].append(Sep.DOUBLE)
+            table.append(Sep.DOUBLE)
+
+        # Create the cells.
+        col_values: List[List[float]] = [[] for _ in range(len(flat_col_headers[-1]))]
+        col_metrics: List[List[Metric]] = [[] for _ in range(len(flat_col_headers[-1]))]
+        row_values: List[List[float]] = [[] for _ in range(len(flat_row_headers[-1]))]
+        row_metrics: List[List[Metric]] = [[] for _ in range(len(flat_row_headers[-1]))]
+        for i, row_header in enumerate(flat_row_headers[-1]):
+            table.append(CellRow([Sep.DOUBLE]))
+            for k, v in enumerate(row_header):
+                is_first_header = (
+                    i == 0
+                    or flat_row_headers[-1][i - 1][: k + 1] != row_header[: k + 1]
+                )
+                to_print = v if is_first_header else ""
+                v_span, j = 0, 0
+                while (
+                    i + j < len(flat_row_headers[-1])
+                    and flat_row_headers[-1][i + j][: k + 1] == row_header[: k + 1]
+                ):
+                    v_span += 1
+                    j += 1
+                v_span = v_span * (1 if to_print else -1)
+                table[-1].append(Cell(to_print, Adjust.RIGHT, v_span=v_span))
+                table[-1].append(Sep.SIMPLE)
+            table[-1].pop()
+            table[-1].append(Sep.DOUBLE)
+
+            for j, col_header in enumerate(flat_col_headers[-1]):
+                crt_col_header: Set[Tuple] = raw_col_headers  # type: ignore
+                for v in col_header:
+                    crt_col_header = crt_col_header[v]  # type: ignore
+
+                crt_row_header: Set[Tuple] = raw_row_headers  # type: ignore
+                for v in row_header:
+                    crt_row_header = crt_row_header[v]  # type: ignore
+
+                candidates = crt_col_header.intersection(crt_row_header)  # type: ignore
+                # Filter the candidates with unsupported results.
+                candidates = {
+                    candidate
+                    for candidate in candidates
+                    for result in self._results[candidate[1]]
+                    if result.problem.domain == candidate[0]
+                    and result.planner_name in [p.name for p in candidate[2]]
+                }
+
+                if len(candidates) > 1:
+                    raise ValueError(
+                        f"Multiple candidates for {col_header} in {row_header}: {candidates}"
+                    )
+                if len(candidates) == 0:
+                    value = "x"
+                else:
+                    d, gi, g, m = candidates.pop()  # type: ignore
+
+                    raw_value = float("inf") if m.is_reversed_order() else float("-inf")
+                    value = ""
+                    for p in g:
+                        results = [
+                            result
+                            for result in self._results[gi]
+                            if result.problem.domain == d
+                            and result.planner_name == p.name
+                        ]
+                        p_raw_val = m.evaluate_raw(
+                            results, [r for rg in self._results for r in rg]
+                        )
+                        if m.is_reversed_order() and p_raw_val < raw_value:
+                            raw_value = p_raw_val
+                            value = eval(post_process_value)(  # nosec: B307
+                                d,
+                                p,
+                                m,
+                                raw_value,
+                                m.evaluate(
+                                    results, [r for rg in self._results for r in rg]
+                                ),
+                            )
+                        elif not m.is_reversed_order() and p_raw_val > raw_value:
+                            raw_value = p_raw_val
+                            value = eval(post_process_value)(  # nosec: B307
+                                d,
+                                p,
+                                m,
+                                raw_value,
+                                m.evaluate(
+                                    results, [r for rg in self._results for r in rg]
+                                ),
+                            )
+                    row_values[i].append(raw_value)
+                    row_metrics[i].append(m)
+                    col_values[j].append(raw_value)
+                    col_metrics[j].append(m)
+
+                table[-1].append(
+                    Cell(value, Adjust.RIGHT, raw_value=raw_value, metric=m)
+                )
+                # XXX: This assumes that each "planner" has the same number of "metrics".
+                if j % col_modulo < col_modulo - 1:
+                    table[-1].append(Sep.SIMPLE)
+                else:
+                    table[-1].append(Sep.DOUBLE)
+            if final_column is not None:
+                metric = (
+                    None
+                    if set(row_metrics[i]) != {row_metrics[i][0]}
+                    else row_metrics[i][0]
+                )
+                eval_value = eval(final_column["value"])  # nosec: B307
+                final_col_val = eval_value(metric, row_values[i])
+                col_val = Cell(
+                    f"{final_col_val:.2f}",
+                    Adjust.RIGHT,
+                    raw_value=final_col_val,
+                    metric=metric,
+                )
+                table[-1].append(col_val)
+                table[-1].append(Sep.DOUBLE)
+            is_last_header = i == len(flat_row_headers[-1]) - 1 or any(
+                flat_row_headers[-1][i + 1][k] != row_header[k]
+                for k in range(len(row_header) - 1)
+            )
+            if is_last_header:
+                table.append(Sep.DOUBLE)
+            else:
+                table.append(Sep.SIMPLE)
+        table.pop()
+        table.append(Sep.DOUBLE)
+        if final_row is not None:
+            table.append(CellRow([Sep.DOUBLE]))
+            name = final_row["name"]
+            table[-1].append(Cell(name, Adjust.RIGHT, len(flat_row_headers[-1][-1])))
+            table[-1].append(Sep.DOUBLE)
+            for j, col_vals in enumerate(col_values):
+                metric = (
+                    None
+                    if set(col_metrics[j]) != {col_metrics[j][0]}
+                    else col_metrics[j][0]
+                )
+                eval_value = eval(final_row["value"])  # nosec: B307
+                final_row_val = eval_value(metric, col_vals)
+                row_val = Cell(
+                    f"{final_row_val:.2f}",
+                    Adjust.RIGHT,
+                    raw_value=final_row_val,
+                    metric=metric,
+                )
+                table[-1].append(row_val)
+                # XXX: This assumes that each "planner" has the same number of "metrics".
+                if j % col_modulo < col_modulo - 1:
+                    table[-1].append(Sep.SIMPLE)
+                else:
+                    table[-1].append(Sep.DOUBLE)
+            if final_column is not None:
+                table[-1].append(Cell("", Adjust.CENTER))
+                table[-1].append(Sep.DOUBLE)
+            table.append(Sep.DOUBLE)
+
+        # Set the best and worst cells per row.
+        # XXX: This assumes that each "planner" has the same number of "metrics".
+        if auto_best_row or auto_worst_row:
+            for line in table.lines:
+                line_values: List[List[float]] = [[] for _ in range(col_modulo)]
+                metrics: List[Optional[Metric]] = [None for _ in range(col_modulo)]
+                for j, cell in enumerate(line.cells):
+                    if cell.raw_value is not None and cell.metric is not None:
+                        line_values[j % col_modulo].append(cell.raw_value)
+                        if metrics[j % col_modulo] is None:
+                            metrics[j % col_modulo] = cell.metric
+                        elif metrics[j % col_modulo] != cell.metric:
+                            raise ValueError("The metrics are not the same.")
+                if all(len(values) == 0 for values in line_values):
+                    continue
+                best, worst = [], []
+                for values, metric in zip(line_values, metrics):
+                    if metric is None:
+                        raise ValueError("The metric is not defined.")
+                    sorted_vals = sorted(values, reverse=metric.is_reversed_order())
+                    best.append(sorted_vals[-1])
+                    worst.append(sorted_vals[0])
+                for j, cell in enumerate(line.cells):
+                    if cell.raw_value is not None and cell.metric is not None:
+                        if auto_best_row:
+                            cell.is_best = cell.raw_value == best[j % col_modulo]
+                        if auto_worst_row:
+                            cell.is_worst = cell.raw_value == worst[j % col_modulo]
+
+        # Add the padding to the cells.
+        for line in table.lines:
+            for cell in line.cells:
+                cell.value = f" {cell.value} "
+                cell.length += 2
+
+        # Compute the length of each column.
+        col_length: Dict[int, int] = defaultdict(lambda: 0)
+        max_span = max(cell.h_span for line in table.lines for cell in line.cells)
+        for span in range(1, max_span + 1):
+            for line in table.lines:
+                for cell in line.cells:
+                    if cell.h_span != span:
+                        continue
+                    length = sum(
+                        col_length[line.column_of(cell) + i] for i in range(span)
+                    ) + (span - 1)
+                    delta = cell.length - length
+                    col_idx = 0
+                    while delta > 0:
+                        col_length[line.column_of(cell) + (col_idx % span)] += 1
+                        delta -= 1
+                        col_idx += 1
+
+        # Update the length of each cell.
+        for line in table.lines:
+            for cell in line.cells:
+                cell.length = sum(
+                    col_length[line.column_of(cell) + i] for i in range(cell.h_span)
+                ) + (cell.h_span - 1)
+
+        # Update the horizontal span of cells for LaTeX.
+        if self._latex:
+            lines = list(table.lines)
+            for i, line in enumerate(lines):
+                if i == len(lines) - 1:
+                    break
+                next_line = lines[i + 1]
+                for cell in line.cells:
+                    cell_start = line.column_of(cell)
+                    cell_end = cell_start + cell.h_span
+                    is_sub_item = False
+                    for item in next_line:
+                        if isinstance(item, Cell):
+                            item_start = next_line.column_of(item)
+                            item_end = item_start + item.h_span
+                            if cell_start <= item_start:
+                                is_sub_item = True
+                            if item_end >= cell_end:
+                                break
+                        else:
+                            if item is Sep.DOUBLE and is_sub_item:
+                                cell.h_span += 1
+
+        # Print the table.
+        if self._latex:
+            self.latex_print(table, col_length, flat_col_headers, flat_row_headers)
+        else:
+            self.term_print(table, col_length)
+
+    # ================================== Format ================================== #
+
+    def latex_print(
+        self,
+        table: CellTable,
+        col_length: Dict[int, int],
+        col_headers: List[List[Tuple]],
+        row_headers: List[List[Tuple]],
+    ) -> None:
+        """Prints a table of cells in LaTeX."""
+        env = "table*" if self._latex_star else "table"
+        self.line(f"\\begin{{{env}}}[{self._latex_pos}]")
+        self.line("\\centering")
+        self.line(f"\\{self._latex_font_size}")
+        self.line(f"\\renewcommand{{\\arraystretch}}{{{self._latex_array_stretch}}}")
+        self.line(f"\\def\\hs{{\\hspace{{{self._latex_horizontal_space}cm}}}}")
+        if self._colored:
+            self.line("\\definecolor{best_color}{HTML}{137b19}")
+            self.line("\\definecolor{worst_color}{HTML}{dc3545}")
+        num_col = max(col_length) + 1 + len([i for i in table[-2] if i is Sep.DOUBLE])
+        self.line("\\begin{tabular}{" + "@{\\hs}r" * num_col + "@{}}")
+        self.line("\\toprule")
+
+        num_row_headers = len(row_headers[-1][-1])
+        for line_idx in range(1, len(table) - 1, 2):
+            line, sep = table[line_idx], table[line_idx + 1]
+            for item_idx, item in enumerate(line):
+                if item_idx not in [0, len(line) - 1]:
+                    self.write(item.fmt(self._latex, self._colored))
+            if sep is Sep.DOUBLE:
+                if line_idx // 2 == len(col_headers) - 1:
+                    self.line("\\\\\\midrule")
+                elif line_idx // 2 < len(col_headers) - 1:
+                    self.write("\\\\")
+                    start = line.index(Sep.DOUBLE, num_row_headers) // 2 + 2
+                    crt_col = 0
+                    for item_idx, item in enumerate(line):
+                        if item_idx == 0:
+                            continue
+                        if isinstance(item, Cell):
+                            crt_col += item.h_span
+                            continue
+                        if item is Sep.DOUBLE:
+                            crt_col += 1
+                        if crt_col < start or item is not Sep.DOUBLE:
+                            continue
+                        if crt_col - 1 >= start:
+                            self.write("\\cmidrule{" + f"{start}-{crt_col-1}" + "}")
+                        start = crt_col + 1
+                    self.line()
+                elif line_idx < len(table) - 2:
+                    next_line: CellRow = table[line_idx + 2]
+                    start = 1
+                    for cell in next_line.cells:
+                        if cell.value.strip() == "":
+                            start += 1
+                        else:
+                            break
+                    self.line(f"\\\\\\cdashline{{{start}-{crt_col-1}}}")
+            else:
+                self.line("\\\\")
+        self.line("\\\\\\bottomrule")
+
+        self.line("\\end{tabular}")
+        self.line(f"\\caption{{{self._latex_caption}}}")
+        self.line("\\label{tab:metrics}")
+        self.line(f"\\end{{{env}}}")
+
+    def term_print(self, table: CellTable, col_length: Dict[int, int]) -> None:
+        """Prints a table of cells in the terminal."""
+        prev_line = None
+        for line_idx in range(1, len(table), 2):
+            line, sep = table[line_idx], table[line_idx - 1]
+            self.horizontal_separator(prev_line, line, col_length, sep)
+            for item in line:
+                self.write(item.fmt(self._latex, self._colored))
+            prev_line = line
+        self.horizontal_separator(prev_line, None, col_length, table[-1])
+
+    # ================================ Separators ================================ #
+
+    def horizontal_separator(
+        self,
+        prev_line: Optional[CellRow],
+        next_line: Optional[CellRow],
+        col_length: Dict[int, int],
+        sep: Sep,
+    ) -> None:
+        """
+        Prints a horizontal separator for the table of metrics.
+
+        Args:
+            prev_line (Optional[CellRow]): The line above the separator.
+            next_line (Optional[CellRow]): The line bellow the separator.
+            col_length (Dict[int, int]): The length of each column.
+            sep (Sep): The type of separator to print.
+        """
+
+        if sep not in {Sep.SIMPLE, Sep.DOUBLE}:
+            raise ValueError(f"Unsupported separator type: {sep}")
+
+        if prev_line is None:
+            if next_line is None:
+                raise ValueError("Cannot print a separator between two empty lines.")
+            self.horizontal_separator_top(next_line, sep)
+
+        elif next_line is None:
+            if prev_line is None:
+                raise ValueError("Cannot print a separator between two empty lines.")
+            self.horizontal_separator_bottom(prev_line, sep)
+
+        else:
+            if next_line.num_columns != prev_line.num_columns:
+                raise ValueError(
+                    "The two lines must have the same number of columns."
+                    + f" {next_line.num_columns} != {prev_line.num_columns}"
+                )
+            self.horizontal_separator_middle(prev_line, next_line, col_length, sep)
+
+        self.line()
+
+    def horizontal_separator_top(self, next_line: CellRow, line_sep: Sep) -> None:
+        """Prints the top horizontal separator for the table of metrics."""
+        for cell_idx in range(1, len(next_line), 2):
+            cell, sep = next_line[cell_idx], next_line[cell_idx - 1]
+            if cell_idx == 1:
+                if sep is Sep.SIMPLE:
+                    self.write("┌" if line_sep is Sep.SIMPLE else "╒")
+                else:
+                    self.write("╓" if line_sep is Sep.SIMPLE else "╔")
+            else:
+                if sep is Sep.SIMPLE:
+                    self.write("┬" if line_sep is Sep.SIMPLE else "╤")
+                else:
+                    self.write("╥" if line_sep is Sep.SIMPLE else "╦")
+            self.write(("─" if line_sep is Sep.SIMPLE else "═") * cell.length)
+        if next_line[-1] is Sep.SIMPLE:
+            self.write("┐" if line_sep is Sep.SIMPLE else "╕")
+        else:
+            self.write("╖" if line_sep is Sep.SIMPLE else "╗")
+
+    def horizontal_separator_bottom(self, prev_line: CellRow, line_sep: Sep) -> None:
+        """Prints the bottom horizontal separator for the table of metrics."""
+        self.line()
+        for cell_idx in range(1, len(prev_line), 2):
+            cell, sep = prev_line[cell_idx], prev_line[cell_idx - 1]
+            if cell_idx == 1:
+                if sep is Sep.SIMPLE:
+                    self.write("└" if line_sep is Sep.SIMPLE else "╘")
+                else:
+                    self.write("╙" if line_sep is Sep.SIMPLE else "╚")
+            else:
+                if sep is Sep.SIMPLE:
+                    self.write("┴" if line_sep is Sep.SIMPLE else "╧")
+                else:
+                    self.write("╨" if line_sep is Sep.SIMPLE else "╩")
+            self.write(("─" if line_sep is Sep.SIMPLE else "═") * cell.length)
+        if prev_line[-1] is Sep.SIMPLE:
+            self.write("┘" if line_sep is Sep.SIMPLE else "╛")
+        else:
+            self.write("╜" if line_sep is Sep.SIMPLE else "╝")
+
+    def horizontal_separator_middle(
+        self,
+        prev_line: CellRow,
+        next_line: CellRow,
+        col_length: Dict[int, int],
+        line_sep: Sep,
+    ) -> None:
+        """Prints a middle horizontal separator for the table of metrics."""
+        if prev_line.num_columns != next_line.num_columns:
+            raise ValueError("The two lines must have the same number of columns.")
+        if prev_line[0] != next_line[0]:
+            raise ValueError("The two lines must start with the same separator.")
+
+        self.line()
+        if next_line[1].v_span < 0:
+            self.write(str(prev_line[0]))
+        else:
+            if prev_line[0] is Sep.SIMPLE:
+                self.write("├" if line_sep is Sep.SIMPLE else "╞")
+            else:
+                self.write("╟" if line_sep is Sep.SIMPLE else "╠")
+
+        prev_cell, prev_sep, prev_cell_idx = prev_line[1], prev_line[2], 1
+        next_cell, next_sep, next_cell_idx = next_line[1], next_line[2], 1
+        for c in sorted(col_length.keys()):
+            length = col_length[c]
+            end_prev_cell = prev_line.column_of(prev_cell) + prev_cell.h_span - 1 == c
+            end_next_cell = next_line.column_of(next_cell) + next_cell.h_span - 1 == c
+            self.write(
+                (
+                    " "
+                    if next_cell.v_span < 0
+                    else "─"
+                    if line_sep is Sep.SIMPLE
+                    else "═"
+                )
+                * length
+            )
+            if c == prev_line.num_columns - 1:
+                if prev_sep != next_sep:
+                    raise ValueError("The two lines must end with the same separator.")
+                if next_cell.v_span < 0:
+                    self.write(str(next_sep))
+                else:
+                    if prev_sep is Sep.SIMPLE:
+                        self.write("┤" if line_sep is Sep.SIMPLE else "╡")
+                    else:
+                        self.write("╢" if line_sep is Sep.SIMPLE else "╣")
+            elif end_prev_cell and end_next_cell:
+                if prev_sep != next_sep:
+                    raise ValueError("The two lines must have with the same separator.")
+                if next_cell.v_span < 0:
+                    if next_line[next_cell_idx + 2].v_span < 0:
+                        if prev_sep is Sep.SIMPLE:
+                            self.write("│")
+                        else:
+                            self.write("║")
+                    else:
+                        if prev_sep is Sep.SIMPLE:
+                            self.write("├" if line_sep is Sep.SIMPLE else "╞")
+                        else:
+                            self.write("╟" if line_sep is Sep.SIMPLE else "╠")
+                else:
+                    if prev_sep is Sep.SIMPLE:
+                        self.write("┼" if line_sep is Sep.SIMPLE else "╪")
+                    else:
+                        self.write("╫" if line_sep is Sep.SIMPLE else "╬")
+                prev_cell_idx += 2
+                prev_cell, prev_sep = prev_line[prev_cell_idx : prev_cell_idx + 2]
+                next_cell_idx += 2
+                next_cell, next_sep = next_line[next_cell_idx : next_cell_idx + 2]
+            elif end_prev_cell:
+                if prev_sep is Sep.SIMPLE:
+                    self.write("┴" if line_sep is Sep.SIMPLE else "╧")
+                else:
+                    self.write("╨" if line_sep is Sep.SIMPLE else "╩")
+                prev_cell_idx += 2
+                prev_cell, prev_sep = prev_line[prev_cell_idx : prev_cell_idx + 2]
+            elif end_next_cell:
+                if next_sep is Sep.SIMPLE:
+                    self.write("┬" if line_sep is Sep.SIMPLE else "╤")
+                else:
+                    self.write("╥" if line_sep is Sep.SIMPLE else "╦")
+                next_cell_idx += 2
+                next_cell, next_sep = next_line[next_cell_idx : next_cell_idx + 2]
+            else:
+                self.write(
+                    (
+                        " "
+                        if next_cell.v_span < 0
+                        else "─"
+                        if line_sep is Sep.SIMPLE
+                        else "═"
+                    )
+                )
+
+
+__all__ = ["VbpTerminalWritter"]

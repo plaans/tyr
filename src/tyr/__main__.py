@@ -18,6 +18,7 @@ from tyr import (  # type: ignore
 from tyr.__version__ import __version__
 from tyr.cli.plot.runner import run_plot
 from tyr.cli.slurm.runner import run_slurm
+from tyr.cli.vbp.runner import run_vbp
 from tyr.core.paths import TyrPaths
 
 # ============================================================================ #
@@ -54,6 +55,9 @@ DEFAULT_CONFIG = {
     "planner": "",
     "plotters": [],
     "planners": [],
+    "group1": [],
+    "group2": [],
+    "group3": [],
     "problem": "",
     "quiet": 0,
     "timeout": 5,
@@ -238,6 +242,15 @@ verbose_option = click.option(
     count=True,
     help="Increase verbosity.",
 )
+
+
+def planners_group_filter(x: int):
+    return click.option(
+        f"--group{x}",
+        type=str,
+        multiple=True,
+        help=f"A list of regex filters on planner names for group {x}.",
+    )
 
 
 # ============================================================================ #
@@ -777,6 +790,144 @@ def cli_table(
         conf["timeout"],
         conf["memout"],
         conf["planners"],
+        conf["domains"],
+        conf["metrics"],
+        conf["colored"],
+        conf["latex"],
+        conf["latex_array_stretch"],
+        conf["latex_caption"],
+        conf["latex_font_size"],
+        conf["latex_horizontal_space"],
+        conf["latex_pos"],
+        conf["latex_star"],
+    )
+
+
+# ============================================================================ #
+#                             Virtual Best Planner                             #
+# ============================================================================ #
+
+
+@cli.command(
+    "vbp",
+    help="Analyse the results stored in the database in a `Virtual Best Planner` approach.",
+)
+@verbose_option
+@quiet_option
+@out_option
+@logs_path_option
+@db_path_option
+@config_option
+@timeout_option
+@memout_option
+@planners_group_filter(1)
+@planners_group_filter(2)
+@planners_group_filter(3)
+@domains_filter
+@metrics_filter
+@click.option(
+    "--colored",
+    is_flag=True,
+    help="Whether to use colored output.",
+)
+@latex_option
+@click.option(
+    "--latex-array-stretch",
+    type=float,
+    help="Stretch the LaTeX table vertically. "
+    f"Default: {DEFAULT_CONFIG['latex_array_stretch']}",
+)
+@click.option(
+    "--latex-caption",
+    type=str,
+    help=f"Caption for the LaTeX table. Default: {DEFAULT_CONFIG['latex_caption']}",
+)
+@click.option(
+    "--latex-font-size",
+    type=str,
+    help="Font size for the LaTeX table. "
+    f"Default: {DEFAULT_CONFIG['latex_font_size']}",
+)
+@click.option(
+    "--latex-horizontal-space",
+    type=float,
+    help="Horizontal space between columns for the LaTeX table in cm. "
+    f"Default: {DEFAULT_CONFIG['latex_horizontal_space']}cm",
+)
+@click.option(
+    "--latex-pos",
+    type=str,
+    help=f"Position of the LaTeX table. Default: {DEFAULT_CONFIG['latex_pos']}",
+)
+@click.option(
+    "--latex-star",
+    is_flag=True,
+    help="Use a table* environment in LaTeX. Default: table.",
+)
+@pass_context
+def cli_vbp(
+    ctx: CliContext,
+    verbose: int,
+    quiet: int,
+    out,
+    logs_path: str,
+    db_path: str,
+    config,
+    timeout: int,
+    memout: int,
+    group1: List[str],
+    group2: List[str],
+    group3: List[str],
+    domains: List[str],
+    metrics: List[str],
+    latex: bool,
+    latex_array_stretch: float,
+    latex_caption: str,
+    colored: bool,
+    latex_font_size: str,
+    latex_horizontal_space: float,
+    latex_pos: str,
+    latex_star: bool,
+):
+    config = config or ctx.config
+    cli_config = {
+        "verbose": verbose,
+        "quiet": quiet,
+        "out": out,
+        "logs_path": logs_path,
+        "db_path": db_path,
+        "timeout": timeout,
+        "memout": memout,
+        "group1": group1,
+        "group2": group2,
+        "group3": group3,
+        "domains": domains,
+        "metrics": metrics,
+        "latex": latex,
+        "latex_array_stretch": latex_array_stretch,
+        "latex_caption": latex_caption,
+        "colored": colored,
+        "latex_font_size": latex_font_size,
+        "latex_horizontal_space": latex_horizontal_space,
+        "latex_pos": latex_pos,
+        "latex_star": latex_star,
+    }
+    conf = merge_configs(cli_config, yaml_config(config, "vbp"), DEFAULT_CONFIG)
+    update_context(
+        ctx,
+        conf["verbose"],
+        conf["quiet"],
+        conf["out"],
+        conf["logs_path"],
+        conf["db_path"],
+        config,
+    )
+
+    run_vbp(
+        ctx,
+        conf["timeout"],
+        conf["memout"],
+        [conf["group1"], conf["group2"], conf["group3"]],
         conf["domains"],
         conf["metrics"],
         conf["colored"],

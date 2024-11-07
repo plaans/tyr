@@ -315,3 +315,6 @@ solve *args: (tyr "solve" args)
 
 # Run the table command.
 table *args: (tyr "table" args)
+
+# Run the vbp command.
+vbp *args: (tyr "vbp" args)
