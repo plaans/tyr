@@ -414,7 +414,7 @@ class Planner:
         txt_path = self.get_log_file(problem, "problem", running_mode, "txt")
         txt_path.write_text(str(version))
 
-    def _solve_anytime(  # pylint: disable = too-many-arguments
+    def _solve_anytime(  # pylint: disable = too-many-arguments, too-many-positional-arguments
         self,
         planner: Engine,
         version: AbstractProblem,
@@ -435,7 +435,7 @@ class Planner:
         except Exception as error:  # pylint: disable=broad-exception-caught
             queue.put(error)
 
-    def _solve_oneshot(  # pylint: disable = too-many-arguments
+    def _solve_oneshot(  # pylint: disable = too-many-arguments, too-many-positional-arguments
         self,
         planner: Engine,
         version: AbstractProblem,
@@ -456,7 +456,7 @@ class Planner:
         except Exception as error:  # pylint: disable=broad-exception-caught
             queue.put(error)
 
-    # pylint: disable = too-many-arguments
+    # pylint: disable = too-many-arguments, too-many-positional-arguments
     def _handle_upf_result(
         self,
         upf_result: PlanGenerationResult,
@@ -519,7 +519,7 @@ class Planner:
 
         with open(logs, "r", encoding="utf-8") as log_file:
             for line in log_file:
-                if (res := callback(line)) is not None:
+                if (res := callback(line)) is not None:  # pylint: disable=not-callable
                     return res
         return None
 

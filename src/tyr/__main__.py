@@ -1,4 +1,5 @@
-# pylint: disable = missing-function-docstring, too-many-arguments, too-many-locals
+# pylint: disable = missing-function-docstring, too-many-arguments
+# pylint: disable = too-many-positional-arguments, too-many-locals
 
 from pathlib import Path
 from typing import List, Optional

@@ -67,7 +67,7 @@ class SolveTerminalWritter(Writter):
             self.line(msg, bold=True)
         return planner, problem
 
-    def report_file(  # pylint: disable=too-many-arguments
+    def report_file(  # pylint: disable=too-many-arguments, too-many-positional-arguments
         self,
         planner: Planner,
         result: PlannerResult,

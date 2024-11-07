@@ -64,7 +64,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
     error_message: str = ""
     from_database: bool = False
 
-    # pylint: disable = too-many-arguments
+    # pylint: disable = too-many-arguments, too-many-positional-arguments
     @staticmethod
     def from_upf(
         planner_name: str,
@@ -177,7 +177,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
         return list(merged.values())
 
     @staticmethod
-    def error(  # pylint: disable = too-many-arguments
+    def error(  # pylint: disable = too-many-arguments, too-many-positional-arguments
         problem: ProblemInstance,
         planner: "Planner",
         config: SolveConfig,

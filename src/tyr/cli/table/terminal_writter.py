@@ -181,7 +181,7 @@ class CellTable:
 class TableTerminalWritter(Writter):
     """Terminal writter for the analysis command."""
 
-    # pylint: disable = too-many-arguments
+    # pylint: disable = too-many-arguments, too-many-positional-arguments
     def __init__(
         self,
         solve_config: SolveConfig,

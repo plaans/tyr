@@ -8,7 +8,7 @@ from tyr.planners.model.config import RunningMode, SolveConfig
 from tyr.planners.model.result import PlannerResult, PlannerResultStatus
 
 
-# pylint: disable=too-many-arguments, too-many-locals
+# pylint: disable=too-many-arguments, too-many-positional-arguments, too-many-locals
 def run_table(
     ctx: CliContext,
     timeout: int,

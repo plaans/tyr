@@ -15,7 +15,7 @@ from tyr.problems.model.instance import ProblemInstance
 I = TypeVar("I")  # noqa: E741
 
 
-# pylint: disable = too-many-arguments
+# pylint: disable = too-many-arguments, too-many-positional-arguments
 def _solve(
     tw: BenchTerminalWritter,
     results: List[BenchResult],

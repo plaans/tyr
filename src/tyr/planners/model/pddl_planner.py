@@ -46,7 +46,8 @@ class TyrPDDLPlanner(PDDLAnytimePlanner):
     def _get_write_domain_options(self) -> Dict[str, bool]:
         return {}
 
-    # pylint: disable=too-many-arguments, too-many-locals, too-many-branches, too-many-statements
+    # pylint: disable=too-many-arguments, too-many-positional-arguments, too-many-locals
+    # pylint: disable=too-many-branches, too-many-statements
     def _solve(  # pragma: no cover # Copy of the original method with really small changes
         self,
         problem: AbstractProblem,

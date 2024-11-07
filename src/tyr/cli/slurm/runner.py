@@ -6,7 +6,7 @@ from tyr.cli.slurm.terminal_writter import SlurmTerminalWritter
 from tyr.planners.model.config import RunningMode, SolveConfig
 
 
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments, too-many-positional-arguments
 def run_slurm(
     ctx: CliContext,
     solve_config: SolveConfig,

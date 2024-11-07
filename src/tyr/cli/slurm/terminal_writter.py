@@ -76,12 +76,9 @@ class SlurmTerminalWritter(Writter):
         if user_mail:
             self.line("#SBATCH --mail-type=ALL")
             self.line(f"#SBATCH --mail-user={user_mail}")
+        self.line("#SBATCH --nodes=1")
         if nodelist:
-            self.line(f"#SBATCH --nodes=1")
             self.line(f"#SBATCH --nodelist={','.join(nodelist)}")
-        else:
-            # 5 is a total arbitrary number.
-            self.line(f"#SBATCH --nodes=1")
         self.line("#SBATCH --cpus-per-task=1")
         self.line(f"#SBATCH --mem-per-cpu={self.mem_kilo()}K")
         self.line(f"#SBATCH --array=0-{num_jobs-1}")

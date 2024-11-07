@@ -56,7 +56,7 @@ class BenchTerminalWritter(Writter):
         PlannerResultStatus.NOT_RUN: ("N", "purple"),
     }
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(  # pylint: disable=too-many-arguments, too-many-positional-arguments
         self,
         solve_config: SolveConfig,
         out: Union[Optional[TextIO], List[TextIO]] = None,
