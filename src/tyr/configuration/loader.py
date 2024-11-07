@@ -20,12 +20,13 @@ def get_config_file(name: str, path: Optional[Path] = None) -> Path:
     import tyr.configuration as config_module
 
     if path is not None:
-        config_file = path
-    else:
-        config_file = (Path(config_module.__path__[0]) / f"{name}.yaml").resolve()
-        if not config_file.exists():
-            config_file = config_file.parent / f"{name}.example.yaml"
+        if isinstance(path, str):
+            return Path(path)
+        return path
 
+    config_file = (Path(config_module.__path__[0]) / f"{name}.yaml").resolve()
+    if not config_file.exists():
+        config_file = config_file.parent / f"{name}.example.yaml"
     return config_file
 
 
