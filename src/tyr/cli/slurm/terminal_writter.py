@@ -71,8 +71,8 @@ class SlurmTerminalWritter(Writter):
         # Print the header of the script.
         self.line("#!/bin/bash")
         self.line("#SBATCH --job-name=tyr")
-        self.line("#SBATCH --output=%x-%j.out")
-        self.line("#SBATCH --error=%x-%j.err")
+        self.line("#SBATCH --output=slurm_logs/%x-%j.out")
+        self.line("#SBATCH --error=slurm_logs/%x-%j.err")
         if user_mail:
             self.line("#SBATCH --mail-type=ALL")
             self.line(f"#SBATCH --mail-user={user_mail}")
