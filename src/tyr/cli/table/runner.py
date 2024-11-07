@@ -115,7 +115,11 @@ are not consistent for planner {r.planner_name}."
 
     # Perform the analysis.
     tw.line()
-    tw.analyse()
+    if len(results) == 0:
+        tw.write("[WARNING]", bold=True, yellow=True)
+        tw.line(" No results to analyse.")
+    else:
+        tw.analyse()
 
 
 __all__ = ["run_table"]
