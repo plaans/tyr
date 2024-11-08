@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [1.21.0-dev.2](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.21.0-dev.1...v1.21.0-dev.2) (2024-11-08)
+
+
+### Bug Fixes
+
+* **vbp:** use best result per instance ([f4baa0c](https://gitlab.laas.fr/rgodet1/tyr/commit/f4baa0c9b4bdc588d440ffc321189d8ec7e42307))
+
 # [1.21.0-dev.1](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.20.3...v1.21.0-dev.1) (2024-11-07)
 
 
