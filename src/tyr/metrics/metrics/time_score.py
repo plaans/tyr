@@ -36,5 +36,13 @@ class TimeScoreMetric(Metric):
                 total += 1 - log10(computation_time) / log10(timeout)
         return total / len(results) * 100
 
+    def keep_best_result(self, results):
+        return min(
+            results,
+            key=lambda r: r.computation_time
+            if r.computation_time is not None
+            else float("inf"),
+        )
+
 
 __all__ = ["TimeScoreMetric"]

@@ -21,5 +21,8 @@ class CoverageMetric(Metric):
             * 100
         )
 
+    def keep_best_result(self, results):
+        return max(results, key=lambda r: r.status == PlannerResultStatus.SOLVED)
+
 
 __all__ = ["CoverageMetric"]

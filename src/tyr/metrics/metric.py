@@ -78,5 +78,14 @@ class Metric(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         """
         return self._evaluate(results, all_results)
 
+    def keep_best_result(self, results: List[PlannerResult]) -> PlannerResult:
+        """
+        Get the best result from a list of results.
+
+        Args:
+            results: The results to evaluate.
+        """
+        raise NotImplementedError
+
 
 __all__ = ["Metric"]

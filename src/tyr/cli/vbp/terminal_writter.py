@@ -1,6 +1,7 @@
 from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum, auto
+from itertools import groupby
 from pathlib import Path
 from typing import Dict, Generator, List, Optional, Set, TextIO, Tuple, Union
 
@@ -284,7 +285,7 @@ class VbpTerminalWritter(Writter):
                 {"mapping": "lambda d, gi, g, m: d.name"},
             ]
         post_process_value = conf.get(
-            "post_process_value", "lambda d, p, m, vr, vs: vs"
+            "post_process_value", "lambda d, gi, g, m, vr, vs: vs"
         )
         final_column = conf.get("final_column", None)
         final_row = conf.get("final_row", None)
@@ -450,40 +451,32 @@ class VbpTerminalWritter(Writter):
                 else:
                     d, gi, g, m = candidates.pop()  # type: ignore
 
-                    raw_value = float("inf") if m.is_reversed_order() else float("-inf")
-                    value = ""
-                    for p in g:
-                        results = [
-                            result
-                            for result in self._results[gi]
-                            if result.problem.domain == d
-                            and result.planner_name == p.name
-                        ]
-                        p_raw_val = m.evaluate_raw(
-                            results, [r for rg in self._results for r in rg]
+                    results = [
+                        m.keep_best_result(list(v))
+                        for _, v in groupby(
+                            sorted(
+                                (
+                                    result
+                                    for result in self._results[gi]
+                                    if result.problem.domain == d
+                                    and result.planner_name in [p.name for p in g]
+                                ),
+                                key=lambda r: r.problem.name,
+                            ),
+                            key=lambda r: r.problem.name,
                         )
-                        if m.is_reversed_order() and p_raw_val < raw_value:
-                            raw_value = p_raw_val
-                            value = eval(post_process_value)(  # nosec: B307
-                                d,
-                                p,
-                                m,
-                                raw_value,
-                                m.evaluate(
-                                    results, [r for rg in self._results for r in rg]
-                                ),
-                            )
-                        elif not m.is_reversed_order() and p_raw_val > raw_value:
-                            raw_value = p_raw_val
-                            value = eval(post_process_value)(  # nosec: B307
-                                d,
-                                p,
-                                m,
-                                raw_value,
-                                m.evaluate(
-                                    results, [r for rg in self._results for r in rg]
-                                ),
-                            )
+                    ]
+                    raw_value = m.evaluate_raw(
+                        results, [r for rg in self._results for r in rg]
+                    )
+                    value = eval(post_process_value)(  # nosec: B307
+                        d,
+                        gi,
+                        g,
+                        m,
+                        raw_value,
+                        m.evaluate(results, [r for rg in self._results for r in rg]),
+                    )
                     row_values[i].append(raw_value)
                     row_metrics[i].append(m)
                     col_values[j].append(raw_value)

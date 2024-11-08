@@ -37,5 +37,13 @@ class QualityScoreMetric(Metric):
                 total += best_quality / quality
         return total / len(results) * 100
 
+    def keep_best_result(self, results):
+        return min(
+            results,
+            key=lambda r: r.plan_quality
+            if r.plan_quality is not None
+            else float("inf"),
+        )
+
 
 __all__ = ["QualityScoreMetric"]

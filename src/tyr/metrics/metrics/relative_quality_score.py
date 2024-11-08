@@ -24,3 +24,11 @@ class RelativeQualityScoreMetric(Metric):
             return self.max_value()
         qs = QualityScoreMetric()._evaluate(results, all_results)
         return (1 - qs / cov) * 100
+
+    def keep_best_result(self, results):
+        return min(
+            results,
+            key=lambda r: r.plan_quality
+            if r.plan_quality is not None
+            else float("inf"),
+        )
