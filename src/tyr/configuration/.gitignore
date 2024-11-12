@@ -1,2 +1,2 @@
 *.yaml
-!cli.example.yaml
+!*.example.yaml
