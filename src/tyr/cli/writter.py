@@ -200,6 +200,17 @@ class Writter:
 
         self.line(line, **markup)
 
+    def big_separator(
+        self,
+        sepchar: str,
+        title: Optional[str] = None,
+        fullwidth: Optional[int] = None,
+        **markup: bool,
+    ):
+        self.separator(sepchar, None, fullwidth=fullwidth, **markup)
+        self.separator(" ", title, fullwidth, **markup)
+        self.separator(sepchar, None, fullwidth=fullwidth, **markup)
+
     # ============================================================================ #
     #                                    Report                                    #
     # ============================================================================ #
