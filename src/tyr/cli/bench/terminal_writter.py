@@ -253,10 +253,10 @@ class BenchTerminalWritter(Writter):
         )
         self._planner_max_length = max(len(p.name) for p in planners.selected)
         self._problem_max_length = max(
-            len(pb.name) + len(pl.get_version(pb)[0]) + 1  # type: ignore
+            len(pb.name) + len(pl.get_version_name(pb)) + 1  # type: ignore
             for pb in problems.selected
             for pl in planners.selected
-            if pl.get_version(pb)[0] is not None
+            if pl.get_version_name(pb) is not None
         )
 
         self.rewrite("")

@@ -108,6 +108,17 @@ class Planner:
         file.touch()
         return file
 
+    def get_version_name(self, problem: ProblemInstance) -> str:
+        """Get the version name for the given problem.
+
+        Args:
+            problem (ProblemInstance): The problem to solve.
+
+        Returns:
+            str: The version name to solve.
+        """
+        return self.config.problems.get(problem.domain.name, "base")
+
     def get_version(
         self, problem: ProblemInstance
     ) -> Tuple[Optional[str], Optional[AbstractProblem]]:
@@ -120,7 +131,7 @@ class Planner:
             Optional[AbstractProblem]: The version to solve and its name.
                 `None` for both if it is not supported.
         """
-        version_name = self.config.problems.get(problem.domain.name, "base")
+        version_name = self.get_version_name(problem)
         try:
             return version_name, problem.versions[version_name].value
         except KeyError:
