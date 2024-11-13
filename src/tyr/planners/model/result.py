@@ -7,7 +7,7 @@ from unified_planning.engines.results import (
     PlanGenerationResult,
     PlanGenerationResultStatus,
 )
-from unified_planning.plans import PlanKind, TimeTriggeredPlan
+from unified_planning.plans import PlanKind, TimeTriggeredPlan, Plan
 
 from tyr.planners.model.config import RunningMode, SolveConfig
 from tyr.problems import ProblemInstance
@@ -63,6 +63,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
     plan_quality: Optional[float] = None
     error_message: str = ""
     from_database: bool = False
+    plan: Optional[Plan] = None
 
     # pylint: disable = too-many-arguments, too-many-positional-arguments
     @staticmethod
@@ -73,6 +74,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
         result: PlanGenerationResult,
         config: SolveConfig,
         running_mode: RunningMode,
+        plan: Optional[Plan],
     ) -> "PlannerResult":
         """Converts a result from the unified planning library to our inner result format.
 
@@ -118,6 +120,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             config,
             computation_time,
             plan_quality,
+            plan=plan,
         )
 
     def merge(self, other: "PlannerResult") -> "PlannerResult":

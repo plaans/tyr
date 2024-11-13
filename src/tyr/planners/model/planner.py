@@ -486,6 +486,7 @@ class Planner:
             upf_result,
             config,
             running_mode,
+            upf_result.plan,
         )
         if result.computation_time is None:
             result.computation_time = times[1] - times[0]
