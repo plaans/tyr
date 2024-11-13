@@ -2,7 +2,7 @@ from typing import List
 
 from tyr.cli import collector
 from tyr.cli.config import CliContext
-from tyr.cli.vbp.terminal_writter import VbpTerminalWritter
+from tyr.cli.vbp.terminal_writer import VbpTerminalWriter
 from tyr.planners.database import Database
 from tyr.planners.model.config import RunningMode, SolveConfig
 from tyr.planners.model.result import PlannerResult, PlannerResultStatus
@@ -47,9 +47,9 @@ def run_vbp(
     """
     # pylint: disable = duplicate-code
 
-    # Create the writter and start the session.
+    # Create the writer and start the session.
     solve_config = SolveConfig(1, memout, timeout, 0, True, False, True, False)
-    tw = VbpTerminalWritter(
+    tw = VbpTerminalWriter(
         solve_config,
         ctx.out,
         ctx.verbosity,

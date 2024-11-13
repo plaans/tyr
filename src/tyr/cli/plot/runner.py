@@ -2,7 +2,7 @@ from typing import List
 
 from tyr.cli import collector
 from tyr.cli.config import CliContext
-from tyr.cli.plot.terminal_writter import PlotTerminalWritter
+from tyr.cli.plot.terminal_writer import PlotTerminalWriter
 from tyr.planners.database import Database
 from tyr.planners.model.config import RunningMode, SolveConfig
 from tyr.planners.model.result import PlannerResult, PlannerResultStatus
@@ -31,9 +31,9 @@ def run_plot(
     """
     # pylint: disable = duplicate-code
 
-    # Create the writter and start the session.
+    # Create the writer and start the session.
     solve_config = SolveConfig(1, memout, timeout, 0, True, False, True, False)
-    tw = PlotTerminalWritter(solve_config, ctx.out, ctx.verbosity, ctx.config)
+    tw = PlotTerminalWriter(solve_config, ctx.out, ctx.verbosity, ctx.config)
     tw.session_starts()
 
     # Collect the planners, the problems and the plots functions.

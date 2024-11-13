@@ -1,15 +1,15 @@
 from typing import List
 
 from tyr.cli.collector import CollectionResult
-from tyr.cli.writter import Writter
+from tyr.cli.writer import Writer
 from tyr.planners.model.planner import Planner
 from tyr.planners.model.result import PlannerResult
 from tyr.plotters.plotter import Plotter
 from tyr.problems.model.instance import ProblemInstance
 
 
-class PlotTerminalWritter(Writter):
-    """A terminal writter for the plot command."""
+class PlotTerminalWriter(Writer):
+    """A terminal writer for the plot command."""
 
     def report_collect(
         self,
@@ -41,4 +41,4 @@ class PlotTerminalWritter(Writter):
         return "plot"
 
 
-__all__ = ["PlotTerminalWritter"]
+__all__ = ["PlotTerminalWriter"]

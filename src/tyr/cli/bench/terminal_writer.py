@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, TextIO, Tuple, Union
 
 from tyr.cli.collector import CollectionResult
-from tyr.cli.writter import Writter
+from tyr.cli.writer import Writer
 from tyr.planners.model.config import RunningMode, SolveConfig
 from tyr.planners.model.planner import Planner
 from tyr.planners.model.result import PlannerResult, PlannerResultStatus
@@ -41,7 +41,7 @@ class BenchResult:
         )
 
 
-class BenchTerminalWritter(Writter):
+class BenchTerminalWriter(Writer):
     """Utility class to write content of the benchmark on the terminal."""
 
     _default_version_name = "base"
@@ -402,4 +402,4 @@ class BenchTerminalWritter(Writter):
         self.line(msg.rjust(fill), **{self._main_color: True})
 
 
-__all__ = ["BenchResult", "BenchTerminalWritter"]
+__all__ = ["BenchResult", "BenchTerminalWriter"]

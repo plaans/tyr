@@ -4,7 +4,7 @@ from typing import Dict, List, TypeVar
 from joblib import Parallel, delayed
 
 from tyr.cli import collector
-from tyr.cli.bench.terminal_writter import BenchResult, BenchTerminalWritter
+from tyr.cli.bench.terminal_writer import BenchResult, BenchTerminalWriter
 from tyr.cli.config import CliContext
 from tyr.planners.loader import register_all_planners
 from tyr.planners.model.config import RunningMode, SolveConfig
@@ -17,7 +17,7 @@ I = TypeVar("I")  # noqa: E741
 
 # pylint: disable = too-many-arguments, too-many-positional-arguments
 def _solve(
-    tw: BenchTerminalWritter,
+    tw: BenchTerminalWriter,
     results: List[BenchResult],
     planner: Planner,
     problem: ProblemInstance,
@@ -63,8 +63,8 @@ def run_bench(
         no_summary (bool): If True, the summary will not be displayed.
     """
 
-    # Create the writter and start the session.
-    tw = BenchTerminalWritter(
+    # Create the writer and start the session.
+    tw = BenchTerminalWriter(
         solve_config, ctx.out, ctx.verbosity, ctx.config, no_summary
     )
     tw.session_starts()

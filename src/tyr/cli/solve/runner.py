@@ -1,6 +1,6 @@
 from tyr.cli import collector
 from tyr.cli.config import CliContext
-from tyr.cli.solve.terminal_writter import SolveTerminalWritter
+from tyr.cli.solve.terminal_writer import SolveTerminalWriter
 from tyr.planners.loader import register_all_planners
 from tyr.planners.model.config import RunningMode, SolveConfig
 
@@ -22,8 +22,8 @@ def run_solve(
         running_mode (RunningMode): The mode to run planner resolution.
     """
 
-    # Create the writter and start the session.
-    tw = SolveTerminalWritter(solve_config, ctx.out, ctx.verbosity, ctx.config)
+    # Create the writer and start the session.
+    tw = SolveTerminalWriter(solve_config, ctx.out, ctx.verbosity, ctx.config)
     tw.session_starts()
 
     # Collect the planner and the problem to use.

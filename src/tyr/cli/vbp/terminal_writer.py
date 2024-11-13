@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Dict, Generator, List, Optional, Set, TextIO, Tuple, Union
 
 from tyr.cli.collector import CollectionResult
-from tyr.cli.writter import Writter
+from tyr.cli.writer import Writer
 from tyr.configuration.loader import load_config
 from tyr.metrics.metric import Metric
 from tyr.planners.model.config import SolveConfig
@@ -179,8 +179,8 @@ class CellTable:
 
 
 # pylint: disable = too-many-instance-attributes
-class VbpTerminalWritter(Writter):
-    """Terminal writter for the analysis command."""
+class VbpTerminalWriter(Writer):
+    """Terminal writer for the analysis command."""
 
     # pylint: disable = too-many-arguments, too-many-positional-arguments
     def __init__(
@@ -894,4 +894,4 @@ class VbpTerminalWritter(Writter):
                 )
 
 
-__all__ = ["VbpTerminalWritter"]
+__all__ = ["VbpTerminalWriter"]

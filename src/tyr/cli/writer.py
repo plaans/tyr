@@ -26,7 +26,7 @@ def _should_do_markup(file: TextIO) -> bool:
     )
 
 
-class Writter:
+class Writer:
     """Utility class to write content on an output textio."""
 
     _esctable = {
@@ -364,4 +364,4 @@ class Writter:
         return text.replace("\x1b[0m", "")
 
 
-__all__ = ["Writter"]
+__all__ = ["Writer"]

@@ -3,14 +3,14 @@ from pathlib import Path
 from typing import List, Literal, Optional, TextIO, Tuple, Union
 
 from tyr.cli.collector import CollectionResult
-from tyr.cli.writter import Writter
+from tyr.cli.writer import Writer
 from tyr.planners.model.config import RunningMode, SolveConfig
 from tyr.planners.model.planner import Planner
 from tyr.planners.model.result import PlannerResult, PlannerResultStatus
 from tyr.problems.model.instance import ProblemInstance
 
 
-class SolveTerminalWritter(Writter):
+class SolveTerminalWriter(Writer):
     """Utility class to write content of the resolution on the terminal."""
 
     def __init__(
@@ -135,4 +135,4 @@ class SolveTerminalWritter(Writter):
         self.separator("=", msg, **{status_map[self._status]: True})
 
 
-__all__ = ["SolveTerminalWritter"]
+__all__ = ["SolveTerminalWriter"]

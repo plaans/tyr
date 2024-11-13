@@ -2,7 +2,7 @@ from typing import List
 
 from tyr.cli import collector
 from tyr.cli.config import CliContext
-from tyr.cli.table.terminal_writter import TableTerminalWritter
+from tyr.cli.table.terminal_writer import TableTerminalWriter
 from tyr.planners.database import Database
 from tyr.planners.model.config import RunningMode, SolveConfig
 from tyr.planners.model.result import PlannerResult, PlannerResultStatus
@@ -45,9 +45,9 @@ def run_table(
     """
     # pylint: disable = duplicate-code
 
-    # Create the writter and start the session.
+    # Create the writer and start the session.
     solve_config = SolveConfig(1, memout, timeout, 0, True, False, True, False)
-    tw = TableTerminalWritter(
+    tw = TableTerminalWriter(
         solve_config,
         ctx.out,
         ctx.verbosity,

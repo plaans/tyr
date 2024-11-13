@@ -3,14 +3,14 @@ from pathlib import Path
 from typing import List, Optional, TextIO, Union
 
 from tyr.cli.collector import CollectionResult
-from tyr.cli.writter import Writter
+from tyr.cli.writer import Writer
 from tyr.planners.model.config import RunningMode, SolveConfig
 from tyr.planners.model.planner import Planner
 from tyr.problems.model.domain import AbstractDomain
 from tyr.problems.model.instance import ProblemInstance
 
 
-class SlurmTerminalWritter(Writter):
+class SlurmTerminalWriter(Writer):
     """Utility class to write content of the slurm script on the terminal."""
 
     def __init__(
@@ -123,4 +123,4 @@ class SlurmTerminalWritter(Writter):
         )
 
 
-__all__ = ["SlurmTerminalWritter"]
+__all__ = ["SlurmTerminalWriter"]

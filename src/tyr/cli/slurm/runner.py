@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from tyr.cli import collector
 from tyr.cli.config import CliContext
-from tyr.cli.slurm.terminal_writter import SlurmTerminalWritter
+from tyr.cli.slurm.terminal_writer import SlurmTerminalWriter
 from tyr.planners.model.config import RunningMode, SolveConfig
 
 
@@ -29,8 +29,8 @@ def run_slurm(
         nodes (List[str]): The list of nodes to use on the cluster.
     """
 
-    # Create the writter and start the session.
-    tw = SlurmTerminalWritter(solve_config, ctx.out, ctx.verbosity, ctx.config)
+    # Create the writer and start the session.
+    tw = SlurmTerminalWriter(solve_config, ctx.out, ctx.verbosity, ctx.config)
     tw.session_starts()
 
     # Collect the planner and the problem to use.
