@@ -107,35 +107,39 @@ def report_results(
     invalid_for_both: list[ProblemInstance],
 ):
     """Report the results of the validation."""
-    tw.line()
-    tw.big_separator("=", f"Valid: {len(valid)}", bold=True, green=True)
-    tw.line()
-    for problem in valid:
-        tw.line(problem.name)
+    if valid:
+        tw.line()
+        tw.big_separator("=", f"Valid: {len(valid)}", bold=True, green=True)
+        tw.line()
+        for problem in valid:
+            tw.line(problem.name)
 
-    tw.line()
-    tw.big_separator(
-        "=", f"Invalid for Aries: {len(invalid_for_aries)}", bold=True, red=True
-    )
-    tw.line()
-    for problem in invalid_for_aries:
-        tw.line(problem.name)
+    if invalid_for_aries:
+        tw.line()
+        tw.big_separator(
+            "=", f"Invalid for Aries: {len(invalid_for_aries)}", bold=True, red=True
+        )
+        tw.line()
+        for problem in invalid_for_aries:
+            tw.line(problem.name)
 
-    tw.line()
-    tw.big_separator(
-        "=", f"Invalid for Val: {len(invalid_for_val)}", bold=True, red=True
-    )
-    tw.line()
-    for problem in invalid_for_val:
-        tw.line(problem.name)
+    if invalid_for_val:
+        tw.line()
+        tw.big_separator(
+            "=", f"Invalid for Val: {len(invalid_for_val)}", bold=True, red=True
+        )
+        tw.line()
+        for problem in invalid_for_val:
+            tw.line(problem.name)
 
-    tw.line()
-    tw.big_separator(
-        "=", f"Invalid for both: {len(invalid_for_both)}", bold=True, red=True
-    )
-    tw.line()
-    for problem in invalid_for_both:
-        tw.line(problem.name)
+    if invalid_for_both:
+        tw.line()
+        tw.big_separator(
+            "=", f"Invalid for both: {len(invalid_for_both)}", bold=True, red=True
+        )
+        tw.line()
+        for problem in invalid_for_both:
+            tw.line(problem.name)
 
 
 def save_results(
@@ -199,8 +203,11 @@ def validate_plan_with_aries(problem: AbstractProblem, plan: Plan) -> bool:
 
 def validate_plan_with_val(problem: Path, domain: Path, plan: Path) -> bool:
     """Validate a plan using Val."""
+    ext = "pddl"
+    if ":hierarchy" in domain.read_text():
+        ext = "hddl"
     cmd = (
-        "./src/tyr/planners/planners/aries/planning/ext/val-pddl "
+        f"./src/tyr/planners/planners/aries/planning/ext/val-{ext} "
         f"{domain.as_posix()} {problem.as_posix()} {plan.as_posix()}"
     )
     return subprocess.run(cmd, shell=True, check=False).returncode == 0  # nosec: B602
@@ -214,10 +221,6 @@ def validate_plan_with_val(problem: Path, domain: Path, plan: Path) -> bool:
 # pylint:disable=too-many-locals, too-many-branches, too-many-statements
 def main():
     """Main function."""
-
-    # UPF environment
-    env = get_environment()
-    env.error_used_name = False
 
     # Load the configuration
     config = get_config()
@@ -250,6 +253,10 @@ def main():
                 len(ONLY) > 0 and problem.domain.name not in ONLY
             ):
                 continue
+
+            # UPF environment
+            env = get_environment()
+            env.error_used_name = False
 
             # Solve the problem
             tw.line()
