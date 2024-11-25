@@ -246,7 +246,8 @@ class VbpTerminalWriter(Writer):
         """
         self.rewrite("")
         for i, group in enumerate(planner_groups):
-            self.write(f"Group {i + 1}: ", bold=True)
+            if not self.quiet:
+                self.write(f"Group {i + 1}: ", bold=True)
             self.report_collected(group, "planner")
         self.report_collected(problems, "problem")
         self.report_collected(metrics, "metric")

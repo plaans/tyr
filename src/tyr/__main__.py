@@ -55,9 +55,16 @@ DEFAULT_CONFIG = {
     "planner": "",
     "plotters": [],
     "planners": [],
+    "groups": 9,
     "group1": [],
     "group2": [],
     "group3": [],
+    "group4": [],
+    "group5": [],
+    "group6": [],
+    "group7": [],
+    "group8": [],
+    "group9": [],
     "problem": "",
     "quiet": 0,
     "timeout": 5,
@@ -249,7 +256,7 @@ def planners_group_filter(x: int):
         f"--group{x}",
         type=str,
         multiple=True,
-        help=f"A list of regex filters on planner names for group {x}.",
+        help=f"Regex filters on planner names for group {x}.",
     )
 
 
@@ -820,9 +827,20 @@ def cli_table(
 @config_option
 @timeout_option
 @memout_option
+@click.option(
+    "--groups",
+    type=int,
+    help=f"Number of groups of planners. Default to {DEFAULT_CONFIG['groups']}.",
+)
 @planners_group_filter(1)
 @planners_group_filter(2)
 @planners_group_filter(3)
+@planners_group_filter(4)
+@planners_group_filter(5)
+@planners_group_filter(6)
+@planners_group_filter(7)
+@planners_group_filter(8)
+@planners_group_filter(9)
 @domains_filter
 @metrics_filter
 @click.option(
@@ -875,9 +893,16 @@ def cli_vbp(
     config,
     timeout: int,
     memout: int,
+    groups: int,
     group1: List[str],
     group2: List[str],
     group3: List[str],
+    group4: List[str],
+    group5: List[str],
+    group6: List[str],
+    group7: List[str],
+    group8: List[str],
+    group9: List[str],
     domains: List[str],
     metrics: List[str],
     latex: bool,
@@ -898,9 +923,16 @@ def cli_vbp(
         "db_path": db_path,
         "timeout": timeout,
         "memout": memout,
+        "groups": groups,
         "group1": group1,
         "group2": group2,
         "group3": group3,
+        "group4": group4,
+        "group5": group5,
+        "group6": group6,
+        "group7": group7,
+        "group8": group8,
+        "group9": group9,
         "domains": domains,
         "metrics": metrics,
         "latex": latex,
@@ -922,12 +954,23 @@ def cli_vbp(
         conf["db_path"],
         config,
     )
-
+    print(conf["groups"])
+    print(conf["group1"])
     run_vbp(
         ctx,
         conf["timeout"],
         conf["memout"],
-        [conf["group1"], conf["group2"], conf["group3"]],
+        [
+            conf["group1"],
+            conf["group2"],
+            conf["group3"],
+            conf["group4"],
+            conf["group5"],
+            conf["group6"],
+            conf["group7"],
+            conf["group8"],
+            conf["group9"],
+        ][: conf["groups"]],
         conf["domains"],
         conf["metrics"],
         conf["colored"],
