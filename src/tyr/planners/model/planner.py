@@ -16,6 +16,7 @@ from unified_planning.engines import PlanGenerationResult, PlanGenerationResultS
 from unified_planning.environment import get_environment
 from unified_planning.exceptions import UPException
 from unified_planning.grpc.proto_writer import ProtobufWriter
+from unified_planning.plans import PlanKind
 from unified_planning.shortcuts import AbstractProblem, Engine
 
 from tyr.core.paths import TyrPaths
@@ -441,8 +442,14 @@ class Planner:
                 timeout=timeout,
                 output_stream=log_file,
             ):
+                end = time.time()
                 if result.status != PlanGenerationResultStatus.TIMEOUT:
-                    queue.put((result, start, time.time()))
+                    if (
+                        result.plan is not None
+                        and result.plan.kind == PlanKind.HIERARCHICAL_PLAN
+                    ):
+                        result.plan = result.plan.action_plan
+                    queue.put((result, start, end))
         except Exception as error:  # pylint: disable=broad-exception-caught
             queue.put(error)
 
@@ -463,6 +470,11 @@ class Planner:
                 output_stream=log_file,
             )
             end = time.time()
+            if (
+                upf_result.plan is not None
+                and upf_result.plan.kind == PlanKind.HIERARCHICAL_PLAN
+            ):
+                upf_result.plan = upf_result.plan.action_plan
             queue.put((upf_result, start, end))
         except Exception as error:  # pylint: disable=broad-exception-caught
             queue.put(error)
