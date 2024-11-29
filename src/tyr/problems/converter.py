@@ -7,6 +7,7 @@ from unified_planning.model.htn import HierarchicalProblem
 from unified_planning.model.scheduling import SchedulingProblem
 from unified_planning.model.types import _IntType
 from unified_planning.shortcuts import (
+    And,
     GE,
     LE,
     LT,
@@ -20,6 +21,7 @@ from unified_planning.shortcuts import (
     InstantaneousAction,
     Minus,
     Not,
+    Or,
     Parameter,
     Plus,
     Problem,
@@ -108,6 +110,10 @@ def remove_user_typing(problem: Problem) -> Problem:
             return Parameter(fn.parameter().name, obj_tpe, env)
         if fn.is_not():
             return Not(convert_fnode(fn.args[0]))
+        if fn.is_and():
+            return And(*[convert_fnode(a) for a in fn.args])
+        if fn.is_or():
+            return Or(*[convert_fnode(a) for a in fn.args])
         if fn.is_equals():
             return Equals(convert_fnode(fn.args[0]), convert_fnode(fn.args[1]))
         if fn.is_le():
