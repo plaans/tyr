@@ -74,7 +74,6 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
         result: PlanGenerationResult,
         config: SolveConfig,
         running_mode: RunningMode,
-        plan: Optional[Plan],
     ) -> "PlannerResult":
         """Converts a result from the unified planning library to our inner result format.
 
@@ -120,7 +119,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             config,
             computation_time,
             plan_quality,
-            plan=plan,
+            plan=result.plan,
         )
 
     def merge(self, other: "PlannerResult") -> "PlannerResult":
