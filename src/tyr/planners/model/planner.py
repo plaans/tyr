@@ -5,7 +5,6 @@ import time
 import traceback
 import warnings
 from dataclasses import replace
-from io import TextIOWrapper
 from multiprocessing import Process, Queue
 from pathlib import Path
 from queue import Empty
@@ -295,58 +294,56 @@ class Planner:
                 planner.skip_checks = True
                 # Get the log file.
                 log_path = self.get_log_file(problem, "output", running_mode)
-                with open(log_path, "w", encoding="utf-8") as log_file:
-                    end = start + config.timeout
-                    self._last_upf_result = None
-                    # Use a multiprocessing queue to get the results from the child process.
-                    queue: Queue = Queue()
-                    process = Process(
-                        target=solve_target,
-                        args=(planner, version, config.timeout, log_file, queue),
-                    )
-                    process.start()
-                    start_process = time.time()
-                    # Get the results from the queue.
-                    while (
-                        time.time() - start_process
-                        < config.timeout + config.timeout_offset
-                    ):
-                        if not process.is_alive() and queue.empty():
+                end = start + config.timeout
+                self._last_upf_result = None
+                # Use a multiprocessing queue to get the results from the child process.
+                queue: Queue = Queue()
+                process = Process(
+                    target=solve_target,
+                    args=(planner, version, config.timeout, log_path, queue),
+                )
+                process.start()
+                start_process = time.time()
+                # Get the results from the queue.
+                while (
+                    time.time() - start_process < config.timeout + config.timeout_offset
+                ):
+                    if not process.is_alive() and queue.empty():
+                        break
+                    try:
+                        result = queue.get(timeout=0.1)
+                        if isinstance(result, Exception):
+                            raise result
+                        self._last_upf_result, start, end = result
+                        if running_mode == RunningMode.ONESHOT:
                             break
-                        try:
-                            result = queue.get(timeout=0.1)
-                            if isinstance(result, Exception):
-                                raise result
-                            self._last_upf_result, start, end = result
-                            if running_mode == RunningMode.ONESHOT:
-                                break
-                            yield self._handle_upf_result(
-                                self.last_upf_result,
-                                self.name,
-                                problem,
-                                version_name,
-                                running_mode,
-                                config,
-                                (start, end),
-                            )
-                        except Empty:
-                            continue
-                    # The planner timed out.
+                        yield self._handle_upf_result(
+                            self.last_upf_result,
+                            self.name,
+                            problem,
+                            version_name,
+                            running_mode,
+                            config,
+                            (start, end),
+                        )
+                    except Empty:
+                        continue
+                # The planner timed out.
+                if process.is_alive():
+                    # Kill the process if it is still running.
+                    process.terminate()
+                    process.join(2)
                     if process.is_alive():
-                        # Kill the process if it is still running.
-                        process.terminate()
-                        process.join(2)
-                        if process.is_alive():
-                            process.kill()
-                        # Return a timeout result if no result was found.
-                        if self.last_upf_result is None:
-                            yield PlannerResult.timeout(
-                                problem,
-                                self,
-                                config,
-                                running_mode,
-                            )
-                            return
+                        process.kill()
+                    # Return a timeout result if no result was found.
+                    if self.last_upf_result is None:
+                        yield PlannerResult.timeout(
+                            problem,
+                            self,
+                            config,
+                            running_mode,
+                        )
+                        return
 
             if self.last_upf_result is None:
                 # No result was found.
@@ -434,53 +431,55 @@ class Planner:
         planner: Engine,
         version: AbstractProblem,
         timeout: int,
-        log_file: TextIOWrapper,
+        log_file_path: Path,
         queue: Queue,
     ) -> None:
-        try:
-            # Record time and try the solve the problem.
-            start = time.time()
-            for result in planner.get_solutions(
-                version,
-                timeout=timeout,
-                output_stream=log_file,
-            ):
-                end = time.time()
-                if result.status != PlanGenerationResultStatus.TIMEOUT:
-                    if (
-                        result.plan is not None
-                        and result.plan.kind == PlanKind.HIERARCHICAL_PLAN
-                    ):
-                        result.plan = result.plan.action_plan
-                    queue.put((result, start, end))
-        except Exception as error:  # pylint: disable=broad-exception-caught
-            queue.put(error)
+        with open(log_file_path, "w", encoding="utf-8") as log_file:
+            try:
+                # Record time and try the solve the problem.
+                start = time.time()
+                for result in planner.get_solutions(
+                    version,
+                    timeout=timeout,
+                    output_stream=log_file,
+                ):
+                    end = time.time()
+                    if result.status != PlanGenerationResultStatus.TIMEOUT:
+                        if (
+                            result.plan is not None
+                            and result.plan.kind == PlanKind.HIERARCHICAL_PLAN
+                        ):
+                            result.plan = result.plan.action_plan
+                        queue.put((result, start, end))
+            except Exception as error:  # pylint: disable=broad-exception-caught
+                queue.put(error)
 
     def _solve_oneshot(  # pylint: disable = too-many-arguments, too-many-positional-arguments
         self,
         planner: Engine,
         version: AbstractProblem,
         timeout: int,
-        log_file: TextIOWrapper,
+        log_file_path: Path,
         queue: Queue,
     ) -> None:
-        try:
-            # Record time and try the solve the problem.
-            start = time.time()
-            upf_result = planner.solve(
-                version,
-                timeout=timeout,
-                output_stream=log_file,
-            )
-            end = time.time()
-            if (
-                upf_result.plan is not None
-                and upf_result.plan.kind == PlanKind.HIERARCHICAL_PLAN
-            ):
-                upf_result.plan = upf_result.plan.action_plan
-            queue.put((upf_result, start, end))
-        except Exception as error:  # pylint: disable=broad-exception-caught
-            queue.put(error)
+        with open(log_file_path, "w", encoding="utf-8") as log_file:
+            try:
+                # Record time and try the solve the problem.
+                start = time.time()
+                upf_result = planner.solve(
+                    version,
+                    timeout=timeout,
+                    output_stream=log_file,
+                )
+                end = time.time()
+                if (
+                    upf_result.plan is not None
+                    and upf_result.plan.kind == PlanKind.HIERARCHICAL_PLAN
+                ):
+                    upf_result.plan = upf_result.plan.action_plan
+                queue.put((upf_result, start, end))
+            except Exception as error:  # pylint: disable=broad-exception-caught
+                queue.put(error)
 
     # pylint: disable = too-many-arguments, too-many-positional-arguments
     def _handle_upf_result(
