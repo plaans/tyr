@@ -287,7 +287,10 @@ class Planner:
             # Disable credits.
             get_environment().credits_stream = None
             process: Optional[Process] = None
-            with builder(name=upf_planner_name) as planner:
+            with builder(
+                name=upf_planner_name,
+                params=self.config.upf_params,
+            ) as planner:
                 # Disable compatibility checking.
                 planner.skip_checks = True
                 # Get the log file.
