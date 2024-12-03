@@ -64,7 +64,8 @@ class SlurmTerminalWriter(Writer):
         running_modes: List[RunningMode],
     ) -> None:
         """Prints the slurm script."""
-        num_jobs = len(self._planners) * len(self._domains)
+        num_pb = sum(d.get_num_problems() for d in self._domains)
+        num_jobs = len(self._planners) * num_pb
         if num_jobs == 0:
             self.line("No jobs to run.", red=True)
             return
@@ -97,9 +98,10 @@ class SlurmTerminalWriter(Writer):
         # Print the domains list and the domain to use.
         self.write("\nDOMAINS=(")
         for i, domain in enumerate(sorted(self._domains, key=str)):
-            if i > 0:
-                self.write(" ")
-            self.write(f'"{domain.name}:"')
+            for j in range(1, domain.get_num_problems() + 1):
+                if i + j > 1:
+                    self.write(" ")
+                self.write(f'"{domain.name}:{j}$"')
         self.line(")")
         self.line("DOMAIN_IDX=$((SLURM_ARRAY_TASK_ID / ${#PLANNERS[@]}))")
         self.line("DOMAIN=${DOMAINS[$DOMAIN_IDX]}")
