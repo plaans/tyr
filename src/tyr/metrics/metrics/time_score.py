@@ -40,7 +40,7 @@ class TimeScoreMetric(Metric):
         return min(
             results,
             key=lambda r: r.computation_time
-            if r.computation_time is not None
+            if r.computation_time is not None and r.status == PlannerResultStatus.SOLVED
             else float("inf"),
         )
 

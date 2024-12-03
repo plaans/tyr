@@ -3,7 +3,7 @@ from typing import List
 from tyr.metrics.metric import Metric
 from tyr.metrics.metrics.coverage import CoverageMetric
 from tyr.metrics.metrics.quality_score import QualityScoreMetric
-from tyr.planners.model.result import PlannerResult
+from tyr.planners.model.result import PlannerResult, PlannerResultStatus
 
 
 class RelativeQualityScoreMetric(Metric):
@@ -29,6 +29,6 @@ class RelativeQualityScoreMetric(Metric):
         return min(
             results,
             key=lambda r: r.plan_quality
-            if r.plan_quality is not None
+            if r.plan_quality is not None and r.status == PlannerResultStatus.SOLVED
             else float("inf"),
         )

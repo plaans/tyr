@@ -22,7 +22,9 @@ class QualityScoreMetric(Metric):
         for result in results:
             same_instances = [r for r in all_results if r.problem == result.problem]
             best_quality = min(
-                float("inf") if r.plan_quality is None else r.plan_quality
+                float("inf")
+                if r.plan_quality is None or r.status != PlannerResultStatus.SOLVED
+                else r.plan_quality
                 for r in same_instances
             )
             quality = result.plan_quality
@@ -41,7 +43,7 @@ class QualityScoreMetric(Metric):
         return min(
             results,
             key=lambda r: r.plan_quality
-            if r.plan_quality is not None
+            if r.plan_quality is not None and r.status == PlannerResultStatus.SOLVED
             else float("inf"),
         )
 
