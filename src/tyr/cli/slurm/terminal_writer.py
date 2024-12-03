@@ -38,7 +38,8 @@ class SlurmTerminalWriter(Writer):
             problems (CollectionResult[ProblemInstance]): The collection result on problems.
         """
 
-        self.rewrite("")
+        if not self.quiet:
+            self.rewrite("")
         self.report_collected(planners, "planner")
         self.report_collected(problems, "problem")
 

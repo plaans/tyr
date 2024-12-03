@@ -39,7 +39,8 @@ def run_slurm(
     tw.report_collect(planners, problems)
 
     # Create the slurm script.
-    tw.line()
+    if ctx.verbosity > 0:
+        tw.line()
     tw.script(user_mail, nodelist, running_modes)
 
 
