@@ -63,7 +63,10 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
     plan_quality: Optional[float] = None
     error_message: str = ""
     from_database: bool = False
+    # String if the plan has been loaded from the database, Plan if it has been generated.
     plan: Optional[Union[Plan, str]] = None
+    # Original results if the result has been merged.
+    originals: Optional[List["PlannerResult"]] = None
 
     # pylint: disable = too-many-arguments, too-many-positional-arguments
     @staticmethod
@@ -150,8 +153,13 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             (x.plan_quality for x in (self, other) if x.plan_quality is not None),
             default=None,
         )
+        originals = (self.originals or [self]) + (other.originals or [other])
 
-        args = {"running_mode": RunningMode.MERGED, "plan_quality": quality}
+        args = {
+            "running_mode": RunningMode.MERGED,
+            "plan_quality": quality,
+            "originals": originals,
+        }
         if other.status != PlannerResultStatus.SOLVED:
             return replace(self, **args)  # type: ignore
         if self.status != PlannerResultStatus.SOLVED:

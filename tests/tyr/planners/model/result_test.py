@@ -188,6 +188,7 @@ class TestPlannerResult:
         assert merged_result.computation_time == 5.0
         assert merged_result.plan_quality == 0.5
         assert merged_result.status == PlannerResultStatus.SOLVED
+        assert merged_result.originals == [result1, result2]
 
     def test_merge_different_config(self):
         result1 = PlannerResult(
@@ -275,7 +276,11 @@ class TestPlannerResult:
             running_mode=RunningMode.ONESHOT,
         )
         merged_result = result1.merge(result2)
-        assert merged_result == replace(result1, running_mode=RunningMode.MERGED)
+        assert merged_result == replace(
+            result1,
+            running_mode=RunningMode.MERGED,
+            originals=[result1, result2],
+        )
 
     def test_merge_self_result_not_solved(self):
         result1 = PlannerResult(
@@ -297,7 +302,11 @@ class TestPlannerResult:
             running_mode=RunningMode.ONESHOT,
         )
         merged_result = result1.merge(result2)
-        assert merged_result == replace(result2, running_mode=RunningMode.MERGED)
+        assert merged_result == replace(
+            result2,
+            running_mode=RunningMode.MERGED,
+            originals=[result1, result2],
+        )
 
     def test_merge_all(self):
         result1 = PlannerResult(
