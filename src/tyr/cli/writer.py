@@ -177,7 +177,7 @@ class Writer:
         fullwidth: Optional[int] = None,
         **markup: bool,
     ):
-        """Writes a seperator with an optional centered title.
+        """Writes a separator with an optional centered title.
 
         Args:
             sepchar (str): The character to use for the separator.
@@ -207,6 +207,7 @@ class Writer:
         fullwidth: Optional[int] = None,
         **markup: bool,
     ):
+        """Writes a big separator with an optional centered title."""
         self.separator(sepchar, None, fullwidth=fullwidth, **markup)
         self.separator(" ", title, fullwidth, **markup)
         self.separator(sepchar, None, fullwidth=fullwidth, **markup)

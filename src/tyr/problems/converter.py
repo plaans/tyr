@@ -7,10 +7,10 @@ from unified_planning.model.htn import HierarchicalProblem
 from unified_planning.model.scheduling import SchedulingProblem
 from unified_planning.model.types import _IntType
 from unified_planning.shortcuts import (
-    And,
     GE,
     LE,
     LT,
+    And,
     DurationInterval,
     DurativeAction,
     EffectKind,

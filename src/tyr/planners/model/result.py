@@ -7,7 +7,7 @@ from unified_planning.engines.results import (
     PlanGenerationResult,
     PlanGenerationResultStatus,
 )
-from unified_planning.plans import PlanKind, TimeTriggeredPlan, Plan
+from unified_planning.plans import Plan, PlanKind, TimeTriggeredPlan
 
 from tyr.planners.model.config import RunningMode, SolveConfig
 from tyr.problems import ProblemInstance

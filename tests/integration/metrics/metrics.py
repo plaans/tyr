@@ -7,3 +7,6 @@ class FakeMetric(Metric):
 
     def _evaluate(self, results, all_results):
         """Fake evaluate method."""
+
+    def keep_best_result(self, results):
+        raise NotImplementedError
