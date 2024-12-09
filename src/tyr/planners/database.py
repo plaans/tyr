@@ -52,6 +52,7 @@ class Database(Singleton):
                     "memout"	INTEGER NOT NULL,
                     "timeout"	INTEGER NOT NULL,
                     "creation"	TEXT NOT NULL,
+                    "plan"	TEXT,
                     PRIMARY KEY("id" AUTOINCREMENT)
                 );
                 """
@@ -88,8 +89,8 @@ class Database(Singleton):
                 """
                 INSERT INTO "results" (
                     "planner", "problem", "mode", "status", "computation", "quality",
-                    "error msg", "jobs", "memout", "timeout", "creation"
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                    "error msg", "jobs", "memout", "timeout", "creation", "plan"
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
                 """,
                 (
                     result.planner_name,
@@ -103,6 +104,7 @@ class Database(Singleton):
                     result.config.memout,
                     result.config.timeout,
                     datetime.datetime.now().isoformat(),
+                    "\n".join(list(map(str.strip, str(result.plan).splitlines()[1:]))),
                 ),
             )
             conn.commit()
@@ -210,6 +212,7 @@ class Database(Singleton):
             plan_quality=resp[6],
             error_message=resp[7],
             from_database=True,
+            plan=resp[12],
         )
 
 

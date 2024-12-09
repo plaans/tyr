@@ -29,6 +29,8 @@ def result_mock():
     result = MagicMock()
     result.config.timeout = 10
     result.running_mode = RunningMode.ONESHOT
+    result.plan = MagicMock()
+    result.plan.__str__.return_value = "Sequential Plan\n    Action 1\n    Action 2"
     yield result
 
 
@@ -60,6 +62,7 @@ class TestDatabase:
                     "memout"	INTEGER NOT NULL,
                     "timeout"	INTEGER NOT NULL,
                     "creation"	TEXT NOT NULL,
+                    "plan"	TEXT,
                     PRIMARY KEY("id" AUTOINCREMENT)
                 );
                 """
@@ -113,8 +116,8 @@ class TestDatabase:
             """
                 INSERT INTO "results" (
                     "planner", "problem", "mode", "status", "computation", "quality",
-                    "error msg", "jobs", "memout", "timeout", "creation"
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                    "error msg", "jobs", "memout", "timeout", "creation", "plan"
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
                 """,
             (
                 result_mock.planner_name,
@@ -128,6 +131,7 @@ class TestDatabase:
                 result_mock.config.memout,
                 result_mock.config.timeout,
                 now,
+                "Action 1\nAction 2",
             ),
         )
         conn_mock.commit.assert_called_once()
@@ -169,6 +173,7 @@ class TestDatabase:
             result_mock.config.memout,
             result_mock.config.timeout,
             now,
+            str(result_mock.plan),
         )
 
         result = database.load_planner_result(
@@ -188,6 +193,7 @@ class TestDatabase:
             result_mock.plan_quality,
             result_mock.error_message,
             True,
+            str(result_mock.plan),
         )
         cursor_mock.execute.assert_called_once_with(
             """
@@ -252,6 +258,7 @@ class TestDatabase:
             result_mock.config.memout,
             result_mock.config.timeout,
             now,
+            result_mock.plan,
         )
 
         result = database.load_planner_result(
@@ -289,6 +296,7 @@ class TestDatabase:
                 result_mock.config.memout,
                 result_mock.config.timeout,
                 now,
+                result_mock.plan,
             ),
             (
                 2,
@@ -303,6 +311,7 @@ class TestDatabase:
                 result_mock.config.memout,
                 result_mock.config.timeout,
                 now,
+                result_mock.plan,
             ),
         ]
 
@@ -323,6 +332,7 @@ class TestDatabase:
             None,
             "",
             True,
+            None,
         )
         assert cursor_mock.execute.return_value.fetchone.call_count == 1
 
@@ -352,6 +362,7 @@ class TestDatabase:
                 result_mock.config.memout,
                 result_mock.config.timeout,
                 now,
+                result_mock.plan,
             ),
             (
                 2,
@@ -366,6 +377,7 @@ class TestDatabase:
                 result_mock.config.memout,
                 result_mock.config.timeout,
                 now,
+                result_mock.plan,
             ),
         ]
 
@@ -386,6 +398,7 @@ class TestDatabase:
             result_mock.plan_quality,
             result_mock.error_message,
             True,
+            result_mock.plan,
         )
         assert cursor_mock.execute.return_value.fetchone.call_count == 2
 
@@ -415,6 +428,7 @@ class TestDatabase:
                 result_mock.config.memout,
                 result_mock.config.timeout,
                 now,
+                result_mock.plan,
             ),
             (
                 2,
@@ -429,6 +443,7 @@ class TestDatabase:
                 result_mock.config.memout,
                 result_mock.config.timeout,
                 now,
+                result_mock.plan,
             ),
         ]
 
@@ -449,6 +464,7 @@ class TestDatabase:
             result_mock.plan_quality,
             result_mock.error_message,
             True,
+            result_mock.plan,
         )
         assert cursor_mock.execute.return_value.fetchone.call_count == 1
 
@@ -478,6 +494,7 @@ class TestDatabase:
                 result_mock.config.memout,
                 result_mock.config.timeout,
                 now,
+                result_mock.plan,
             ),
             (
                 2,
@@ -492,6 +509,7 @@ class TestDatabase:
                 result_mock.config.memout,
                 result_mock.config.timeout,
                 now,
+                result_mock.plan,
             ),
         ]
 
@@ -512,6 +530,7 @@ class TestDatabase:
             result_mock.plan_quality,
             result_mock.error_message,
             True,
+            result_mock.plan,
         )
         assert cursor_mock.execute.return_value.fetchone.call_count == 2
 
@@ -541,6 +560,7 @@ class TestDatabase:
                 result_mock.config.memout,
                 result_mock.config.timeout,
                 now,
+                result_mock.plan,
             ),
             (
                 2,
@@ -555,6 +575,7 @@ class TestDatabase:
                 result_mock.config.memout,
                 result_mock.config.timeout,
                 now,
+                result_mock.plan,
             ),
             (
                 3,
@@ -569,6 +590,7 @@ class TestDatabase:
                 result_mock.config.memout,
                 result_mock.config.timeout,
                 now,
+                result_mock.plan,
             ),
         ]
 
@@ -589,6 +611,7 @@ class TestDatabase:
             result_mock.plan_quality,
             result_mock.error_message,
             True,
+            result_mock.plan,
         )
         assert cursor_mock.execute.return_value.fetchone.call_count == 3
 
@@ -617,6 +640,7 @@ class TestDatabase:
             result_mock.config.memout,
             5,
             now,
+            result_mock.plan,
         )
 
         result = database.load_planner_result(

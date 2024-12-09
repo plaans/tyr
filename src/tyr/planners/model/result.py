@@ -63,7 +63,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
     plan_quality: Optional[float] = None
     error_message: str = ""
     from_database: bool = False
-    plan: Optional[Plan] = None
+    plan: Optional[Union[Plan, str]] = None
 
     # pylint: disable = too-many-arguments, too-many-positional-arguments
     @staticmethod
