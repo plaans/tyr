@@ -27,6 +27,7 @@ def merge(db_folder: Path, out_db: str):
             "memout"	INTEGER NOT NULL,
             "timeout"	INTEGER NOT NULL,
             "creation"	TEXT NOT NULL,
+            "plan"	TEXT,
             PRIMARY KEY("id" AUTOINCREMENT)
         );
         """
@@ -40,7 +41,7 @@ def merge(db_folder: Path, out_db: str):
             """
             SELECT
                 "planner", "problem", "mode", "status", "computation", "quality",
-                "error msg", "jobs", "memout", "timeout", "creation"
+                "error msg", "jobs", "memout", "timeout", "creation", "plan"
             FROM results
             """
         )
@@ -50,8 +51,8 @@ def merge(db_folder: Path, out_db: str):
                 """
                 INSERT INTO "results" (
                     "planner", "problem", "mode", "status", "computation", "quality",
-                    "error msg", "jobs", "memout", "timeout", "creation"
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    "error msg", "jobs", "memout", "timeout", "creation", "plan"
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 result,
             )
