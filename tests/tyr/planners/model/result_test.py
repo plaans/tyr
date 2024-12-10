@@ -351,6 +351,47 @@ class TestPlannerResult:
         merged_results = PlannerResult.merge_all(results)
         assert merged_results == expected
 
+    def test_merge_originals(self):
+        result1 = PlannerResult(
+            config="config",
+            planner="planner",
+            problem="problem",
+            computation_time=10.0,
+            plan_quality=0.5,
+            status=PlannerResultStatus.SOLVED,
+            running_mode=RunningMode.ONESHOT,
+        )
+        result2 = PlannerResult(
+            config="config",
+            planner="planner",
+            problem="problem",
+            computation_time=5.0,
+            plan_quality=0.8,
+            status=PlannerResultStatus.SOLVED,
+            running_mode=RunningMode.ONESHOT,
+        )
+        result3 = PlannerResult(
+            config="config",
+            planner="planner",
+            problem="problem",
+            computation_time=5.0,
+            plan_quality=0.8,
+            status=PlannerResultStatus.SOLVED,
+            running_mode=RunningMode.ONESHOT,
+        )
+        result4 = PlannerResult(
+            config="config",
+            planner="planner",
+            problem="problem",
+            computation_time=5.0,
+            plan_quality=0.8,
+            status=PlannerResultStatus.SOLVED,
+            running_mode=RunningMode.ONESHOT,
+        )
+        merged_results = PlannerResult.merge_all([result1, result2, result3, result4])
+        assert len(merged_results) == 1
+        assert merged_results.pop().originals == [result1, result2, result3, result4]
+
     # =================================== Error ================================== #
 
     @pytest.mark.parametrize("name", ["mockplanner", "mockplannerbis"])
