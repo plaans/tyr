@@ -429,7 +429,7 @@ class TableTerminalWriter(Writer):
                     for candidate in candidates
                     for result in self._results
                     if result.problem.domain == candidate[0]
-                    and result.planner_name == candidate[1].name
+                    and result.planner.name == candidate[1].name
                 }
 
                 if len(candidates) > 1:
@@ -443,7 +443,7 @@ class TableTerminalWriter(Writer):
                     results = [
                         result
                         for result in self._results
-                        if result.problem.domain == d and result.planner_name == p.name
+                        if result.problem.domain == d and result.planner.name == p.name
                     ]
                     raw_value = m.evaluate_raw(results, self._results)
                     value = eval(post_process_value)(  # nosec: B307

@@ -14,7 +14,7 @@ from tyr.problems.model.instance import ProblemInstance
 
 @dataclass
 class BenchResult:
-    """The minimal representation of a result for the writter."""
+    """The minimal representation of a result for the writer."""
 
     status: PlannerResultStatus
     planner_name: str
@@ -34,7 +34,7 @@ class BenchResult:
         """
         return BenchResult(
             result.status,
-            result.planner_name,
+            result.planner.name,
             result.running_mode,
             result.problem.name,
             result.error_message,

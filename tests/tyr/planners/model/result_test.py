@@ -28,6 +28,13 @@ class TestPlannerResult:
 
     @staticmethod
     @pytest.fixture()
+    def planner():
+        p = MagicMock()
+        p.name = "mockplanner"
+        yield p
+
+    @staticmethod
+    @pytest.fixture()
     def upf_result():
         yield PlanGenerationResult(
             PlanGenerationResultStatus.SOLVED_OPTIMALLY,
@@ -44,12 +51,13 @@ class TestPlannerResult:
     @pytest.mark.parametrize("problem", [MagicMock(), MagicMock()])
     def test_from_upf_problem(
         self,
+        planner: Mock,
         problem: Mock,
         config: Mock,
         upf_result: PlanGenerationResult,
     ):
         result = PlannerResult.from_upf(
-            "mockplanner",
+            planner,
             problem,
             "version_name",
             upf_result,
@@ -62,6 +70,7 @@ class TestPlannerResult:
     def test_from_upf_status(
         self,
         status: PlanGenerationResultStatus,
+        planner: Mock,
         problem: Mock,
         config: Mock,
         upf_result: PlanGenerationResult,
@@ -79,7 +88,7 @@ class TestPlannerResult:
         }
         upf_result.status = status
         result = PlannerResult.from_upf(
-            "mockplanner",
+            planner,
             problem,
             "version_name",
             upf_result,
@@ -88,28 +97,29 @@ class TestPlannerResult:
         )
         assert result.status == status_map[status]
 
-    @pytest.mark.parametrize("name", ["mockplanner", "mockplannerbis"])
+    @pytest.mark.parametrize("planner", [MagicMock(), MagicMock()])
     def test_from_upf_planner_name(
         self,
-        name: str,
+        planner: Mock,
         problem: Mock,
         config: Mock,
         upf_result: PlanGenerationResult,
     ):
         result = PlannerResult.from_upf(
-            name,
+            planner,
             problem,
             "version_name",
             upf_result,
             config,
             RunningMode.ONESHOT,
         )
-        assert result.planner_name == name
+        assert result.planner == planner
 
     @pytest.mark.parametrize("computation_time", [None, "1.5", "0.0", "15"])
     def test_from_upf_computation_time(
         self,
         computation_time: Optional[str],
+        planner: Mock,
         problem: Mock,
         config: Mock,
         upf_result: PlanGenerationResult,
@@ -121,7 +131,7 @@ class TestPlannerResult:
             upf_result.metrics = {"engine_internal_time": computation_time}
             expected = float(computation_time)
         result = PlannerResult.from_upf(
-            "mockplanner",
+            planner,
             problem,
             "version_name",
             upf_result,
@@ -139,6 +149,7 @@ class TestPlannerResult:
         plan: Optional[Mock],
         quality: Optional[float],
         version_name: str,
+        planner: Mock,
         problem: Mock,
         config: Mock,
         upf_result: PlanGenerationResult,
@@ -146,7 +157,7 @@ class TestPlannerResult:
         upf_result.plan = plan
         problem.get_quality_of_plan.return_value = quality
         result = PlannerResult.from_upf(
-            "mockplanner",
+            planner,
             problem,
             version_name,
             upf_result,
@@ -165,7 +176,7 @@ class TestPlannerResult:
     def test_merge_same_results(self):
         result1 = PlannerResult(
             config="config",
-            planner_name="planner",
+            planner="planner",
             problem="problem",
             computation_time=10.0,
             plan_quality=0.5,
@@ -174,7 +185,7 @@ class TestPlannerResult:
         )
         result2 = PlannerResult(
             config="config",
-            planner_name="planner",
+            planner="planner",
             problem="problem",
             computation_time=5.0,
             plan_quality=0.8,
@@ -183,7 +194,7 @@ class TestPlannerResult:
         )
         merged_result = result1.merge(result2)
         assert merged_result.config == "config"
-        assert merged_result.planner_name == "planner"
+        assert merged_result.planner == "planner"
         assert merged_result.problem == "problem"
         assert merged_result.computation_time == 5.0
         assert merged_result.plan_quality == 0.5
@@ -193,7 +204,7 @@ class TestPlannerResult:
     def test_merge_different_config(self):
         result1 = PlannerResult(
             config="config1",
-            planner_name="planner",
+            planner="planner",
             problem="problem",
             computation_time=10.0,
             plan_quality=0.9,
@@ -202,7 +213,7 @@ class TestPlannerResult:
         )
         result2 = PlannerResult(
             config="config2",
-            planner_name="planner",
+            planner="planner",
             problem="problem",
             computation_time=5.0,
             plan_quality=0.8,
@@ -215,7 +226,7 @@ class TestPlannerResult:
     def test_merge_different_planners(self):
         result1 = PlannerResult(
             config="config",
-            planner_name="planner1",
+            planner="planner1",
             problem="problem",
             computation_time=10.0,
             plan_quality=0.9,
@@ -224,7 +235,7 @@ class TestPlannerResult:
         )
         result2 = PlannerResult(
             config="config",
-            planner_name="planner2",
+            planner="planner2",
             problem="problem",
             computation_time=5.0,
             plan_quality=0.8,
@@ -237,7 +248,7 @@ class TestPlannerResult:
     def test_merge_different_problems(self):
         result1 = PlannerResult(
             config="config",
-            planner_name="planner",
+            planner="planner",
             problem="problem1",
             computation_time=10.0,
             plan_quality=0.9,
@@ -246,7 +257,7 @@ class TestPlannerResult:
         )
         result2 = PlannerResult(
             config="config",
-            planner_name="planner",
+            planner="planner",
             problem="problem2",
             computation_time=5.0,
             plan_quality=0.8,
@@ -259,7 +270,7 @@ class TestPlannerResult:
     def test_merge_other_result_not_solved(self):
         result1 = PlannerResult(
             config="config",
-            planner_name="planner",
+            planner="planner",
             problem="problem",
             computation_time=10.0,
             plan_quality=0.9,
@@ -268,7 +279,7 @@ class TestPlannerResult:
         )
         result2 = PlannerResult(
             config="config",
-            planner_name="planner",
+            planner="planner",
             problem="problem",
             computation_time=None,
             plan_quality=None,
@@ -285,7 +296,7 @@ class TestPlannerResult:
     def test_merge_self_result_not_solved(self):
         result1 = PlannerResult(
             config="config",
-            planner_name="planner",
+            planner="planner",
             problem="problem",
             computation_time=None,
             plan_quality=None,
@@ -294,7 +305,7 @@ class TestPlannerResult:
         )
         result2 = PlannerResult(
             config="config",
-            planner_name="planner",
+            planner="planner",
             problem="problem",
             computation_time=10.0,
             plan_quality=0.9,
@@ -311,7 +322,7 @@ class TestPlannerResult:
     def test_merge_all(self):
         result1 = PlannerResult(
             config="config",
-            planner_name="planner",
+            planner="planner",
             problem="problem",
             computation_time=10.0,
             plan_quality=0.5,
@@ -320,7 +331,7 @@ class TestPlannerResult:
         )
         result2 = PlannerResult(
             config="config",
-            planner_name="planner",
+            planner="planner",
             problem="problem",
             computation_time=5.0,
             plan_quality=0.8,
@@ -329,7 +340,7 @@ class TestPlannerResult:
         )
         result3 = PlannerResult(
             config="config",
-            planner_name="planner-bis",
+            planner="planner-bis",
             problem="problem",
             computation_time=5.0,
             plan_quality=0.8,
@@ -338,7 +349,7 @@ class TestPlannerResult:
         )
         result4 = PlannerResult(
             config="config",
-            planner_name="planner-bis",
+            planner="planner-bis",
             problem="problem-bis",
             computation_time=5.0,
             plan_quality=0.8,
@@ -394,22 +405,20 @@ class TestPlannerResult:
 
     # =================================== Error ================================== #
 
-    @pytest.mark.parametrize("name", ["mockplanner", "mockplannerbis"])
+    @pytest.mark.parametrize("planner", [MagicMock(), MagicMock()])
     @pytest.mark.parametrize("problem", [MagicMock(), MagicMock()])
     @pytest.mark.parametrize("computation_time", [1.5, 0, 16])
     @pytest.mark.parametrize("message", ["foo", "bar"])
     def test_error(
         self,
-        name: str,
+        planner: Mock,
         problem: Mock,
         config: Mock,
         computation_time: float,
         message: str,
     ):
-        planner = MagicMock()
-        planner.name = name
         expected = PlannerResult(
-            name,
+            planner,
             problem,
             RunningMode.ONESHOT,
             PlannerResultStatus.ERROR,
@@ -430,18 +439,16 @@ class TestPlannerResult:
 
     # ================================== Not Run ================================= #
 
-    @pytest.mark.parametrize("name", ["mockplanner", "mockplannerbis"])
+    @pytest.mark.parametrize("planner", [MagicMock(), MagicMock()])
     @pytest.mark.parametrize("problem", [MagicMock(), MagicMock()])
     def test_not_run(
         self,
-        name: str,
+        planner: Mock,
         problem: Mock,
         config: Mock,
     ):
-        planner = MagicMock()
-        planner.name = name
         expected = PlannerResult(
-            name,
+            planner,
             problem,
             RunningMode.ONESHOT,
             PlannerResultStatus.NOT_RUN,
@@ -454,15 +461,13 @@ class TestPlannerResult:
 
     # ================================== Timeout ================================= #
 
-    @pytest.mark.parametrize("name", ["mockplanner", "mockplannerbis"])
+    @pytest.mark.parametrize("planner", [MagicMock(), MagicMock()])
     @pytest.mark.parametrize("problem", [MagicMock(), MagicMock()])
     @pytest.mark.parametrize("timeout", [1, 0, 16])
-    def test_timeout(self, name: str, problem: Mock, config: Mock, timeout: float):
-        planner = MagicMock()
-        planner.name = name
+    def test_timeout(self, planner: Mock, problem: Mock, config: Mock, timeout: float):
         config.timeout = timeout
         expected = PlannerResult(
-            str(planner),
+            planner,
             problem,
             RunningMode.ONESHOT,
             PlannerResultStatus.TIMEOUT,
@@ -474,13 +479,11 @@ class TestPlannerResult:
 
     # ================================ Unsupported =============================== #
 
-    @pytest.mark.parametrize("name", ["mockplanner", "mockplannerbis"])
+    @pytest.mark.parametrize("planner", [MagicMock(), MagicMock()])
     @pytest.mark.parametrize("problem", [MagicMock(), MagicMock()])
-    def test_unsupported(self, name: str, problem: Mock, config: Mock):
-        planner = MagicMock()
-        planner.name = name
+    def test_unsupported(self, planner: Mock, problem: Mock, config: Mock):
         expected = PlannerResult(
-            name,
+            planner,
             problem,
             RunningMode.ONESHOT,
             PlannerResultStatus.UNSUPPORTED,

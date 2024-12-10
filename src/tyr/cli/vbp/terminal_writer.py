@@ -440,7 +440,7 @@ class VbpTerminalWriter(Writer):
                     for candidate in candidates
                     for result in self._results[candidate[1]]
                     if result.problem.domain == candidate[0]
-                    and result.planner_name in [p.name for p in candidate[2]]
+                    and result.planner.name in [p.name for p in candidate[2]]
                 }
 
                 if len(candidates) > 1:
@@ -460,7 +460,7 @@ class VbpTerminalWriter(Writer):
                                     result
                                     for result in self._results[gi]
                                     if result.problem.domain == d
-                                    and result.planner_name in [p.name for p in g]
+                                    and result.planner.name in [p.name for p in g]
                                 ),
                                 key=lambda r: r.problem.name,
                             ),

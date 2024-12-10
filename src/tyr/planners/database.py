@@ -13,6 +13,7 @@ from tyr.problems.model.instance import ProblemInstance
 
 if TYPE_CHECKING:
     from tyr.planners.model.config import RunningMode, SolveConfig
+    from tyr.planners.model.planner import Planner
     from tyr.planners.model.result import PlannerResult
 
 
@@ -93,7 +94,7 @@ class Database(Singleton):
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
                 """,
                 (
-                    result.planner_name,
+                    result.planner.name,
                     result.problem.name,
                     result.running_mode.name,
                     result.status.name,
@@ -112,7 +113,7 @@ class Database(Singleton):
     # pylint: disable = too-many-arguments, too-many-positional-arguments, too-many-locals
     def load_planner_result(
         self,
-        planner_name: str,
+        planner: "Planner",
         problem: ProblemInstance,
         config: "SolveConfig",
         running_mode: "RunningMode",
@@ -122,7 +123,7 @@ class Database(Singleton):
         """Loads the planner result matching the given attributes if any.
 
         Args:
-            planner_name (str): The planner name.
+            planner (Planner): The planner.
             problem (ProblemInstance): The problem instance.
             config (SolveConfig): The configuration used to solve the problem.
             running_mode (RunningMode): The running mode for the planner resolution.
@@ -142,7 +143,7 @@ class Database(Singleton):
                     ORDER BY "creation" DESC
                     LIMIT 1;
                     """
-        params = [planner_name, problem.name, running_mode.name, config.memout]
+        params = [planner.name, problem.name, running_mode.name, config.memout]
         if force_before_timeout:
             request = request.replace('"memout"=?', '"memout"=? AND "computation"<=?')
             params.append(config.timeout)
@@ -163,7 +164,7 @@ class Database(Singleton):
         if resp[5] is not None and resp[5] > config.timeout:
             if running_mode.name == "ANYTIME" and not force_before_timeout:
                 result_before_timeout = self.load_planner_result(
-                    planner_name,
+                    planner,
                     problem,
                     config,
                     running_mode,
@@ -172,7 +173,7 @@ class Database(Singleton):
                 )
                 if result_before_timeout is not None:
                     return result_before_timeout
-            result = PlannerResult.timeout(problem, planner_name, config, running_mode)
+            result = PlannerResult.timeout(problem, planner, config, running_mode)
             return replace(result, from_database=True)
 
         if resp[4] != "SOLVED" and running_mode.name == "ANYTIME":
@@ -185,7 +186,7 @@ class Database(Singleton):
                         LIMIT 1;
                         """
             params = [
-                planner_name,
+                planner.name,
                 problem.name,
                 running_mode.name,
                 config.memout,
@@ -203,7 +204,7 @@ class Database(Singleton):
                 resp = resp_solved
 
         return PlannerResult(
-            planner_name,
+            planner,
             problem,
             running_mode,
             status=getattr(PlannerResultStatus, resp[4]),

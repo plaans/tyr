@@ -44,7 +44,7 @@ class Plotter(Abstract, Singleton, metaclass=AbstractSingletonMeta):
         """Plot the performance of a planner."""
         # pylint: disable = use-dict-literal
 
-        planners = sorted(set(r.planner_name for r in results))
+        planners = sorted(set(r.planner.name for r in results))
         domains = sorted(set(r.problem.domain.name for r in results))
         symbols = SymbolValidator().values
         fig = go.Figure()
@@ -57,7 +57,7 @@ class Plotter(Abstract, Singleton, metaclass=AbstractSingletonMeta):
                     [
                         r
                         for r in results
-                        if r.planner_name == planner and r.problem.domain.name == domain
+                        if r.planner.name == planner and r.problem.domain.name == domain
                     ]
                 )
                 fig.add_trace(
@@ -86,7 +86,7 @@ class Plotter(Abstract, Singleton, metaclass=AbstractSingletonMeta):
     def latex(self, results: List[PlannerResult]) -> str:
         """Return the LaTeX code of the plot."""
 
-        planners = sorted(set(r.planner_name for r in results))
+        planners = sorted(set(r.planner.name for r in results))
         domains = sorted(set(r.problem.domain.name for r in results))
 
         colors = [
@@ -157,7 +157,7 @@ class Plotter(Abstract, Singleton, metaclass=AbstractSingletonMeta):
                     [
                         r
                         for r in results
-                        if r.planner_name == planner and r.problem.domain.name == domain
+                        if r.planner.name == planner and r.problem.domain.name == domain
                     ]
                 )
 

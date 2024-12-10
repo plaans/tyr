@@ -82,7 +82,7 @@ def run_vbp(
             for problem in problems.selected:
                 for running_mode in RunningMode:
                     result = Database().load_planner_result(
-                        planner.name,
+                        planner,
                         problem,
                         solve_config,
                         running_mode,
@@ -114,11 +114,11 @@ def run_vbp(
                 r1.status == PlannerResultStatus.UNSUPPORTED
                 for r1 in group_results
                 if r1.problem.domain == r.problem.domain
-                and r1.planner_name == r.planner_name
+                and r1.planner.name == r.planner.name
                 and r1.running_mode == r.running_mode
             ):
                 msg = f"Unsupported results on domain {r.problem.domain.name} \
-    are not consistent for planner {r.planner_name}."
+    are not consistent for planner {r.planner}."
                 tw.line()
                 tw.write("[ERROR]", bold=True, red=True)
                 tw.line(f" {msg}", red=True)

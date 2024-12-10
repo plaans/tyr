@@ -32,14 +32,14 @@ class QualityRatioPlotter(Plotter):
     def _data(self, data: List[PlannerResult]) -> Tuple[List[float], List[float]]:
         """Extract the data to plot."""
         # Extract the planner names
-        self._planner_names = sorted(list({r.planner_name for r in data}))
+        self._planner_names = sorted(list({r.planner.name for r in data}))
         if len(self._planner_names) != 2:
             raise ValueError("Quality Ratio plot requires exactly two planners.")
 
         # Sort results by planner name
         planner_results = [
             sorted(
-                PlannerResult.merge_all([r for r in data if r.planner_name == name]),
+                PlannerResult.merge_all([r for r in data if r.planner.name == name]),
                 key=lambda r: r.problem.name,
             )
             for name in self._planner_names

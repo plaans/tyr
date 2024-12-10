@@ -54,7 +54,7 @@ class PlannerResultStatus(Enum):
 class PlannerResult:  # pylint: disable = too-many-instance-attributes
     """Represents the result of a planner solving a problem."""
 
-    planner_name: str
+    planner: "Planner"
     problem: ProblemInstance
     running_mode: RunningMode
     status: PlannerResultStatus
@@ -71,7 +71,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
     # pylint: disable = too-many-arguments, too-many-positional-arguments
     @staticmethod
     def from_upf(
-        planner_name: str,
+        planner: "Planner",
         problem: ProblemInstance,
         version_name: str,
         result: PlanGenerationResult,
@@ -83,7 +83,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
         NOTE: If `config.unify_epsilons` is True, the plan is updated in place.
 
         Args:
-            planner_name (str): The name of the planner solving the problem.
+            planner (Planner): The planner solving the problem.
             problem (ProblemInstance): The problem solved by the planner.
             version_name (str): The name of the version of the problem solved.
             result (PlanGenerationResult): The result to convert.
@@ -115,7 +115,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             plan_quality = problem.get_quality_of_plan(result.plan, version_name)
 
         return PlannerResult(
-            planner_name,
+            planner,
             problem,
             running_mode,
             PlannerResultStatus.from_upf(result.status),
@@ -136,7 +136,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
         """
         if self.config != other.config:
             raise ValueError("Cannot merge results with different configurations.")
-        if self.planner_name != other.planner_name:
+        if self.planner != other.planner:
             raise ValueError("Cannot merge results from different planners.")
         if self.problem != other.problem:
             raise ValueError("Cannot merge results from different problems.")
@@ -178,7 +178,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
         """
         merged = {}
         for result in results:
-            key = (result.problem, result.planner_name)
+            key = (result.problem, result.planner)
             if key not in merged:
                 merged[key] = result
             else:
@@ -208,7 +208,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             PlannerResult: The error result.
         """
         return PlannerResult(
-            planner.name,
+            planner,
             problem,
             running_mode,
             PlannerResultStatus.ERROR,
@@ -237,7 +237,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             PlannerResult: The not run result.
         """
         return PlannerResult(
-            planner.name,
+            planner,
             problem,
             running_mode,
             PlannerResultStatus.NOT_RUN,
@@ -249,7 +249,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
     @staticmethod
     def timeout(
         problem: ProblemInstance,
-        planner: Union["Planner", str],
+        planner: "Planner",
         config: SolveConfig,
         running_mode: RunningMode,
     ) -> "PlannerResult":
@@ -257,7 +257,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
 
         Args:
             problem (ProblemInstance): The timed out problem.
-            planner (Planner | str): The planner trying the solve the problem or its name.
+            planner (Planner): The planner trying the solve the problem.
             config (SolveConfig): The configuration used to solve the problem.
             running_mode (RunningMode): The mode used by the planner.
 
@@ -265,7 +265,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             PlannerResult: The timeout result.
         """
         return PlannerResult(
-            str(planner),
+            planner,
             problem,
             running_mode,
             PlannerResultStatus.TIMEOUT,
@@ -292,7 +292,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             PlannerResult: The unsupported result.
         """
         return PlannerResult(
-            planner.name,
+            planner,
             problem,
             running_mode,
             PlannerResultStatus.UNSUPPORTED,

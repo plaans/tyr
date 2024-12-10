@@ -29,6 +29,7 @@ def result_mock():
     result = MagicMock()
     result.config.timeout = 10
     result.running_mode = RunningMode.ONESHOT
+    result.planner = MagicMock()
     result.plan = MagicMock()
     result.plan.__str__.return_value = "Sequential Plan\n    Action 1\n    Action 2"
     yield result
@@ -120,7 +121,7 @@ class TestDatabase:
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
                 """,
             (
-                result_mock.planner_name,
+                result_mock.planner.name,
                 result_mock.problem.name,
                 result_mock.running_mode.name,
                 result_mock.status.name,
@@ -162,7 +163,7 @@ class TestDatabase:
         now = "2021-01-01T00:00:00"
         cursor_mock.execute.return_value.fetchone.return_value = (
             1,
-            result_mock.planner_name,
+            result_mock.planner.name,
             result_mock.problem.name,
             result_mock.running_mode.name,
             "SOLVED",
@@ -177,14 +178,14 @@ class TestDatabase:
         )
 
         result = database.load_planner_result(
-            result_mock.planner_name,
+            result_mock.planner,
             result_mock.problem,
             result_mock.config,
             result_mock.running_mode,
         )
 
         assert result == PlannerResult(
-            result_mock.planner_name,
+            result_mock.planner,
             result_mock.problem,
             result_mock.running_mode,
             PlannerResultStatus.SOLVED,
@@ -203,7 +204,7 @@ class TestDatabase:
                     LIMIT 1;
                     """,
             [
-                result_mock.planner_name,
+                result_mock.planner.name,
                 result_mock.problem.name,
                 result_mock.running_mode.name,
                 result_mock.config.memout,
@@ -225,7 +226,7 @@ class TestDatabase:
         cursor_mock.execute.return_value.fetchone.return_value = None
 
         result = database.load_planner_result(
-            result_mock.planner_name,
+            result_mock.planner,
             result_mock.problem,
             result_mock.config,
             result_mock.running_mode,
@@ -247,7 +248,7 @@ class TestDatabase:
         now = "2021-01-01T00:00:00"
         cursor_mock.execute.return_value.fetchone.return_value = (
             1,
-            result_mock.planner_name,
+            result_mock.planner.name,
             result_mock.problem.name,
             result_mock.running_mode.name,
             "NOT_RUN",
@@ -262,7 +263,7 @@ class TestDatabase:
         )
 
         result = database.load_planner_result(
-            result_mock.planner_name,
+            result_mock.planner,
             result_mock.problem,
             result_mock.config,
             result_mock.running_mode,
@@ -285,7 +286,7 @@ class TestDatabase:
         cursor_mock.execute.return_value.fetchone.side_effect = [
             (
                 1,
-                result_mock.planner_name,
+                result_mock.planner.name,
                 result_mock.problem.name,
                 "ONESHOT",
                 "SOLVED",
@@ -300,7 +301,7 @@ class TestDatabase:
             ),
             (
                 2,
-                result_mock.planner_name,
+                result_mock.planner.name,
                 result_mock.problem.name,
                 "ONESHOT",
                 "SOLVED",
@@ -316,14 +317,14 @@ class TestDatabase:
         ]
 
         result = database.load_planner_result(
-            result_mock.planner_name,
+            result_mock.planner,
             result_mock.problem,
             result_mock.config,
             RunningMode.ONESHOT,
         )
 
         assert result == PlannerResult(
-            str(result_mock.planner_name),
+            result_mock.planner,
             result_mock.problem,
             result_mock.running_mode,
             PlannerResultStatus.TIMEOUT,
@@ -351,7 +352,7 @@ class TestDatabase:
         cursor_mock.execute.return_value.fetchone.side_effect = [
             (
                 1,
-                result_mock.planner_name,
+                result_mock.planner.name,
                 result_mock.problem.name,
                 "ANYTIME",
                 "SOLVED",
@@ -366,7 +367,7 @@ class TestDatabase:
             ),
             (
                 2,
-                result_mock.planner_name,
+                result_mock.planner.name,
                 result_mock.problem.name,
                 "ANYTIME",
                 "SOLVED",
@@ -382,14 +383,14 @@ class TestDatabase:
         ]
 
         result = database.load_planner_result(
-            result_mock.planner_name,
+            result_mock.planner,
             result_mock.problem,
             result_mock.config,
             RunningMode.ANYTIME,
         )
 
         assert result == PlannerResult(
-            result_mock.planner_name,
+            result_mock.planner,
             result_mock.problem,
             RunningMode.ANYTIME,
             PlannerResultStatus.SOLVED,
@@ -417,7 +418,7 @@ class TestDatabase:
         cursor_mock.execute.return_value.fetchone.side_effect = [
             (
                 1,
-                result_mock.planner_name,
+                result_mock.planner.name,
                 result_mock.problem.name,
                 "ONESHOT",
                 "MEMOUT",
@@ -432,7 +433,7 @@ class TestDatabase:
             ),
             (
                 2,
-                result_mock.planner_name,
+                result_mock.planner.name,
                 result_mock.problem.name,
                 "ONESHOT",
                 "SOLVED",
@@ -448,14 +449,14 @@ class TestDatabase:
         ]
 
         result = database.load_planner_result(
-            result_mock.planner_name,
+            result_mock.planner,
             result_mock.problem,
             result_mock.config,
             RunningMode.ONESHOT,
         )
 
         assert result == PlannerResult(
-            result_mock.planner_name,
+            result_mock.planner,
             result_mock.problem,
             RunningMode.ONESHOT,
             PlannerResultStatus.MEMOUT,
@@ -483,7 +484,7 @@ class TestDatabase:
         cursor_mock.execute.return_value.fetchone.side_effect = [
             (
                 1,
-                result_mock.planner_name,
+                result_mock.planner.name,
                 result_mock.problem.name,
                 "ANYTIME",
                 "MEMOUT",
@@ -498,7 +499,7 @@ class TestDatabase:
             ),
             (
                 2,
-                result_mock.planner_name,
+                result_mock.planner.name,
                 result_mock.problem.name,
                 "ANYTIME",
                 "SOLVED",
@@ -514,14 +515,14 @@ class TestDatabase:
         ]
 
         result = database.load_planner_result(
-            result_mock.planner_name,
+            result_mock.planner,
             result_mock.problem,
             result_mock.config,
             RunningMode.ANYTIME,
         )
 
         assert result == PlannerResult(
-            result_mock.planner_name,
+            result_mock.planner,
             result_mock.problem,
             RunningMode.ANYTIME,
             PlannerResultStatus.SOLVED,
@@ -549,7 +550,7 @@ class TestDatabase:
         cursor_mock.execute.return_value.fetchone.side_effect = [
             (
                 1,
-                result_mock.planner_name,
+                result_mock.planner.name,
                 result_mock.problem.name,
                 "ANYTIME",
                 "SOLVED",
@@ -564,7 +565,7 @@ class TestDatabase:
             ),
             (
                 2,
-                result_mock.planner_name,
+                result_mock.planner.name,
                 result_mock.problem.name,
                 "ANYTIME",
                 "MEMOUT",
@@ -579,7 +580,7 @@ class TestDatabase:
             ),
             (
                 3,
-                result_mock.planner_name,
+                result_mock.planner.name,
                 result_mock.problem.name,
                 "ANYTIME",
                 "SOLVED",
@@ -595,14 +596,14 @@ class TestDatabase:
         ]
 
         result = database.load_planner_result(
-            result_mock.planner_name,
+            result_mock.planner,
             result_mock.problem,
             result_mock.config,
             RunningMode.ANYTIME,
         )
 
         assert result == PlannerResult(
-            result_mock.planner_name,
+            result_mock.planner,
             result_mock.problem,
             RunningMode.ANYTIME,
             PlannerResultStatus.SOLVED,
@@ -629,7 +630,7 @@ class TestDatabase:
         now = "2021-01-01T00:00:00"
         cursor_mock.execute.return_value.fetchone.return_value = (
             1,
-            result_mock.planner_name,
+            result_mock.planner.name,
             result_mock.problem.name,
             result_mock.running_mode.name,
             "TIMEOUT",
@@ -644,7 +645,7 @@ class TestDatabase:
         )
 
         result = database.load_planner_result(
-            result_mock.planner_name,
+            result_mock.planner,
             result_mock.problem,
             result_mock.config,
             result_mock.running_mode,

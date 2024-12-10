@@ -250,7 +250,7 @@ class Planner:
         # Check the database.
         if config.no_db_load is False:
             db = Database().load_planner_result(
-                self.name,
+                self,
                 problem,
                 config,
                 running_mode,
@@ -319,7 +319,6 @@ class Planner:
                             break
                         yield self._handle_upf_result(
                             self.last_upf_result,
-                            self.name,
                             problem,
                             version_name,
                             running_mode,
@@ -356,7 +355,6 @@ class Planner:
                 return
             yield self._handle_upf_result(
                 self.last_upf_result,
-                self.name,
                 problem,
                 version_name,
                 running_mode,
@@ -366,7 +364,7 @@ class Planner:
             return
 
         except Exception:  # pylint: disable=broad-exception-caught
-            # An error occured...
+            # An error occurred...
             # Stop the process if it is still running.
             if process is not None and process.is_alive():
                 process.terminate()
@@ -485,7 +483,6 @@ class Planner:
     def _handle_upf_result(
         self,
         upf_result: PlanGenerationResult,
-        planner_name: str,
         problem: ProblemInstance,
         version_name: str,
         running_mode: RunningMode,
@@ -494,7 +491,7 @@ class Planner:
     ) -> PlannerResult:
         # Convert the result into inner format and set computation time if not present.
         result = PlannerResult.from_upf(
-            planner_name,
+            self,
             problem,
             version_name,
             upf_result,
