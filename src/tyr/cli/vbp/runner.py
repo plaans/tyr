@@ -77,22 +77,23 @@ def run_vbp(
     # Get the results from the database.
     results: List[List[PlannerResult]] = []
     for group in groups:
-        results.append([])
-        for planner in group.selected:
-            for problem in problems.selected:
-                for running_mode in RunningMode:
-                    result = Database().load_planner_result(
-                        planner,
-                        problem,
-                        solve_config,
-                        running_mode,
-                        keep_unsupported=True,
-                    )
-                    if result is None:
-                        result = PlannerResult.not_run(
-                            problem, planner, solve_config, running_mode
-                        )
-                    results[-1].append(result)
+        requests = [
+            (planner, problem, running_mode)
+            for planner in group.selected
+            for problem in problems.selected
+            for running_mode in RunningMode
+            if running_mode != RunningMode.MERGED
+        ]
+        group_results: List[PlannerResult] = list(
+            Database().load_multi_planner_results(  # type: ignore
+                requests,  # type: ignore
+                solve_config,
+                keep_unsupported=True,
+                not_run_by_default=True,
+            )
+        )
+        assert not any(r is None for r in group_results)  # nosec: B101
+        results.append(group_results)
 
     # Filter the results.
     results = [

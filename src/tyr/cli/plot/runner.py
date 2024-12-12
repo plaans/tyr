@@ -43,22 +43,22 @@ def run_plot(
     tw.report_collect(planners, problems, plotters)
 
     # Get the results from the database.
-    results: List[PlannerResult] = []
-    for planner in planners.selected:
-        for problem in problems.selected:
-            for running_mode in RunningMode:
-                result = Database().load_planner_result(
-                    planner,
-                    problem,
-                    solve_config,
-                    running_mode,
-                    keep_unsupported=True,
-                )
-                if result is None:
-                    result = PlannerResult.not_run(
-                        problem, planner, solve_config, running_mode
-                    )
-                results.append(result)
+    requests = [
+        (planner, problem, running_mode)
+        for planner in planners.selected
+        for problem in problems.selected
+        for running_mode in RunningMode
+        if running_mode != RunningMode.MERGED
+    ]
+    results: List[PlannerResult] = list(
+        Database().load_multi_planner_results(  # type: ignore
+            requests,  # type: ignore
+            solve_config,
+            keep_unsupported=True,
+            not_run_by_default=True,
+        )
+    )
+    assert not any(r is None for r in results)  # nosec: B101
 
     # Filter the results.
     results = [

@@ -5,7 +5,7 @@ import sqlite3
 import time
 from contextlib import contextmanager
 from dataclasses import replace
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, Iterator, List, Optional, Tuple
 
 from tyr.core.paths import TyrPaths
 from tyr.patterns.singleton import Singleton
@@ -111,6 +111,118 @@ class Database(Singleton):
             conn.commit()
 
     # pylint: disable = too-many-arguments, too-many-positional-arguments, too-many-locals
+    def _handle_db_response(
+        self,
+        resp: Any,
+        planner: "Planner",
+        problem: ProblemInstance,
+        config: "SolveConfig",
+        running_mode: "RunningMode",
+        keep_unsupported: bool,
+        force_before_timeout: bool,
+        not_run_by_default: bool,
+    ) -> Optional["PlannerResult"]:
+        # pylint: disable = import-outside-toplevel
+        from tyr.planners.model.result import PlannerResult, PlannerResultStatus
+
+        def internal_handle(
+            resp: Any,
+            planner: "Planner",
+            problem: ProblemInstance,
+            config: "SolveConfig",
+            running_mode: "RunningMode",
+            keep_unsupported: bool,
+            force_before_timeout: bool,
+        ):
+
+            if (
+                resp is None
+                or resp[4] == "NOT_RUN"
+                or (resp[4] == "UNSUPPORTED" and not keep_unsupported)
+            ):
+                return None
+
+            if (
+                resp[4] == "TIMEOUT"
+                and resp[5] is not None
+                and resp[5] < config.timeout
+            ):
+                return None
+
+            if resp[5] is not None and resp[5] > config.timeout:
+                if running_mode.name == "ANYTIME" and not force_before_timeout:
+                    result_before_timeout = self.load_planner_result(
+                        planner,
+                        problem,
+                        config,
+                        running_mode,
+                        keep_unsupported,
+                        force_before_timeout=True,
+                    )
+                    if result_before_timeout is not None:
+                        return result_before_timeout
+                result = PlannerResult.timeout(problem, planner, config, running_mode)
+                return replace(result, from_database=True)
+
+            if resp[4] != "SOLVED" and running_mode.name == "ANYTIME":
+                request = """
+                            SELECT * FROM "results"
+                            WHERE "planner"=? AND "problem"=? AND "mode"=? AND "memout"=?
+                            AND "computation"<=? AND "creation"<=? AND "creation">=?
+                            AND "status"="SOLVED"
+                            ORDER BY "creation" DESC
+                            LIMIT 1;
+                            """
+                params = [
+                    planner.name,
+                    problem.name,
+                    running_mode.name,
+                    config.memout,
+                    config.timeout,
+                    resp[11],
+                    (
+                        datetime.datetime.fromisoformat(resp[11])
+                        # + 10 seconds to avoid issues linked to retried savings
+                        - datetime.timedelta(seconds=config.timeout + 10)
+                    ).isoformat(),
+                ]
+                with self.database() as conn:
+                    resp_solved = conn.cursor().execute(request, params).fetchone()
+                if resp_solved is not None:
+                    resp = resp_solved
+
+            return PlannerResult(
+                planner,
+                problem,
+                running_mode,
+                status=getattr(PlannerResultStatus, resp[4]),
+                config=config,
+                computation_time=resp[5],
+                plan_quality=resp[6],
+                error_message=resp[7],
+                from_database=True,
+                plan=resp[12],
+            )
+
+        result = internal_handle(
+            resp,
+            planner,
+            problem,
+            config,
+            running_mode,
+            keep_unsupported,
+            force_before_timeout,
+        )
+        if result is not None:
+            assert result.planner == planner  # nosec: B101
+            assert result.problem == problem  # nosec: B101
+            assert result.running_mode == running_mode  # nosec: B101
+            return result
+        if not_run_by_default:
+            return PlannerResult.not_run(problem, planner, config, running_mode)
+        return None
+
+    # pylint: disable = too-many-arguments, too-many-positional-arguments, too-many-locals
     def load_planner_result(
         self,
         planner: "Planner",
@@ -119,6 +231,7 @@ class Database(Singleton):
         running_mode: "RunningMode",
         keep_unsupported: bool = False,
         force_before_timeout: bool = False,
+        not_run_by_default: bool = False,
     ) -> Optional["PlannerResult"]:
         """Loads the planner result matching the given attributes if any.
 
@@ -129,14 +242,11 @@ class Database(Singleton):
             running_mode (RunningMode): The running mode for the planner resolution.
             keep_unsupported (bool): Whether to keep unsupported results.
             force_before_timeout (bool): Whether to force the result to compute before the timeout.
+            not_run_by_default (bool): Whether to return a not run result by default.
 
         Returns:
             Optional[PlannerResult]: The planner result if present, otherwise None.
         """
-
-        # pylint: disable = import-outside-toplevel
-        from tyr.planners.model.result import PlannerResult, PlannerResultStatus
-
         request = """
                     SELECT * FROM "results"
                     WHERE "planner"=? AND "problem"=? AND "mode"=? AND "memout"=?
@@ -150,71 +260,112 @@ class Database(Singleton):
 
         with self.database() as conn:
             resp = conn.cursor().execute(request, params).fetchone()
-
-        if (
-            resp is None
-            or resp[4] == "NOT_RUN"
-            or (resp[4] == "UNSUPPORTED" and not keep_unsupported)
-        ):
-            return None
-
-        if resp[4] == "TIMEOUT" and resp[5] is not None and resp[5] < config.timeout:
-            return None
-
-        if resp[5] is not None and resp[5] > config.timeout:
-            if running_mode.name == "ANYTIME" and not force_before_timeout:
-                result_before_timeout = self.load_planner_result(
-                    planner,
-                    problem,
-                    config,
-                    running_mode,
-                    keep_unsupported,
-                    force_before_timeout=True,
-                )
-                if result_before_timeout is not None:
-                    return result_before_timeout
-            result = PlannerResult.timeout(problem, planner, config, running_mode)
-            return replace(result, from_database=True)
-
-        if resp[4] != "SOLVED" and running_mode.name == "ANYTIME":
-            request = """
-                        SELECT * FROM "results"
-                        WHERE "planner"=? AND "problem"=? AND "mode"=? AND "memout"=?
-                        AND "computation"<=? AND "creation"<=? AND "creation">=?
-                        AND "status"="SOLVED"
-                        ORDER BY "creation" DESC
-                        LIMIT 1;
-                        """
-            params = [
-                planner.name,
-                problem.name,
-                running_mode.name,
-                config.memout,
-                config.timeout,
-                resp[11],
-                (
-                    datetime.datetime.fromisoformat(resp[11])
-                    # + 10 seconds to avoid issues linked to retried savings
-                    - datetime.timedelta(seconds=config.timeout + 10)
-                ).isoformat(),
-            ]
-            with self.database() as conn:
-                resp_solved = conn.cursor().execute(request, params).fetchone()
-            if resp_solved is not None:
-                resp = resp_solved
-
-        return PlannerResult(
+        return self._handle_db_response(
+            resp,
             planner,
             problem,
+            config,
             running_mode,
-            status=getattr(PlannerResultStatus, resp[4]),
-            config=config,
-            computation_time=resp[5],
-            plan_quality=resp[6],
-            error_message=resp[7],
-            from_database=True,
-            plan=resp[12],
+            keep_unsupported,
+            force_before_timeout,
+            not_run_by_default,
         )
+
+    def _load_multi_planner_results_atomic(
+        self,
+        requests: List[Tuple["Planner", ProblemInstance, "RunningMode"]],
+        config: "SolveConfig",
+        keep_unsupported: bool = False,
+        force_before_timeout: bool = False,
+        not_run_by_default: bool = False,
+    ) -> Iterator[Optional["PlannerResult"]]:
+        # The max number of parameters in a SQL query is 1000.
+        # One request is composed of 3 parameters.
+        # The max number of requests is therefore 333.
+        assert len(requests) > 0  # nosec: B101
+        assert len(requests) <= 333  # nosec: B101
+
+        result_requests = " OR ".join(
+            ["(planner=? AND problem=? AND mode=?)"] * len(requests)
+        )
+        result_requests_params = []
+        for planner, problem, mode in requests:
+            result_requests_params.extend([planner.name, problem.name, mode.name])
+
+        request = """
+            WITH ranked_results AS (
+                SELECT
+                    *,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY planner, problem, mode
+                        ORDER BY creation DESC
+                    ) AS rank
+                FROM results
+                WHERE (RESULT_REQUESTS_TO_REPLACE) AND memout=?
+            )
+            SELECT *
+            FROM ranked_results
+            WHERE rank=1
+            ORDER BY planner, problem, mode DESC;
+        """
+        request = request.replace("RESULT_REQUESTS_TO_REPLACE", result_requests)
+        params = result_requests_params + [str(config.memout)]
+
+        if force_before_timeout:
+            request = request.replace("memout=?", "memout=? AND computation<=?")
+            params.append(str(config.timeout))
+
+        with self.database() as conn:
+            resp_list = conn.cursor().execute(request, params).fetchall()
+
+        for (planner, problem, mode) in requests:
+
+            def filter_callback(planner=planner, problem=problem, mode=mode):
+                return lambda x: (
+                    x[1] == planner.name and x[2] == problem.name and x[3] == mode.name
+                )
+
+            resp_item = next(filter(filter_callback(), resp_list), None)
+            yield self._handle_db_response(
+                resp_item,
+                planner,
+                problem,
+                config,
+                mode,
+                keep_unsupported,
+                force_before_timeout,
+                not_run_by_default,
+            )
+
+    def load_multi_planner_results(
+        self,
+        requests: List[Tuple["Planner", ProblemInstance, "RunningMode"]],
+        config: "SolveConfig",
+        keep_unsupported: bool = False,
+        force_before_timeout: bool = False,
+        not_run_by_default: bool = False,
+    ) -> Iterator[Optional["PlannerResult"]]:
+        """Loads the planner results matching the given requests if any.
+
+        Args:
+            requests (List): The list of tuple (planner, problem, mode) to load.
+            config (SolveConfig): The configuration used to solve the problem.
+            keep_unsupported (bool): Whether to keep unsupported results.
+            force_before_timeout (bool): Whether to force the result to compute before the timeout.
+            not_run_by_default (bool): Whether to return a not run result by default.
+
+        Returns:
+            Iterator[PlannerResult]: An iterator over the planner results.
+        """
+
+        for i in range(0, len(requests), 333):
+            yield from self._load_multi_planner_results_atomic(
+                requests[i : i + 333],
+                config,
+                keep_unsupported,
+                force_before_timeout,
+                not_run_by_default,
+            )
 
 
 __all__ = ["Database"]
