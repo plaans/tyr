@@ -4,6 +4,36 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [1.21.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.20.3...v1.21.0) (2024-12-17)
+
+
+### Bug Fixes
+
+* **config:** convert str to path when getting config file ([e3650e2](https://gitlab.laas.fr/rgodet1/tyr/commit/e3650e26c349e8f4b4097c04962d2d11391b6d67))
+* **metric:** filter best quality metric on status ([1acd029](https://gitlab.laas.fr/rgodet1/tyr/commit/1acd029f933c085bc157cd85a1a716c9630f0f3d))
+* **planner:** output log file through the process queue ([047d97f](https://gitlab.laas.fr/rgodet1/tyr/commit/047d97f1502eef6e0acc81f8feb294f1f144d78c))
+* **planners:** hierarchical plan weren't pickable for queue process ([8a09cb7](https://gitlab.laas.fr/rgodet1/tyr/commit/8a09cb7b9f4c02b751eda138eecd69cf0263f66d))
+* **scripts:** merge db with plan ([e15ea24](https://gitlab.laas.fr/rgodet1/tyr/commit/e15ea240d64b734aff3aff927aaa9ec4c371dcfd))
+* **slurm:** first empty line on quiet mode ([e04f7e6](https://gitlab.laas.fr/rgodet1/tyr/commit/e04f7e6b7459ad6f7e2c2444d904428cad3ce6e7))
+* **vbp:** use best result per instance ([f4baa0c](https://gitlab.laas.fr/rgodet1/tyr/commit/f4baa0c9b4bdc588d440ffc321189d8ec7e42307))
+
+
+### Features
+
+* **cli:** add a Virtual Best Planner analysis ([1ef0aec](https://gitlab.laas.fr/rgodet1/tyr/commit/1ef0aec2485c88ceda214a2b6cda608c55292abd))
+* **decorator:** timeout ([cb6476a](https://gitlab.laas.fr/rgodet1/tyr/commit/cb6476aa67d6c270e8fde1e3816d5804149b8734))
+* **metrics:** first quality score ([c2dc526](https://gitlab.laas.fr/rgodet1/tyr/commit/c2dc5264aa2e59f380d06c12fcbfdf5dc1f39e9d))
+* **planner:** can specify parameters in the config file to pass to the UPF factory ([e47546c](https://gitlab.laas.fr/rgodet1/tyr/commit/e47546c691a05ac94ff736c0bbaf88f40106bb60))
+* **planners:** keep trace of the original results once merged ([0ded379](https://gitlab.laas.fr/rgodet1/tyr/commit/0ded37961d28169364786fde8d5d1e92af18d0f7))
+* **planners:** save plan in DB ([15f6c29](https://gitlab.laas.fr/rgodet1/tyr/commit/15f6c290d50e4a6522bbaaadb2cf4c734c9a2386))
+* **problems:** handle the conversion of AND and OR from FNodes ([379550b](https://gitlab.laas.fr/rgodet1/tyr/commit/379550b463e86a32a6254b15e041ece823397ea6))
+* **scripts:** can filter bins from logs ([d18ec17](https://gitlab.laas.fr/rgodet1/tyr/commit/d18ec17358e896ebe1e0c6f5960aa8239895c015))
+
+
+### Performance Improvements
+
+* **planners:** improve loading of multiple results from the database ([9f8e184](https://gitlab.laas.fr/rgodet1/tyr/commit/9f8e184e773b507f1400c83c3e84470d4297ebd7))
+
 # [1.21.0-dev.2](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.21.0-dev.1...v1.21.0-dev.2) (2024-11-08)
 
 
