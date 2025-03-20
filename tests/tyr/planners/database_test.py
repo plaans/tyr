@@ -132,7 +132,7 @@ class TestDatabase:
                 result_mock.config.memout,
                 result_mock.config.timeout,
                 now,
-                "Action 1\nAction 2",
+                "Sequential Plan\n    Action 1\n    Action 2",
             ),
         )
         conn_mock.commit.assert_called_once()

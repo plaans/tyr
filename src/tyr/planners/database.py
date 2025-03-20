@@ -105,7 +105,7 @@ class Database(Singleton):
                     result.config.memout,
                     result.config.timeout,
                     datetime.datetime.now().isoformat(),
-                    "\n".join(list(map(str.strip, str(result.plan).splitlines()[1:]))),
+                    str(result.plan) if result.plan is not None else None,
                 ),
             )
             conn.commit()
@@ -318,7 +318,7 @@ class Database(Singleton):
         with self.database() as conn:
             resp_list = conn.cursor().execute(request, params).fetchall()
 
-        for (planner, problem, mode) in requests:
+        for planner, problem, mode in requests:
 
             def filter_callback(planner=planner, problem=problem, mode=mode):
                 return lambda x: (
