@@ -107,7 +107,7 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             )
             if is_temp and config.unify_epsilons:
                 if pb.epsilon is None:
-                    pb.epsilon = Fraction(1, 1000)
+                    pb.epsilon = Fraction(1, 100)
 
                 def set_null_duration(plan: TimeTriggeredPlan) -> TimeTriggeredPlan:
                     return TimeTriggeredPlan(
