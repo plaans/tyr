@@ -108,8 +108,16 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             if is_temp and config.unify_epsilons:
                 if pb.epsilon is None:
                     pb.epsilon = Fraction(1, 1000)
-                result.plan = result.plan.convert_to(PlanKind.STN_PLAN, pb).convert_to(
-                    PlanKind.TIME_TRIGGERED_PLAN, pb
+
+                def set_null_duration(plan: TimeTriggeredPlan) -> TimeTriggeredPlan:
+                    return TimeTriggeredPlan(
+                        [(s, a, d or 0) for s, a, d in plan.timed_actions]
+                    )
+
+                result.plan = (
+                    set_null_duration(pb.normalize_plan(result.plan))
+                    .convert_to(PlanKind.STN_PLAN, pb)
+                    .convert_to(PlanKind.TIME_TRIGGERED_PLAN, pb)
                 )
 
             plan_quality = problem.get_quality_of_plan(result.plan, version_name)
