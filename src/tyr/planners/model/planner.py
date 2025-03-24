@@ -133,7 +133,9 @@ class Planner:
         """
         version_name = self.get_version_name(problem)
         try:
-            return version_name, problem.versions[version_name].value
+            pb = problem.versions[version_name].value
+            pb.name = problem.name
+            return version_name, pb
         except KeyError:
             return None, None
 

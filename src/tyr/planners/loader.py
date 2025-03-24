@@ -21,6 +21,7 @@ def register_all_planners():
         module = import_module(f"{planners_module.__name__}.{name}")
         for obj_name in dir(module):
             if obj_name.endswith("Planner") and obj_name not in [
+                "OneshotPlanner",
                 "Planner",
                 "TyrPDDLPlanner",
             ]:
