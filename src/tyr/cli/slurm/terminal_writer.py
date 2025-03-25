@@ -6,7 +6,6 @@ from tyr.cli.collector import CollectionResult
 from tyr.cli.writer import Writer
 from tyr.planners.model.config import RunningMode, SolveConfig
 from tyr.planners.model.planner import Planner
-from tyr.problems.model.domain import AbstractDomain
 from tyr.problems.model.instance import ProblemInstance
 
 
@@ -22,7 +21,7 @@ class SlurmTerminalWriter(Writer):
     ) -> None:
         super().__init__(solve_config, out, verbosity, config)
         self._planners: List[Planner] = []
-        self._domains: List[AbstractDomain] = []
+        self._problems: List[ProblemInstance] = []
 
     # ================================== Report ================================== #
 
@@ -44,7 +43,7 @@ class SlurmTerminalWriter(Writer):
         self.report_collected(problems, "problem")
 
         self._planners = planners.selected
-        self._domains = list({p.domain for p in problems.selected})
+        self._problems = problems.selected
 
     # ================================== Session ================================= #
 
@@ -64,7 +63,7 @@ class SlurmTerminalWriter(Writer):
         running_modes: List[RunningMode],
     ) -> None:
         """Prints the slurm script."""
-        num_pb = sum(d.get_num_problems() for d in self._domains)
+        num_pb = len(self._problems)
         num_jobs = len(self._planners) * num_pb
         if num_jobs == 0:
             self.line("No jobs to run.", red=True)
@@ -95,16 +94,15 @@ class SlurmTerminalWriter(Writer):
         self.line("PLANNER_IDX=$((SLURM_ARRAY_TASK_ID % ${#PLANNERS[@]}))")
         self.line("PLANNER=${PLANNERS[$PLANNER_IDX]}")
 
-        # Print the domains list and the domain to use.
-        self.write("\nDOMAINS=(")
-        for i, domain in enumerate(sorted(self._domains, key=str)):
-            for j in range(1, domain.get_num_problems() + 1):
-                if i + j > 1:
-                    self.write(" ")
-                self.write(f'"{domain.name}:{j}$"')
+        # Print the problem list and the problem to use.
+        self.write("\nPROBLEMS=(")
+        for i, problem in enumerate(sorted(self._problems, key=str)):
+            if i > 0:
+                self.write(" ")
+            self.write(f'"{problem.name}$"')
         self.line(")")
-        self.line("DOMAIN_IDX=$((SLURM_ARRAY_TASK_ID / ${#PLANNERS[@]}))")
-        self.line("DOMAIN=${DOMAINS[$DOMAIN_IDX]}")
+        self.line("PROBLEM_IDX=$((SLURM_ARRAY_TASK_ID / ${#PLANNERS[@]}))")
+        self.line("PROBLEM=${PROBLEMS[$PROBLEM_IDX]}")
 
         # Print the command to run.
         running_options = ""
@@ -113,11 +111,11 @@ class SlurmTerminalWriter(Writer):
         if RunningMode.ONESHOT in running_modes:
             running_options += " --oneshot"
         unification = " --unify-epsilons" if self._solve_config.unify_epsilons else ""
-        self.line("\necho \"==> Running '$PLANNER' on '$DOMAIN'\"")
+        self.line("\necho \"==> Running '$PLANNER' on '$PROBLEM'\"")
         uid = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         self.line(
             " ".join(
-                f"srun tyr.sif bench -p $PLANNER -d $DOMAIN --logs-path logs-{uid}/ "
+                f"srun tyr.sif bench -p $PLANNER -d $PROBLEM --logs-path logs-{uid}/ "
                 f"--db-path db-{uid}-${{SLURM_ARRAY_TASK_ID}}.sqlite3 "
                 f"--timeout {self._solve_config.timeout} "
                 f"--memout {self._solve_config.memout} "
