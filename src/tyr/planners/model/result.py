@@ -49,6 +49,21 @@ class PlannerResultStatus(Enum):
             PlanGenerationResultStatus.INTERMEDIATE: PlannerResultStatus.SOLVED,
         }[status]
 
+    def to_upf(self) -> PlanGenerationResultStatus:
+        """Converts a status from our status format to the unified planning library format.
+
+        Returns:
+            PlanGenerationResultStatus: The unified planning library matching status.
+        """
+        return {
+            PlannerResultStatus.SOLVED: PlanGenerationResultStatus.SOLVED_SATISFICING,
+            PlannerResultStatus.UNSOLVABLE: PlanGenerationResultStatus.UNSOLVABLE_INCOMPLETELY,
+            PlannerResultStatus.TIMEOUT: PlanGenerationResultStatus.TIMEOUT,
+            PlannerResultStatus.MEMOUT: PlanGenerationResultStatus.MEMOUT,
+            PlannerResultStatus.ERROR: PlanGenerationResultStatus.INTERNAL_ERROR,
+            PlannerResultStatus.UNSUPPORTED: PlanGenerationResultStatus.UNSUPPORTED_PROBLEM,
+        }[self]
+
 
 @dataclass
 class PlannerResult:  # pylint: disable = too-many-instance-attributes
@@ -131,6 +146,14 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             computation_time,
             plan_quality,
             plan=result.plan,
+        )
+
+    def to_upf(self) -> PlanGenerationResult:
+        """Converts the result to the unified planning library format."""
+        return PlanGenerationResult(
+            status=self.status.to_upf(),
+            plan=self.plan,
+            engine_name=self.planner.name,
         )
 
     def merge(self, other: "PlannerResult") -> "PlannerResult":
