@@ -383,7 +383,7 @@ def cli_bench(
             "--db-only --no-db-load",
             "Cannot use both --db-only and --no-db-load.",
         )
-    if conf["db_only"] and conf["no_db-save"]:
+    if conf["db_only"] and conf["no_db_save"]:
         raise click.BadOptionUsage(
             "--db-only --no-db-save",
             "Cannot use both --db-only and --no-db-save.",
