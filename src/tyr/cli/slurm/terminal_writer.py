@@ -112,6 +112,7 @@ class SlurmTerminalWriter(Writer):
             running_options += " --anytime"
         if RunningMode.ONESHOT in running_modes:
             running_options += " --oneshot"
+        unification = " --unify-epsilons" if self._solve_config.unify_epsilons else ""
         self.line("\necho \"==> Running '$PLANNER' on '$DOMAIN'\"")
         uid = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         self.line(
@@ -120,7 +121,7 @@ class SlurmTerminalWriter(Writer):
                 f"--db-path db-{uid}-${{SLURM_ARRAY_TASK_ID}}.sqlite3 "
                 f"--timeout {self._solve_config.timeout} "
                 f"--memout {self._solve_config.memout} "
-                f"--verbose{running_options}"
+                f"--verbose{running_options}{unification}"
                 "".splitlines()
             )
         )
