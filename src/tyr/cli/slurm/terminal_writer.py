@@ -56,6 +56,7 @@ class SlurmTerminalWriter(Writer):
         """Return the memory stored in the config in kilobytes."""
         return int(self._solve_config.memout / 1024)
 
+    # pylint: disable=too-many-branches
     def script(
         self,
         user_mail: Optional[str],
