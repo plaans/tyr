@@ -2,7 +2,7 @@ from fractions import Fraction
 import os
 import re
 import resource
-from typing import IO, Callable, Dict, Iterator, Optional
+from typing import IO, Callable, Dict, Iterator, Optional, Tuple
 
 import unified_planning as up
 from unified_planning import engines
@@ -16,6 +16,7 @@ from unified_planning.model.action import DurativeAction, InstantaneousAction
 from unified_planning.plans import Plan, PlanKind, SequentialPlan, TimeTriggeredPlan
 from unified_planning.shortcuts import (
     AbstractProblem,
+    AnytimePlanner,
     EffectKind,
     EndTiming,
     OneshotPlanner,
@@ -177,15 +178,11 @@ class AriesWarmUpPlanner(
         plan = reader.parse_plan_string(problem, plan)
         return self._set_time_scale(problem, plan, time_scale)
 
-    def _solve(
+    def _setup_timeout_and_params(
         self,
         problem: AbstractProblem,
-        heuristic: Optional[
-            Callable[["up.model.state.ROState"], Optional[float]]
-        ] = None,
         timeout: Optional[float] = None,
-        output_stream: Optional[IO[str]] = None,
-    ) -> PlanGenerationResult:
+    ) -> Tuple[Optional[float], Dict[str, str]]:
         warm_up_result = self._load_from_db(problem, timeout)
         if warm_up_result is None:
             # No warm up result found, stop here with an error.
@@ -218,6 +215,18 @@ class AriesWarmUpPlanner(
         params = self._params.copy()
         if warm_up_result.plan is not None:
             params["warm_up_plan"] = str(warm_up_result.plan)
+        return remaining_time, params
+
+    def _solve(
+        self,
+        problem: AbstractProblem,
+        heuristic: Optional[
+            Callable[["up.model.state.ROState"], Optional[float]]
+        ] = None,
+        timeout: Optional[float] = None,
+        output_stream: Optional[IO[str]] = None,
+    ) -> PlanGenerationResult:
+        remaining_time, params = self._setup_timeout_and_params(problem, timeout)
         with OneshotPlanner(name="aries", params=params) as planner:
             return planner.solve(
                 problem,
@@ -232,5 +241,10 @@ class AriesWarmUpPlanner(
         timeout: Optional[float] = None,
         output_stream: Optional[IO[str]] = None,
     ) -> Iterator[PlanGenerationResult]:
-        # TODO: Implement the anytime planner
-        raise NotImplementedError("_get_solutions method not implemented")
+        remaining_time, params = self._setup_timeout_and_params(problem, timeout)
+        with AnytimePlanner(name="aries", params=params) as planner:
+            yield from planner.get_solutions(  # pylint: disable=no-member
+                problem,
+                timeout=remaining_time,
+                output_stream=output_stream,
+            )
