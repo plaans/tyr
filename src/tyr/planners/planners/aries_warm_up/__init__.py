@@ -1,4 +1,5 @@
 from fractions import Fraction
+import os
 import re
 import resource
 from typing import IO, Callable, Dict, Iterator, Optional
@@ -59,9 +60,9 @@ class AriesWarmUpPlanner(
     def _load_from_db(
         self, problem: AbstractProblem, timeout: Optional[float] = None
     ) -> Optional[PlannerResult]:
-        # TODO: Be generic for the planner to load
         db = Database()
-        planner = [p for p in get_all_planners() if p.name == "lpg"].pop()
+        planner_name = os.environ["TYR_WARM_UP_PLANNER"]
+        planner = [p for p in get_all_planners() if p.name == planner_name].pop()
         domain_name = problem.name.split(":")[0]
         domain = [d for d in get_all_domains() if d.name == domain_name].pop()
         problem_id = int(problem.name.split(":")[1])
