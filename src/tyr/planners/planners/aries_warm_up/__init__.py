@@ -1,3 +1,4 @@
+from fractions import Fraction
 import re
 import resource
 from typing import IO, Callable, Dict, Iterator, Optional
@@ -9,7 +10,17 @@ from unified_planning.engines.results import (
     PlanGenerationResult,
     PlanGenerationResultStatus,
 )
-from unified_planning.shortcuts import AbstractProblem, OneshotPlanner, ProblemKind
+from unified_planning.io import PDDLReader
+from unified_planning.model.action import DurativeAction, InstantaneousAction
+from unified_planning.plans import Plan, PlanKind, TimeTriggeredPlan
+from unified_planning.shortcuts import (
+    AbstractProblem,
+    EffectKind,
+    EndTiming,
+    OneshotPlanner,
+    ProblemKind,
+    StartTiming,
+)
 
 from tyr.planners.database import Database
 from tyr.planners.model.config import RunningMode, SolveConfig
@@ -47,7 +58,7 @@ class AriesWarmUpPlanner(
     def _load_from_db(self, problem: AbstractProblem, timeout: Optional[float] = None):
         # TODO: Be generic for the planner to load
         db = Database()
-        optic = [p for p in get_all_planners() if p.name == "aries"].pop()
+        planner = [p for p in get_all_planners() if p.name == "optic"].pop()
         domain_name = problem.name.split(":")[0]
         domain = [d for d in get_all_domains() if d.name == domain_name].pop()
         problem_id = int(problem.name.split(":")[1])
@@ -68,11 +79,68 @@ class AriesWarmUpPlanner(
         )
 
         return db.load_planner_result(
-            optic,
+            planner,
             problem_instance,
             solve_config,
             RunningMode.ONESHOT,
         )
+
+    def _convert_plan_line_to_upf_format(self, line: str) -> str:
+        return line.strip().replace(",", "").replace("(", " ").replace(": ", ": (")
+
+    def _set_time_scale(self, problem: AbstractProblem, plan: Plan, time_scale: int):
+        if problem.epsilon is None:
+            problem.epsilon = Fraction(1, time_scale)
+
+        def convert_to_temporal(plan: Plan) -> Plan:
+            actions = []
+            for s, a, d in plan.timed_actions:
+                action = a.action
+                if isinstance(action, InstantaneousAction):
+                    da = DurativeAction(
+                        action.name,
+                        _env=action.environment,
+                        **{p.name: p.type for p in action.parameters},
+                    )
+                    da.set_fixed_duration(0)
+                    for c in action.preconditions:
+                        da.add_condition(StartTiming(), c)
+                    for e in action.effects:
+                        if e.kind == EffectKind.INCREASE:
+                            meth = da.add_increase_effect
+                        elif e.kind == EffectKind.DECREASE:
+                            meth = da.add_decrease_effect
+                        elif e.kind == EffectKind.ASSIGN:
+                            meth = da.add_effect
+                        else:
+                            raise ValueError(f"Unknown effect kind: {e.kind}")
+                        meth(EndTiming(), e.fluent, e.value, e.condition, e.forall)
+                    a._action = da  # pylint: disable=protected-access
+                    d = 0
+                actions.append((s, a, d or 0))
+            return TimeTriggeredPlan(actions)
+
+        return (
+            convert_to_temporal(problem.normalize_plan(plan))
+            .convert_to(PlanKind.STN_PLAN, problem)
+            .convert_to(PlanKind.TIME_TRIGGERED_PLAN, problem)
+        )
+
+    def _load_plan_from_str_with_time_scale(
+        self,
+        problem: AbstractProblem,
+        plan: str,
+        time_scale: int,
+    ):
+        reader = PDDLReader(problem.environment)
+        plan = "\n".join(
+            [
+                self._convert_plan_line_to_upf_format(line)
+                for line in plan.splitlines()[1:]  # Skip the first line
+            ]
+        )
+        plan = reader.parse_plan_string(problem, plan)
+        return self._set_time_scale(problem, plan, time_scale)
 
     def _solve(
         self,
@@ -85,6 +153,7 @@ class AriesWarmUpPlanner(
     ) -> PlanGenerationResult:
         warm_up_result = self._load_from_db(problem, timeout)
         if warm_up_result is None:
+            # No warm up result found, stop here with an error.
             return PlanGenerationResult(
                 PlanGenerationResultStatus.INTERNAL_ERROR,
                 plan=None,
@@ -94,19 +163,25 @@ class AriesWarmUpPlanner(
 
         warm_up_plan = warm_up_result.plan
         if warm_up_plan is None or len(warm_up_plan.splitlines()) <= 1:
+            # No plan found for the warm up, stop here with the same result.
             return PlanGenerationResult(
                 status=warm_up_result.status,
                 plan=warm_up_plan,
                 engine_name=self.name,
-                log_messages=warm_up_result.log_messages,
-                metrics=warm_up_result.metrics,
+                log_messages=getattr(warm_up_result, "log_messages", []),
+                metrics=getattr(warm_up_result, "metrics", {}),
             )
+        warm_up_plan = self._load_plan_from_str_with_time_scale(
+            problem, warm_up_plan, 10
+        )
 
+        # Solve the problem with the warm up plan and the remaining time.
         params = self._params.copy()
         params["warm_up_plan"] = str(warm_up_plan)
         with OneshotPlanner(name="aries", params=params) as planner:
             return planner.solve(
                 problem,
+                heuristic=heuristic,
                 timeout=timeout - warm_up_result.computation_time,
                 output_stream=output_stream,
             )
