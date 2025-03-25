@@ -105,24 +105,34 @@ class SlurmTerminalWriter(Writer):
         self.line("PROBLEM=${PROBLEMS[$PROBLEM_IDX]}")
 
         # Print the command to run.
-        running_options = ""
+        running_option = ""
         if RunningMode.ANYTIME in running_modes:
-            running_options += " --anytime"
+            running_option += " --anytime"
         if RunningMode.ONESHOT in running_modes:
-            running_options += " --oneshot"
+            running_option += " --oneshot"
         unification = " --unify-epsilons" if self._solve_config.unify_epsilons else ""
         self.line("\necho \"==> Running '$PLANNER' on '$PROBLEM'\"")
         uid = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-        self.line(
-            " ".join(
-                f"srun tyr.sif bench -p $PLANNER -d $PROBLEM --logs-path logs-{uid}/ "
-                f"--db-path db-{uid}-${{SLURM_ARRAY_TASK_ID}}.sqlite3 "
-                f"--timeout {self._solve_config.timeout} "
-                f"--memout {self._solve_config.memout} "
-                f"--verbose{running_options}{unification}"
-                "".splitlines()
+
+        for running_mode in running_modes:
+            running_option = ""
+            if running_mode == RunningMode.ANYTIME:
+                running_option = " --anytime"
+            elif running_mode == RunningMode.ONESHOT:
+                running_option = " --oneshot"
+            else:
+                raise ValueError(f"Unknown running mode: {running_mode}")
+
+            self.line(
+                " ".join(
+                    f"srun tyr.sif bench -p $PLANNER -d $PROBLEM --logs-path logs-{uid}/ "
+                    f"--db-path db-{uid}-${{SLURM_ARRAY_TASK_ID}}.sqlite3 "
+                    f"--timeout {self._solve_config.timeout} "
+                    f"--memout {self._solve_config.memout} "
+                    f"--verbose{running_option}{unification}"
+                    "".splitlines()
+                )
             )
-        )
 
 
 __all__ = ["SlurmTerminalWriter"]
