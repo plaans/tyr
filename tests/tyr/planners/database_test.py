@@ -28,6 +28,7 @@ def cursor_mock():
 def result_mock():
     result = MagicMock()
     result.config.timeout = 10
+    result.config.timeout_offset = 5
     result.running_mode = RunningMode.ONESHOT
     result.planner = MagicMock()
     result.plan = MagicMock()
