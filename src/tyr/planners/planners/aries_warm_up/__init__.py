@@ -182,15 +182,21 @@ class AriesWarmUpPlanner(
         self,
         problem: AbstractProblem,
         timeout: Optional[float] = None,
-    ) -> Tuple[Optional[float], Dict[str, str]]:
+    ) -> Tuple[Optional[float], Dict[str, str], PlanGenerationResult]:
         warm_up_result = self._load_from_db(problem, timeout)
         if warm_up_result is None:
             # No warm up result found, stop here with an error.
-            return PlanGenerationResult(
-                PlanGenerationResultStatus.INTERNAL_ERROR,
-                plan=None,
-                engine_name=self.name,
-                log_messages=[LogMessage(LogLevel.ERROR, "Warm up result not found")],
+            return (
+                None,
+                {},
+                PlanGenerationResult(
+                    PlanGenerationResultStatus.INTERNAL_ERROR,
+                    plan=None,
+                    engine_name=self.name,
+                    log_messages=[
+                        LogMessage(LogLevel.ERROR, "Warm up result not found")
+                    ],
+                ),
             )
         if timeout is None:
             remaining_time = None
@@ -215,7 +221,7 @@ class AriesWarmUpPlanner(
         params = self._params.copy()
         if warm_up_result.plan is not None:
             params["warm_up_plan"] = str(warm_up_result.plan)
-        return remaining_time, params
+        return remaining_time, params, warm_up_result
 
     def _solve(
         self,
@@ -226,14 +232,21 @@ class AriesWarmUpPlanner(
         timeout: Optional[float] = None,
         output_stream: Optional[IO[str]] = None,
     ) -> PlanGenerationResult:
-        remaining_time, params = self._setup_timeout_and_params(problem, timeout)
+        remaining_time, params, warm_up_result = self._setup_timeout_and_params(
+            problem, timeout
+        )
+        if warm_up_result.status == PlanGenerationResultStatus.INTERNAL_ERROR:
+            return warm_up_result
         with OneshotPlanner(name="aries", params=params) as planner:
-            return planner.solve(
+            result = planner.solve(
                 problem,
                 heuristic=heuristic,
                 timeout=remaining_time,
                 output_stream=output_stream,
             )
+        if result is None or result.plan is None:
+            return warm_up_result
+        return result
 
     def _get_solutions(
         self,
@@ -241,10 +254,23 @@ class AriesWarmUpPlanner(
         timeout: Optional[float] = None,
         output_stream: Optional[IO[str]] = None,
     ) -> Iterator[PlanGenerationResult]:
-        remaining_time, params = self._setup_timeout_and_params(problem, timeout)
+        remaining_time, params, warm_up_result = self._setup_timeout_and_params(
+            problem, timeout
+        )
+        if warm_up_result.status == PlanGenerationResultStatus.INTERNAL_ERROR:
+            yield warm_up_result
+            return
         with AnytimePlanner(name="aries", params=params) as planner:
-            yield from planner.get_solutions(  # pylint: disable=no-member
+            results = planner.get_solutions(  # pylint: disable=no-member
                 problem,
                 timeout=remaining_time,
                 output_stream=output_stream,
             )
+        if results is None or len(results) == 0:
+            yield warm_up_result
+            return
+        for result in results:
+            if result is None or result.plan is None:
+                yield warm_up_result
+                return
+            yield result
