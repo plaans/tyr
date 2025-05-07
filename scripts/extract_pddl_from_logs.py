@@ -3,17 +3,17 @@ from pathlib import Path
 import shutil
 
 
-def create_folders_and_copy_files(base_dir, new_base_dir):
-    # List all the socs2025 folders (depots, jobshop, etc.)
-    socs_folders = [
+def create_folders_and_copy_files(base_dir, new_base_dir, paper_name):
+    # List all the paper folders (depots, jobshop, etc.)
+    folders = [
         f
         for f in os.listdir(base_dir)
-        if os.path.isdir(os.path.join(base_dir, f)) and f.startswith("socs2025")
+        if os.path.isdir(os.path.join(base_dir, f)) and f.startswith(paper_name)
     ]
 
-    for soc_folder in socs_folders:
+    for folder in folders:
         # Get the category name (e.g., depots, jobshop, etc.)
-        category_name = soc_folder.split("-")[1]
+        category_name = "-".join(folder.split("-")[1:])
 
         # Create a new category folder under the new base directory
         category_dir = os.path.join(new_base_dir, category_name)
@@ -22,7 +22,7 @@ def create_folders_and_copy_files(base_dir, new_base_dir):
         # Walk through the oneshot subfolders (1-oneshot, 2-oneshot, etc.)
         oneshot_folders = [
             f
-            for f in os.listdir(os.path.join(base_dir, soc_folder))
+            for f in os.listdir(os.path.join(base_dir, folder))
             if f.endswith("-oneshot")
         ]
 
@@ -32,7 +32,7 @@ def create_folders_and_copy_files(base_dir, new_base_dir):
             os.makedirs(instance_folder, exist_ok=True)
 
             # Define the source path for domain.pddl and problem.pddl
-            oneshot_path = os.path.join(base_dir, soc_folder, oneshot_folder)
+            oneshot_path = os.path.join(base_dir, folder, oneshot_folder)
             domain_file = os.path.join(oneshot_path, "domain.pddl")
             problem_file = os.path.join(oneshot_path, "problem.pddl")
 
@@ -46,12 +46,9 @@ def create_folders_and_copy_files(base_dir, new_base_dir):
 
 
 # Specify the base directory containing your logs and the directory where the new structure should be created
-base_dir = (
-    Path(__file__).parent.parent / "logs/aries"
-)  # Change this to your actual base path
-new_base_dir = (
-    Path(__file__).parent.parent / "logs/pddl"
-)  # Change this to your desired output path
+base_dir = Path(__file__).parent.parent / "logs/aries-simple"
+new_base_dir = Path(__file__).parent.parent / "logs/pddl"
+paper_name = "ecai2025"
 
 # Call the function to create the new structure and copy files
-create_folders_and_copy_files(base_dir, new_base_dir)
+create_folders_and_copy_files(base_dir, new_base_dir, paper_name)
