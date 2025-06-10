@@ -12,4 +12,4 @@ toml
 numpy==1.*
 
 # Unified Planning
-git+https://github.com/aiplan4eu/unified-planning.git@d3ddd24#egg=unified_planning
+git+https://github.com/aiplan4eu/unified-planning.git@da70a38#egg=unified_planning
