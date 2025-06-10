@@ -108,6 +108,15 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
         Returns:
             PlannerResult: The inner matching result.
         """
+        if isinstance(result, PlannerResult):
+            return replace(
+                result,
+                planner=planner,
+                problem=problem,
+                running_mode=running_mode,
+                config=config,
+            )
+
         computation_key = "engine_internal_time"
         computation_time = None
         if result.metrics is not None and computation_key in result.metrics:
