@@ -251,12 +251,18 @@ class BenchTerminalWriter(Writer):
         self._num_to_run = (
             len(planners.selected) * len(problems.selected) * len(running_modes)
         )
-        self._planner_max_length = max(len(p.name) for p in planners.selected)
+        self._planner_max_length = max(
+            (len(p.name) for p in planners.selected),
+            default=0,
+        )
         self._problem_max_length = max(
-            len(pb.name) + len(pl.get_version_name(pb)) + 1  # type: ignore
-            for pb in problems.selected
-            for pl in planners.selected
-            if pl.get_version_name(pb) is not None
+            (
+                len(pb.name) + len(pl.get_version_name(pb)) + 1  # type: ignore
+                for pb in problems.selected
+                for pl in planners.selected
+                if pl.get_version_name(pb) is not None
+            ),
+            default=0,
         )
 
         self.rewrite("")
