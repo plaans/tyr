@@ -40,6 +40,7 @@ class AriesWarmUpPlanner(
     """A version of Aries with a warm up plan."""
 
     _params: Dict[str, str] = {}
+    optimality_metric_required = False
 
     def __init__(self, **kwargs):
         self._params = {k: str(v) for k, v in kwargs.items()}
@@ -237,12 +238,13 @@ class AriesWarmUpPlanner(
         )
         if warm_up_result.status == PlanGenerationResultStatus.INTERNAL_ERROR:
             return warm_up_result
-        with OneshotPlanner(name="aries", params=params) as planner:
+        with OneshotPlanner(name="aries") as planner:
             result = planner.solve(
                 problem,
                 heuristic=heuristic,
                 timeout=remaining_time,
                 output_stream=output_stream,
+                **params,
             )
         if result is None or result.plan is None:
             return warm_up_result
@@ -260,11 +262,14 @@ class AriesWarmUpPlanner(
         if warm_up_result.status == PlanGenerationResultStatus.INTERNAL_ERROR:
             yield warm_up_result
             return
-        with AnytimePlanner(name="aries", params=params) as planner:
-            results = planner.get_solutions(  # pylint: disable=no-member
-                problem,
-                timeout=remaining_time,
-                output_stream=output_stream,
+        with AnytimePlanner(name="aries") as planner:
+            results = list(
+                planner.get_solutions(  # pylint: disable=no-member
+                    problem,
+                    timeout=remaining_time,
+                    output_stream=output_stream,
+                    **params,
+                )
             )
         if results is None or len(results) == 0:
             yield warm_up_result
