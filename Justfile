@@ -231,8 +231,8 @@ reset-full: clear-full install-full
 
 
 # Build the Apptainer image.
-build-apptainer:
-    apptainer build --fakeroot --writable-tmpfs container/tyr.sif container/tyr.def
+build-apptainer output="container/tyr.sif":
+    apptainer build --fakeroot --writable-tmpfs {{ output }} container/tyr.def
 
 
 # ============================================================================ #
