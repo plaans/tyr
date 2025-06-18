@@ -561,8 +561,20 @@ class Planner:
     def _check_special_status_from_logs_lpg(
         self, line: str
     ) -> Optional[PlannerResultStatus]:
+        # Those domains have timed-initial literals that are not supported by LPG.
+        til_domains = [
+            "airport-time",
+            "satellite-windows-time",
+            "umts-time",
+        ]
+        # Those domains have required concurrency that are not supported by LPG.
+        req_concurrency_domains = ["match-cellar"]
+
         if line in ["Max time exceeded.\n", "Error: max cpu-time reached\n"]:
             return PlannerResultStatus.TIMEOUT
+        for domain in til_domains + req_concurrency_domains:
+            if domain.upper() in line:
+                return PlannerResultStatus.UNSUPPORTED
         return None
 
     # ============================================================================ #
