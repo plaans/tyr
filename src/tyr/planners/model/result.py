@@ -190,7 +190,11 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             default=None,
         )
         quality = min(
-            (x.plan_quality for x in (self, other) if x.plan_quality is not None),
+            (
+                x.plan_quality
+                for x in (self, other)
+                if x.plan_quality is not None and x.status == PlannerResultStatus.SOLVED
+            ),
             default=None,
         )
         originals = (self.originals or [self]) + (other.originals or [other])
