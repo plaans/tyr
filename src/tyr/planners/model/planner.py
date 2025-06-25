@@ -15,6 +15,7 @@ from unified_planning.engines import PlanGenerationResult, PlanGenerationResultS
 from unified_planning.environment import get_environment
 from unified_planning.exceptions import UPException
 from unified_planning.grpc.proto_writer import ProtobufWriter
+from unified_planning.io.pddl_reader import PDDLReader
 from unified_planning.plans import PlanKind
 from unified_planning.shortcuts import AbstractProblem, Engine
 
@@ -271,9 +272,12 @@ class Planner:
             yield PlannerResult.unsupported(problem, self, config, running_mode)
             return
 
-        # Clear the logs and logs the version to solve.
+        # Clear the logs, logs the version to solve and reload the version from the logs.
         shutil.rmtree(self.get_log_file(problem, "", running_mode).parent, True)
         self._log_problem_version(problem, version, running_mode)
+        dom_path = self.get_log_file(problem, "domain", running_mode, "pddl")
+        prb_path = self.get_log_file(problem, "problem", running_mode, "pddl")
+        version = PDDLReader().parse_problem(dom_path, prb_path)
 
         # Limits the virtual memory of the current process.
         resource.setrlimit(resource.RLIMIT_AS, (config.memout, resource.RLIM_INFINITY))
@@ -416,8 +420,12 @@ class Planner:
 
         # Export the problem in UPF binary format.
         try:
+            pb = PDDLReader().parse_problem(dom_path, prb_path)
+            b_writer = ProtobufWriter()
+            pb_msg = b_writer.convert(pb)
             bin_path = self.get_log_file(problem, "problem", running_mode, "binpb")
-            bin_path.write_bytes(ProtobufWriter().convert(version).SerializeToString())
+            with open(bin_path, "wb") as file:
+                file.write(pb_msg.SerializeToString())
         except Exception as error:
             err_path = self.get_log_file(problem, "bin_export_error", running_mode)
             err_path.write_text(str(error))
@@ -440,7 +448,7 @@ class Planner:
                 start = time.time()
                 for result in planner.get_solutions(
                     version,
-                    timeout=timeout,
+                    timeout=float(timeout),
                     output_stream=log_file,
                 ):
                     end = time.time()
@@ -468,7 +476,7 @@ class Planner:
                 start = time.time()
                 upf_result = planner.solve(
                     version,
-                    timeout=timeout,
+                    timeout=float(timeout),
                     output_stream=log_file,
                 )
                 end = time.time()

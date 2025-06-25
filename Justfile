@@ -113,7 +113,7 @@ install-custom-domains:
 # ================================= Planners ================================= #
 
 # Install all integrated planners
-install-all-planners: install-aries install-enhsp install-linear-complex install-lpg install-optic install-panda-pi install-popcorn install-popf install-tamer
+install-all-planners: install-aries install-enhsp install-linear-complex install-lpg install-optic install-panda-pi install-popcorn install-popf install-tamer install-nextflap
 
 _install-planner-submodule name:
     if test ! -e {{ planners_dir }}/{{ name }}; then git submodule update --init --recursive {{ planners_dir }}/{{ name }}; fi
@@ -211,6 +211,10 @@ install-tamer: install-venv
     {{ python }} -m pip install up-tamer
     @just _register-planner tamer
 
+# Install the NextFlap planner
+install-nextflap: install-venv
+    {{ python }} -m pip install up-nextflap
+    @just _register-planner nextflap
 
 # ============================================================================ #
 #                                     Reset                                    #
