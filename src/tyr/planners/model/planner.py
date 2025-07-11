@@ -278,6 +278,7 @@ class Planner:
         dom_path = self.get_log_file(problem, "domain", running_mode, "pddl")
         prb_path = self.get_log_file(problem, "problem", running_mode, "pddl")
         version = PDDLReader().parse_problem(dom_path, prb_path)
+        version.name = problem.name
 
         # Limits the virtual memory of the current process.
         resource.setrlimit(resource.RLIMIT_AS, (config.memout, resource.RLIM_INFINITY))
