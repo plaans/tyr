@@ -216,7 +216,7 @@ class AriesWarmUpPlanner(
 
         if remaining_time is not None and remaining_time <= 0:
             # No time left for aries, stop here with the original result.
-            return warm_up_result.to_upf()
+            return None, {}, warm_up_result.to_upf()
 
         # Solve the problem with the warm up plan and the remaining time.
         params = self._params.copy()
@@ -236,7 +236,7 @@ class AriesWarmUpPlanner(
         remaining_time, params, warm_up_result = self._setup_timeout_and_params(
             problem, timeout
         )
-        if warm_up_result.status == PlanGenerationResultStatus.INTERNAL_ERROR:
+        if remaining_time is None:
             return warm_up_result
         with OneshotPlanner(name="aries") as planner:
             result = planner.solve(
@@ -259,7 +259,7 @@ class AriesWarmUpPlanner(
         remaining_time, params, warm_up_result = self._setup_timeout_and_params(
             problem, timeout
         )
-        if warm_up_result.status == PlanGenerationResultStatus.INTERNAL_ERROR:
+        if remaining_time is None:
             yield warm_up_result
             return
         with AnytimePlanner(name="aries") as planner:
