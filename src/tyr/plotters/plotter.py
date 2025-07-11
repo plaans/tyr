@@ -25,6 +25,22 @@ MARKER_SYMBOLS = [
 ]
 
 
+MARKER_SYMBOLS = [
+    "circle",
+    "square",
+    "diamond",
+    "cross",
+    "x",
+    "triangle-up",
+    "triangle-down",
+    "triangle-left",
+    "triangle-right",
+    "star",
+    "hexagram",
+    "hourglass",
+]
+
+
 class Plotter(Abstract, Singleton, metaclass=AbstractSingletonMeta):
     """A plotter to visualize the performance of a planner."""
 
