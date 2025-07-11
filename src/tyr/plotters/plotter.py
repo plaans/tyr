@@ -3,12 +3,27 @@ from typing import Dict, List, Tuple
 
 import plotly.graph_objects as go
 from plotly.colors import DEFAULT_PLOTLY_COLORS
-from plotly.validators.scatter.marker import SymbolValidator
 
 from tyr.patterns import AbstractSingletonMeta
 from tyr.patterns.abstract import Abstract
 from tyr.patterns.singleton import Singleton
 from tyr.planners.model.result import PlannerResult
+
+
+MARKER_SYMBOLS = [
+    "circle",
+    "square",
+    "diamond",
+    "cross",
+    "x",
+    "triangle-up",
+    "triangle-down",
+    "triangle-left",
+    "triangle-right",
+    "star",
+    "hexagram",
+    "hourglass",
+]
 
 
 class Plotter(Abstract, Singleton, metaclass=AbstractSingletonMeta):
@@ -46,7 +61,7 @@ class Plotter(Abstract, Singleton, metaclass=AbstractSingletonMeta):
 
         planners = sorted(set(r.planner.name for r in results))
         domains = sorted(set(r.problem.domain.name for r in results))
-        symbols = SymbolValidator().values
+        symbols = MARKER_SYMBOLS
         fig = go.Figure()
 
         for i, planner in enumerate(planners):
