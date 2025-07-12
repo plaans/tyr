@@ -1,4 +1,5 @@
 from fractions import Fraction
+from math import ceil
 import os
 import re
 import resource
@@ -26,7 +27,7 @@ from unified_planning.shortcuts import (
 
 from tyr.planners.database import Database
 from tyr.planners.model.config import RunningMode, SolveConfig
-from tyr.planners.model.result import PlannerResult
+from tyr.planners.model.result import PlannerResult, PlannerResultStatus
 from tyr.planners.planners.aries.planning.unified.plugin.up_aries import Aries
 from tyr.planners.scanner import get_all_planners
 from tyr.problems.scanner import get_all_domains
@@ -76,7 +77,7 @@ class AriesWarmUpPlanner(
         solve_config = SolveConfig(
             jobs=1,
             memout=memout,
-            timeout=timeout,
+            timeout=ceil(timeout * 1.05),
             timeout_offset=0,
             db_only=False,
             no_db_load=False,
@@ -89,6 +90,8 @@ class AriesWarmUpPlanner(
             problem_instance,
             solve_config,
             RunningMode.ONESHOT,
+            keep_unsupported=True,
+            not_run_by_default=True,
         )
 
     def _convert_plan_line_to_upf_format(self, line: str) -> str:
@@ -206,9 +209,11 @@ class AriesWarmUpPlanner(
         else:
             remaining_time = timeout - warm_up_result.computation_time
         warm_up_result.planner = self
+        warm_up_result.from_database = False
 
         if warm_up_result.plan is None or len(warm_up_result.plan.splitlines()) <= 1:
             warm_up_result.plan = None
+            warm_up_result.status = PlannerResultStatus.TIMEOUT
         if warm_up_result.plan is not None:
             warm_up_result.plan = self._load_plan_from_str_with_time_scale(
                 problem, warm_up_result.plan, 10
