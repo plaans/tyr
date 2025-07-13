@@ -226,8 +226,17 @@ class AriesWarmUpPlanner(
         # Solve the problem with the warm up plan and the remaining time.
         params = self._params.copy()
         if warm_up_result.plan is not None:
-            params["warm_up_plan"] = str(warm_up_result.plan)
+            plan = str(warm_up_result.plan)
+            params["warm_start_plan"] = self._plan_from_str(problem, plan)
         return remaining_time, params, warm_up_result
+
+    def _plan_line_to_upf_format(self, line: str) -> str:
+        return line.strip().replace(",", " ").replace("(", " ").replace(":", ": (")
+
+    def _plan_from_str(self, problem: AbstractProblem, plan: str) -> Plan:
+        reader = PDDLReader(problem.environment)
+        plan = "\n".join(map(self._plan_line_to_upf_format, plan.splitlines()[1:]))
+        return reader.parse_plan_string(problem, plan)
 
     def _solve(
         self,
