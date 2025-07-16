@@ -9,8 +9,8 @@ from unittest.mock import Mock, call, patch
 import pytest
 from unified_planning.shortcuts import (
     AbstractProblem,
-    InstantaneousAction,
     Fluent,
+    InstantaneousAction,
     Not,
     Problem,
 )
