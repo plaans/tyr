@@ -9,7 +9,6 @@ from tyr.patterns.abstract import Abstract
 from tyr.patterns.singleton import Singleton
 from tyr.planners.model.result import PlannerResult
 
-
 MARKER_SYMBOLS = [
     "circle",
     "square",

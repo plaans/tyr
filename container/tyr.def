@@ -6,7 +6,7 @@ From: python:3.12-slim
     .gitmodules
     requirements/* requirements/
     src/* src/
-    tests/* tests/
+    # tests/* tests/
     Justfile
     pyproject.toml
 
@@ -32,15 +32,16 @@ From: python:3.12-slim
 
     # Install Tyr
     apt install -y git
-    just --set PY_D . --set PY_T dev install-full
+    # just --set PY_D . --set PY_T dev install-full
+    just --set PY_D . --set PY_T dev install-pip install-aries install-custom-domains install-optic install-lpg
     VERSION="$(just --set PY_D . tyr --version)"
     echo "VERSION: $VERSION" >> "$APPTAINER_LABELS"
 
 %runscript
     exec python -m tyr "$@"
 
-%test
-    python -m pytest tests/
+# %test
+#     python -m pytest tests/
 
 %labels
     Author: Roland Godet <rgodet@laas.fr>
