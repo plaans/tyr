@@ -231,7 +231,10 @@ class AriesWarmUpPlanner(
         return remaining_time, params, warm_up_result
 
     def _plan_line_to_upf_format(self, line: str) -> str:
-        return line.strip().replace(",", " ").replace("(", " ").replace(":", ": (")
+        line = line.strip().replace(",", " ").replace("(", " ").replace(": ", ": (")
+        if ")" not in line:
+            line = line.replace(" [", ") [")
+        return line
 
     def _plan_from_str(self, problem: AbstractProblem, plan: str) -> Plan:
         reader = PDDLReader(problem.environment)
