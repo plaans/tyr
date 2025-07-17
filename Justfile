@@ -116,7 +116,7 @@ install-custom-domains:
 install-all-planners: install-aries install-enhsp install-linear-complex install-lpg install-optic install-panda-pi install-popcorn install-popf install-tamer install-nextflap
 
 _install-planner-submodule name:
-    if test ! -e {{ planners_dir }}/{{ name }}; then git submodule update --init --recursive {{ planners_dir }}/{{ name }}; fi
+    git submodule update --init --recursive {{ planners_dir }}/{{ name }}
 
 _register-planner name:
     #!/bin/bash
