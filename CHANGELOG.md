@@ -4,6 +4,46 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [1.22.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.21.0...v1.22.0) (2025-07-17)
+
+
+### Bug Fixes
+
+* adaptation for nextflap planner ([f33625c](https://gitlab.laas.fr/rgodet1/tyr/commit/f33625ceab93888670ea306e70c85f7c7f25dbcb))
+* **aries-warm-up:** convert the str plan from db into upf format ([2464fb6](https://gitlab.laas.fr/rgodet1/tyr/commit/2464fb6e2f94a5f2b2899e1dbe5dc8e46c57fcf2))
+* **aries-warm-up:** error / unpresent handling ([e112de2](https://gitlab.laas.fr/rgodet1/tyr/commit/e112de2a405c43e80a00771dc9e79c2124dddfd0))
+* **aries-warm-up:** no time left management ([1b9261b](https://gitlab.laas.fr/rgodet1/tyr/commit/1b9261b9e31139c94351f7c23cd3832622cfd273))
+* **aries-warm-up:** plan line with no parameters ([4ad1f28](https://gitlab.laas.fr/rgodet1/tyr/commit/4ad1f286c6e785a53335849693c91a7c95332573))
+* **cli:** no planner or problems display ([485919f](https://gitlab.laas.fr/rgodet1/tyr/commit/485919f6fe1ae555caad5b44f4c8ab000ae4df22))
+* **cli:** typo ([e33e3d5](https://gitlab.laas.fr/rgodet1/tyr/commit/e33e3d5fceae0b628e381db42703ccd8770e2a59))
+* **db:** take into account the timeout offset ([e0b8751](https://gitlab.laas.fr/rgodet1/tyr/commit/e0b8751a93bbe7daf596344b0e247f8691774b8c))
+* **domains:** ecai25 commit ref ([fba890d](https://gitlab.laas.fr/rgodet1/tyr/commit/fba890d8821f69d383093eda3df629af12f84d1c))
+* **domains:** missing domains for ecai25 ([5729568](https://gitlab.laas.fr/rgodet1/tyr/commit/5729568355d2261157c92d63c6303a53a1ef19f9))
+* **models:** detection of already converted results ([5979a3d](https://gitlab.laas.fr/rgodet1/tyr/commit/5979a3d71ee84db4ef01727bc0c5f7cd0e5a2ce9))
+* **planner:** reset problem name after reloading from the logs ([55b9b8f](https://gitlab.laas.fr/rgodet1/tyr/commit/55b9b8f2cd881ee7aedbf7870a621cf7a0c6016c))
+* **planners:** epsilon unification ([09a20ad](https://gitlab.laas.fr/rgodet1/tyr/commit/09a20ad342c84a5c20193757db193b56b488f430))
+* **planners:** filter solved plans for results quality merging ([170b4dc](https://gitlab.laas.fr/rgodet1/tyr/commit/170b4dc43a302d5cb995fd7731efc2f46a123ff7))
+* **planners:** no solution when warm-up returns the given warm-up plan ([f72f0d6](https://gitlab.laas.fr/rgodet1/tyr/commit/f72f0d62aa9b2943b938e0329306d73ab054bd6a))
+* **planners:** warm up with sequential plans ([490e6f6](https://gitlab.laas.fr/rgodet1/tyr/commit/490e6f6054a0f94396a202a6831fd628e022d43f))
+* **scripts:** pddl export from logs ([b0ebd53](https://gitlab.laas.fr/rgodet1/tyr/commit/b0ebd539ded3039abedcc4cfa6ce5c3a863bc600))
+* **slurm:** separation of oneshot and anytime ([7f4e888](https://gitlab.laas.fr/rgodet1/tyr/commit/7f4e888eced57f3235eec11a9e476a7a88224c5d))
+* tests ([5020376](https://gitlab.laas.fr/rgodet1/tyr/commit/502037633d5aae4e4e411d6349fa65238de3b2fd))
+* **tests:** update failure handling in domain creation tests ([5686c6a](https://gitlab.laas.fr/rgodet1/tyr/commit/5686c6ace37baf52930cc3549e9039c28bd00c08))
+
+
+### Features
+
+* **planners:** anytime aries warm up ([2a27217](https://gitlab.laas.fr/rgodet1/tyr/commit/2a27217524ef3bd498e57898db516a72f4ab5b15))
+* **planners:** aries warm up with planner from env ([d051ad6](https://gitlab.laas.fr/rgodet1/tyr/commit/d051ad6e2c71a6f88bb04966a852fc11123535e5))
+* **scripts:** convert sql db to csv ([102a93b](https://gitlab.laas.fr/rgodet1/tyr/commit/102a93b8810925a3573b9b1773823b05a3de876d))
+* **scripts:** extract pddl files from aries logs ([477e67b](https://gitlab.laas.fr/rgodet1/tyr/commit/477e67b65be517acfb4df8cc2a7832988914cabc))
+* **slurm:** can specify the number of instances to run ([7791139](https://gitlab.laas.fr/rgodet1/tyr/commit/779113955053b7b9b3f2ba6100d6305ea84d7dd1))
+
+
+### Performance Improvements
+
+* **scripts:** remove duplicates when merging databases ([7ab4c94](https://gitlab.laas.fr/rgodet1/tyr/commit/7ab4c94783d61ccc9bef461e99add9aeb266244a))
+
 # [1.21.0](https://gitlab.laas.fr/rgodet1/tyr/compare/v1.20.3...v1.21.0) (2024-12-17)
 
 
