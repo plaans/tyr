@@ -15,6 +15,7 @@ from unified_planning.engines import PlanGenerationResult, PlanGenerationResultS
 from unified_planning.environment import get_environment
 from unified_planning.exceptions import UPException
 from unified_planning.grpc.proto_writer import ProtobufWriter
+from unified_planning.io.pddl_reader import PDDLReader
 from unified_planning.plans import PlanKind
 from unified_planning.shortcuts import AbstractProblem, Engine
 
@@ -133,7 +134,9 @@ class Planner:
         """
         version_name = self.get_version_name(problem)
         try:
-            return version_name, problem.versions[version_name].value
+            pb = problem.versions[version_name].value
+            pb.name = problem.name
+            return version_name, pb
         except KeyError:
             return None, None
 
@@ -269,9 +272,13 @@ class Planner:
             yield PlannerResult.unsupported(problem, self, config, running_mode)
             return
 
-        # Clear the logs and logs the version to solve.
+        # Clear the logs, logs the version to solve and reload the version from the logs.
         shutil.rmtree(self.get_log_file(problem, "", running_mode).parent, True)
         self._log_problem_version(problem, version, running_mode)
+        dom_path = self.get_log_file(problem, "domain", running_mode, "pddl")
+        prb_path = self.get_log_file(problem, "problem", running_mode, "pddl")
+        version = PDDLReader().parse_problem(dom_path, prb_path)
+        version.name = problem.name
 
         # Limits the virtual memory of the current process.
         resource.setrlimit(resource.RLIMIT_AS, (config.memout, resource.RLIM_INFINITY))
@@ -414,8 +421,12 @@ class Planner:
 
         # Export the problem in UPF binary format.
         try:
+            pb = PDDLReader().parse_problem(dom_path, prb_path)
+            b_writer = ProtobufWriter()
+            pb_msg = b_writer.convert(pb)
             bin_path = self.get_log_file(problem, "problem", running_mode, "binpb")
-            bin_path.write_bytes(ProtobufWriter().convert(version).SerializeToString())
+            with open(bin_path, "wb") as file:
+                file.write(pb_msg.SerializeToString())
         except Exception as error:
             err_path = self.get_log_file(problem, "bin_export_error", running_mode)
             err_path.write_text(str(error))
@@ -438,7 +449,7 @@ class Planner:
                 start = time.time()
                 for result in planner.get_solutions(
                     version,
-                    timeout=timeout,
+                    timeout=float(timeout),
                     output_stream=log_file,
                 ):
                     end = time.time()
@@ -466,7 +477,7 @@ class Planner:
                 start = time.time()
                 upf_result = planner.solve(
                     version,
-                    timeout=timeout,
+                    timeout=float(timeout),
                     output_stream=log_file,
                 )
                 end = time.time()
@@ -559,8 +570,20 @@ class Planner:
     def _check_special_status_from_logs_lpg(
         self, line: str
     ) -> Optional[PlannerResultStatus]:
+        # Those domains have timed-initial literals that are not supported by LPG.
+        til_domains = [
+            "airport-time",
+            "satellite-windows-time",
+            "umts-time",
+        ]
+        # Those domains have required concurrency that are not supported by LPG.
+        req_concurrency_domains = ["match-cellar"]
+
         if line in ["Max time exceeded.\n", "Error: max cpu-time reached\n"]:
             return PlannerResultStatus.TIMEOUT
+        for domain in til_domains + req_concurrency_domains:
+            if domain.upper() in line:
+                return PlannerResultStatus.UNSUPPORTED
         return None
 
     # ============================================================================ #

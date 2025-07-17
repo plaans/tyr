@@ -3,10 +3,17 @@ import resource
 import time
 import traceback
 from dataclasses import replace
-from typing import Any, Dict
-from unittest.mock import MagicMock, Mock, call, patch
+from typing import Any, Dict, Optional
+from unittest.mock import Mock, call, patch
 
 import pytest
+from unified_planning.shortcuts import (
+    AbstractProblem,
+    Fluent,
+    InstantaneousAction,
+    Not,
+    Problem,
+)
 
 from tests.utils import ModelTest
 from tyr import (
@@ -24,10 +31,17 @@ from tyr.planners.model.result import PlannerResultStatus
 
 
 class MockdomainDomain(AbstractDomain):
-    def build_problem_base(self, problem: ProblemInstance):
-        result = MagicMock()
-        result.uid = problem.uid * 3
-        return result
+    def build_problem_base(self, problem: ProblemInstance) -> Optional[AbstractProblem]:
+        x = Fluent("x")
+        a = InstantaneousAction("a")
+        a.add_precondition(Not(x))
+        a.add_effect(x, True)
+        pb = Problem(problem.name)
+        pb.add_fluent(x)
+        pb.add_action(a)
+        pb.set_initial_value(x, False)
+        pb.add_goal(x)
+        return pb
 
 
 class TestPlanner(ModelTest):
@@ -67,7 +81,7 @@ class TestPlanner(ModelTest):
     @staticmethod
     @pytest.fixture()
     def problem(domain: AbstractDomain):
-        yield domain.get_problem("1")
+        yield domain.get_problem(2)
 
     @staticmethod
     @pytest.fixture()
@@ -163,7 +177,7 @@ class TestPlanner(ModelTest):
     def test_get_correct_version(self, planner: Planner, problem: ProblemInstance):
         name, version = planner.get_version(problem)
         assert name == "base"
-        assert version.uid == problem.uid * 3
+        assert version.name == problem.name
 
     def test_get_inexistant_version(self, planner: Planner, problem: ProblemInstance):
         planner.config.problems["mockdomain"] = "inexistant"
@@ -177,7 +191,7 @@ class TestPlanner(ModelTest):
         planner.config.problems.clear()
         name, version = planner.get_version(problem)
         assert name == "base"
-        assert version.uid == problem.uid * 3
+        assert version.name == problem.name
 
     # ================================= Database ================================= #
 

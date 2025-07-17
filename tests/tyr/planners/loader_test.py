@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
 import pytest
-from unified_planning.shortcuts import OneshotPlanner
+from unified_planning.shortcuts import AnytimePlanner, OneshotPlanner
 
 import tests.integration.planners as planner_module
 import tests.tyr.planners.fixtures.configuration as config_module
@@ -39,4 +39,4 @@ class TestLoader:
     def test_real_planner_upf_registration_anytime(self, planner: Planner):
         # Check the planner is registered in unified planning
         register_all_planners()
-        OneshotPlanner(name=planner.anytime_name)
+        AnytimePlanner(name=planner.anytime_name)

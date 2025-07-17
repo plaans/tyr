@@ -49,6 +49,21 @@ class PlannerResultStatus(Enum):
             PlanGenerationResultStatus.INTERMEDIATE: PlannerResultStatus.SOLVED,
         }[status]
 
+    def to_upf(self) -> PlanGenerationResultStatus:
+        """Converts a status from our status format to the unified planning library format.
+
+        Returns:
+            PlanGenerationResultStatus: The unified planning library matching status.
+        """
+        return {
+            PlannerResultStatus.SOLVED: PlanGenerationResultStatus.SOLVED_SATISFICING,
+            PlannerResultStatus.UNSOLVABLE: PlanGenerationResultStatus.UNSOLVABLE_INCOMPLETELY,
+            PlannerResultStatus.TIMEOUT: PlanGenerationResultStatus.TIMEOUT,
+            PlannerResultStatus.MEMOUT: PlanGenerationResultStatus.MEMOUT,
+            PlannerResultStatus.ERROR: PlanGenerationResultStatus.INTERNAL_ERROR,
+            PlannerResultStatus.UNSUPPORTED: PlanGenerationResultStatus.UNSUPPORTED_PROBLEM,
+        }[self]
+
 
 @dataclass
 class PlannerResult:  # pylint: disable = too-many-instance-attributes
@@ -93,6 +108,15 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
         Returns:
             PlannerResult: The inner matching result.
         """
+        if isinstance(result, PlannerResult):
+            return replace(
+                result,
+                planner=planner,
+                problem=problem,
+                running_mode=running_mode,
+                config=config,
+            )
+
         computation_key = "engine_internal_time"
         computation_time = None
         if result.metrics is not None and computation_key in result.metrics:
@@ -107,9 +131,17 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             )
             if is_temp and config.unify_epsilons:
                 if pb.epsilon is None:
-                    pb.epsilon = Fraction(1, 1000)
-                result.plan = result.plan.convert_to(PlanKind.STN_PLAN, pb).convert_to(
-                    PlanKind.TIME_TRIGGERED_PLAN, pb
+                    pb.epsilon = Fraction(1, 100)
+
+                def set_null_duration(plan: TimeTriggeredPlan) -> TimeTriggeredPlan:
+                    return TimeTriggeredPlan(
+                        [(s, a, d or 0) for s, a, d in plan.timed_actions]
+                    )
+
+                result.plan = (
+                    set_null_duration(pb.normalize_plan(result.plan))
+                    .convert_to(PlanKind.STN_PLAN, pb)
+                    .convert_to(PlanKind.TIME_TRIGGERED_PLAN, pb)
                 )
 
             plan_quality = problem.get_quality_of_plan(result.plan, version_name)
@@ -123,6 +155,14 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             computation_time,
             plan_quality,
             plan=result.plan,
+        )
+
+    def to_upf(self) -> PlanGenerationResult:
+        """Converts the result to the unified planning library format."""
+        return PlanGenerationResult(
+            status=self.status.to_upf(),
+            plan=self.plan,
+            engine_name=self.planner.name,
         )
 
     def merge(self, other: "PlannerResult") -> "PlannerResult":
@@ -150,7 +190,11 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
             default=None,
         )
         quality = min(
-            (x.plan_quality for x in (self, other) if x.plan_quality is not None),
+            (
+                x.plan_quality
+                for x in (self, other)
+                if x.plan_quality is not None and x.status == PlannerResultStatus.SOLVED
+            ),
             default=None,
         )
         originals = (self.originals or [self]) + (other.originals or [other])

@@ -28,6 +28,7 @@ def cursor_mock():
 def result_mock():
     result = MagicMock()
     result.config.timeout = 10
+    result.config.timeout_offset = 5
     result.running_mode = RunningMode.ONESHOT
     result.planner = MagicMock()
     result.plan = MagicMock()
@@ -132,7 +133,7 @@ class TestDatabase:
                 result_mock.config.memout,
                 result_mock.config.timeout,
                 now,
-                "Action 1\nAction 2",
+                "Sequential Plan\n    Action 1\n    Action 2",
             ),
         )
         conn_mock.commit.assert_called_once()

@@ -35,6 +35,7 @@ def merge(db_folder: Path, out_db: str):
     db_merged.commit()
 
     for db_file in db_folder.iterdir():
+        # Read content of each database file
         db = sqlite3.connect(db_file)
         db_cursor = db.cursor()
         db_cursor.execute(
@@ -46,6 +47,8 @@ def merge(db_folder: Path, out_db: str):
             """
         )
         results = db_cursor.fetchall()
+
+        # Insert content into the merged database
         for result in results:
             db_merged_cursor.execute(
                 """
@@ -59,6 +62,21 @@ def merge(db_folder: Path, out_db: str):
         db_merged.commit()
         db_cursor.close()
         db.close()
+
+        # Remove the duplicate entries
+        db_merged_cursor.execute(
+            """
+            DELETE FROM "results"
+            WHERE rowid NOT IN (
+                SELECT MIN(rowid)
+                FROM "results"
+                GROUP BY
+                    "planner", "problem", "mode", "status", "computation", "quality",
+                    "error msg", "jobs", "memout", "timeout", "creation", "plan"
+            )
+            """
+        )
+        db_merged.commit()
 
     db_merged_cursor.close()
     db_merged.close()

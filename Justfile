@@ -113,7 +113,7 @@ install-custom-domains:
 # ================================= Planners ================================= #
 
 # Install all integrated planners
-install-all-planners: install-aries install-enhsp install-linear-complex install-lpg install-optic install-panda-pi install-popcorn install-popf install-tamer
+install-all-planners: install-aries install-enhsp install-linear-complex install-lpg install-optic install-panda-pi install-popcorn install-popf install-tamer install-nextflap
 
 _install-planner-submodule name:
     git submodule update --init --recursive {{ planners_dir }}/{{ name }}
@@ -211,6 +211,10 @@ install-tamer: install-venv
     {{ python }} -m pip install up-tamer
     @just _register-planner tamer
 
+# Install the NextFlap planner
+install-nextflap: install-venv
+    {{ python }} -m pip install up-nextflap
+    @just _register-planner nextflap
 
 # ============================================================================ #
 #                                     Reset                                    #
@@ -231,8 +235,8 @@ reset-full: clear-full install-full
 
 
 # Build the Apptainer image.
-build-apptainer:
-    apptainer build --fakeroot --writable-tmpfs container/tyr.sif container/tyr.def
+build-apptainer output="container/tyr.sif":
+    apptainer build --fakeroot --writable-tmpfs {{ output }} container/tyr.def
 
 
 # ============================================================================ #

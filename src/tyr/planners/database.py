@@ -105,7 +105,7 @@ class Database(Singleton):
                     result.config.memout,
                     result.config.timeout,
                     datetime.datetime.now().isoformat(),
-                    "\n".join(list(map(str.strip, str(result.plan).splitlines()[1:]))),
+                    str(result.plan) if result.plan is not None else None,
                 ),
             )
             conn.commit()
@@ -149,7 +149,7 @@ class Database(Singleton):
             ):
                 return None
 
-            if resp[5] is not None and resp[5] > config.timeout:
+            if resp[5] is not None and resp[5] > config.timeout + config.timeout_offset:
                 if running_mode.name == "ANYTIME" and not force_before_timeout:
                     result_before_timeout = self.load_planner_result(
                         planner,
@@ -178,7 +178,7 @@ class Database(Singleton):
                     problem.name,
                     running_mode.name,
                     config.memout,
-                    config.timeout,
+                    config.timeout + config.timeout_offset,
                     resp[11],
                     (
                         datetime.datetime.fromisoformat(resp[11])
@@ -256,7 +256,7 @@ class Database(Singleton):
         params = [planner.name, problem.name, running_mode.name, config.memout]
         if force_before_timeout:
             request = request.replace('"memout"=?', '"memout"=? AND "computation"<=?')
-            params.append(config.timeout)
+            params.append(config.timeout + config.timeout_offset)
 
         with self.database() as conn:
             resp = conn.cursor().execute(request, params).fetchone()
@@ -313,12 +313,12 @@ class Database(Singleton):
 
         if force_before_timeout:
             request = request.replace("memout=?", "memout=? AND computation<=?")
-            params.append(str(config.timeout))
+            params.append(str(config.timeout + config.timeout_offset))
 
         with self.database() as conn:
             resp_list = conn.cursor().execute(request, params).fetchall()
 
-        for (planner, problem, mode) in requests:
+        for planner, problem, mode in requests:
 
             def filter_callback(planner=planner, problem=problem, mode=mode):
                 return lambda x: (

@@ -383,7 +383,7 @@ def cli_bench(
             "--db-only --no-db-load",
             "Cannot use both --db-only and --no-db-load.",
         )
-    if conf["db_only"] and conf["no_db-save"]:
+    if conf["db_only"] and conf["no_db_save"]:
         raise click.BadOptionUsage(
             "--db-only --no-db-save",
             "Cannot use both --db-only and --no-db-save.",
@@ -505,6 +505,7 @@ def cli_plot(
 @domains_filter
 @anytime_option
 @oneshot_option
+@unify_epsilons_option
 @click.option(
     "--user-mail",
     type=str,
@@ -532,6 +533,7 @@ def cli_slurm(
     domains: List[str],
     anytime: bool,
     oneshot: bool,
+    unify_epsilons: bool,
     user_mail: str,
     nodelist: List[str],
 ):
@@ -549,6 +551,7 @@ def cli_slurm(
         "domains": domains,
         "anytime": anytime,
         "oneshot": oneshot,
+        "unify_epsilons": unify_epsilons,
         "user_mail": user_mail,
         "nodelist": nodelist,
     }
@@ -573,7 +576,7 @@ def cli_slurm(
         db_only=False,
         no_db_load=False,
         no_db_save=False,
-        unify_epsilons=False,
+        unify_epsilons=conf["unify_epsilons"],
     )
 
     run_slurm(
