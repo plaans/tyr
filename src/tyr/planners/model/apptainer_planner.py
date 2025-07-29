@@ -25,7 +25,8 @@ class ApptainerPlanner(TyrPDDLPlanner):
         plan_filename: str,
     ) -> List[str]:
         planner_file = inspect.getfile(self.__class__)
-        sif = f"./shortcuts/planners/{Path(planner_file).parent.name}/{self._get_apptainer_file_name()}"
+        sif = f"./shortcuts/planners/{Path(planner_file).parent.name}/"
+        sif += f"{self._get_apptainer_file_name()}"
         domain_rel = Path(domain_filename).relative_to(Path.cwd()).as_posix()
         problem_rel = Path(problem_filename).relative_to(Path.cwd()).as_posix()
         plan_rel = Path(plan_filename).relative_to(Path.cwd()).as_posix()

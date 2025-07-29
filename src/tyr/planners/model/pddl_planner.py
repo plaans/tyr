@@ -132,7 +132,9 @@ class TyrPDDLPlanner(PDDLAnytimePlanner):
             else:
                 metrics["engine_internal_time"] = str(process_end - process_start)
             timeout_occurred = (timeout_occurred or retval != 0) and (
-                computation >= timeout - 1 if timeout else False
+                computation >= timeout - 1
+                if timeout is not None and computation is not None
+                else False
             )
             if timeout_occurred:
                 return PlanGenerationResult(
