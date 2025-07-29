@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Optional
 from unittest.mock import MagicMock, Mock, patch
 
@@ -20,21 +19,34 @@ def planner():
 
 class TestApptainerPlanner:
     def test_get_cmd(self, planner: MockPlanner):
-        file = Path(__file__).parent / "file.sif"
-        domain = "/tmp/domain.pddl"  # nosec: B108
-        problem = "/tmp/problem.pddl"  # nosec: B108
-        plan = "/tmp/plan.txt"  # nosec: B108
-        expected = f"apptainer run -H /tmp -C {file} {domain} {problem} {plan}"
+        from pathlib import Path
+
+        cwd = Path.cwd()
+        domain = str(cwd / "logs/mock-config/foo/2-oneshot/domain.pddl")
+        problem = str(cwd / "logs/mock-config/foo/2-oneshot/problem.pddl")
+        plan = str(cwd / "logs/mock-config/foo/2-oneshot/plan.txt")
+        expected = (
+            "./shortcuts/planners/model/file.sif "
+            "logs/mock-config/foo/2-oneshot/domain.pddl "
+            "logs/mock-config/foo/2-oneshot/problem.pddl "
+            "logs/mock-config/foo/2-oneshot/plan.txt"
+        )
         result = planner._get_cmd(domain, problem, plan)
         assert result == expected.split()
 
     def test_get_anytime_cmd(self, planner: MockPlanner):
-        planner = MockPlanner()
-        file = Path(__file__).parent / "file.sif"
-        domain = "/tmp/domain.pddl"  # nosec: B108
-        problem = "/tmp/problem.pddl"  # nosec: B108
-        plan = "/tmp/plan.txt"  # nosec: B108
-        expected = f"apptainer run -H /tmp -C {file} {domain} {problem} {plan}"
+        from pathlib import Path
+
+        cwd = Path.cwd()
+        domain = str(cwd / "logs/mock-config/foo/2-oneshot/domain.pddl")
+        problem = str(cwd / "logs/mock-config/foo/2-oneshot/problem.pddl")
+        plan = str(cwd / "logs/mock-config/foo/2-oneshot/plan.txt")
+        expected = (
+            "./shortcuts/planners/model/file.sif "
+            "logs/mock-config/foo/2-oneshot/domain.pddl "
+            "logs/mock-config/foo/2-oneshot/problem.pddl "
+            "logs/mock-config/foo/2-oneshot/plan.txt"
+        )
         result = planner._get_anytime_cmd(domain, problem, plan)
         assert result == expected.split()
 

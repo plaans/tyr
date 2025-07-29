@@ -24,11 +24,13 @@ class ApptainerPlanner(TyrPDDLPlanner):
         problem_filename: str,
         plan_filename: str,
     ) -> List[str]:
-        base = "apptainer run"
-        home = Path(domain_filename).parent.as_posix()
         planner_file = inspect.getfile(self.__class__)
-        sif = (Path(planner_file).parent / self._get_apptainer_file_name()).as_posix()
-        cmd = f"{base} -H {home} -C {sif} {domain_filename} {problem_filename} {plan_filename}"
+        sif = f"./shortcuts/planners/{Path(planner_file).parent.name}/"
+        sif += f"{self._get_apptainer_file_name()}"
+        domain_rel = Path(domain_filename).relative_to(Path.cwd()).as_posix()
+        problem_rel = Path(problem_filename).relative_to(Path.cwd()).as_posix()
+        plan_rel = Path(plan_filename).relative_to(Path.cwd()).as_posix()
+        cmd = f"{sif} {domain_rel} {problem_rel} {plan_rel}"
         return cmd.split()
 
     def _get_anytime_cmd(

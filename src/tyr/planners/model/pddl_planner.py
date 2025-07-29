@@ -109,6 +109,16 @@ class TyrPDDLPlanner(PDDLAnytimePlanner):
                     plan_filename,
                     self._writer.get_item_named,
                 )
+            elif os.path.isfile(plan_filename + ".1"):
+                i = 2
+                if anytime:
+                    while os.path.isfile(plan_filename + f".{i}"):
+                        i += 1
+                plan = self._plan_from_file(
+                    problem,
+                    plan_filename + f".{i - 1}",
+                    self._writer.get_item_named,
+                )
             else:
                 plan = self._plan_from_str(
                     problem,
@@ -121,7 +131,12 @@ class TyrPDDLPlanner(PDDLAnytimePlanner):
                 metrics["engine_internal_time"] = str(computation)
             else:
                 metrics["engine_internal_time"] = str(process_end - process_start)
-            if timeout_occurred and retval != 0:
+            timeout_occurred = (timeout_occurred or retval != 0) and (
+                computation >= timeout - 1
+                if timeout is not None and computation is not None
+                else False
+            )
+            if timeout_occurred:
                 return PlanGenerationResult(
                     PlanGenerationResultStatus.TIMEOUT,
                     plan=plan,
