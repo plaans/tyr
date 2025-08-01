@@ -83,8 +83,13 @@ install-venv:
     if test ! -e {{ PY_D }}; then python{{ PY_V }} -m venv {{ PY_D }}; fi
 
 # Install Python dependencies
-install-pip: install-venv
-    {{ python }} -m pip install -r requirements/{{ PY_T }}.txt
+install-pip no_cache="false": install-venv
+    #!/bin/bash
+    if [ "{{ no_cache }}" = "true" ]; then
+        {{ python }} -m pip install --no-cache-dir -r requirements/{{ PY_T }}.txt
+    else
+        {{ python }} -m pip install -r requirements/{{ PY_T }}.txt
+    fi
 alias install := install-pip
 
 # Install Python dependencies, planners, and domains
