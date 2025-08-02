@@ -97,7 +97,7 @@ class TyrPDDLPlanner(PDDLAnytimePlanner):
                 )
             process_start = time.time()
 
-            exec_res = run_command_posix_select(self, cmd, output_stream, timeout)
+            exec_res = run_command_posix_select(cmd, output_stream, timeout)
             timeout_occurred, (proc_out, proc_err), retval = exec_res
 
             process_end = time.time()
