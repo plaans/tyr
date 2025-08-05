@@ -3,8 +3,8 @@ import re
 import time
 from typing import IO, Callable, Dict, List, Optional, Tuple, Union
 
+from unified_planning.engines import pddl_planner as upf_pddl_planner
 from unified_planning.engines.pddl_anytime_planner import PDDLAnytimePlanner, Writer
-from unified_planning.engines import pddl_planner
 from unified_planning.engines.results import (
     LogLevel,
     LogMessage,
@@ -97,7 +97,7 @@ class TyrPDDLPlanner(PDDLAnytimePlanner):
                 )
             process_start = time.time()
 
-            exec_res = pddl_planner.run_command_posix_select(
+            exec_res = upf_pddl_planner.run_command_posix_select(
                 cmd, output_stream, timeout
             )
             timeout_occurred, (proc_out, proc_err), retval = exec_res
