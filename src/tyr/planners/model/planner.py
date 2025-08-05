@@ -1,5 +1,4 @@
 import os
-import psutil
 import resource
 import shutil
 import time
@@ -11,6 +10,7 @@ from pathlib import Path
 from queue import Empty
 from typing import Generator, Optional, Tuple
 
+import psutil
 import unified_planning.shortcuts as upf
 from unified_planning.engines import PlanGenerationResult, PlanGenerationResultStatus
 from unified_planning.environment import get_environment
@@ -74,7 +74,7 @@ def terminate_process_tree(pid: Optional[int]) -> None:
                 pass
     except psutil.NoSuchProcess:
         pass  # Process already dead
-    except Exception:  # pylint: disable=broad-exception-caught
+    except Exception:  # pylint: disable=broad-exception-caught  # nosec: B110
         pass  # Silently ignore other errors
 
 
@@ -405,7 +405,7 @@ class Planner:
                     process.join(timeout=1)
                     if process.is_alive():
                         terminate_process_tree(process.pid)
-                except Exception:  # pylint: disable=broad-exception-caught
+                except Exception:  # pylint: disable=broad-exception-caught  # nosec: B110
                     pass
 
             if self.last_upf_result is None:
@@ -515,8 +515,11 @@ class Planner:
                         ):
                             result.plan = result.plan.action_plan
                         queue.put((result, start, end))
-            except Exception as error:  # pylint: disable=broad-exception-caught
-                queue.put(error)
+            except Exception as error:  # pylint: disable=broad-exception-caught  # nosec: B110
+                # Create a picklable version of the exception
+                picklable_error = Exception(str(error))
+                picklable_error.__class__ = error.__class__
+                queue.put(picklable_error)
 
     def _solve_oneshot(  # pylint: disable = too-many-arguments, too-many-positional-arguments
         self,
@@ -542,8 +545,11 @@ class Planner:
                 ):
                     upf_result.plan = upf_result.plan.action_plan
                 queue.put((upf_result, start, end))
-            except Exception as error:  # pylint: disable=broad-exception-caught
-                queue.put(error)
+            except Exception as error:  # pylint: disable=broad-exception-caught  # nosec: B110
+                # Create a picklable version of the exception
+                picklable_error = Exception(str(error))
+                picklable_error.__class__ = error.__class__
+                queue.put(picklable_error)
 
     # pylint: disable = too-many-arguments, too-many-positional-arguments
     def _handle_upf_result(
