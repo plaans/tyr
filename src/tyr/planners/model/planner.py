@@ -1,4 +1,5 @@
 import os
+import psutil
 import resource
 import shutil
 import time
@@ -315,7 +316,7 @@ class Planner:
 
         # Get the version to solve.
         version_name, version = self.get_version(problem)
-        if version_name is None or version is None:
+        if version_name is None or version is None or version_name == "unsupported":
             # No version found, the problem is not supported.
             yield PlannerResult.unsupported(problem, self, config, running_mode)
             return
