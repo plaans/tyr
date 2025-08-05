@@ -29,6 +29,54 @@ from tyr.problems import ProblemInstance
 warnings.filterwarnings("ignore", category=UserWarning)
 
 
+# pylint: disable=too-many-branches
+def terminate_process_tree(pid: Optional[int]) -> None:
+    """Terminate a process and all its descendants."""
+
+    try:
+        parent = psutil.Process(pid)
+        if not parent.is_running():
+            return
+
+        children = parent.children(recursive=True)
+
+        # Terminate all children first in reverse order
+        for child in reversed(children):
+            try:
+                if child.is_running():
+                    child.terminate()
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                pass
+
+        # Give them a brief moment to terminate before forcing a kill
+        if children:
+            alive = psutil.wait_procs(children, timeout=1)[1]
+
+            for child in alive:
+                try:
+                    if child.is_running():
+                        child.kill()
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    pass
+
+        # Now handle the parent process
+        try:
+            if parent.is_running():
+                parent.terminate()
+                parent.wait(timeout=1)
+        except (psutil.NoSuchProcess, psutil.TimeoutExpired):
+            try:
+                if parent.is_running():
+                    parent.kill()
+                    parent.wait(timeout=1)
+            except (psutil.NoSuchProcess, psutil.TimeoutExpired):
+                pass
+    except psutil.NoSuchProcess:
+        pass  # Process already dead
+    except Exception:  # pylint: disable=broad-exception-caught
+        pass  # Silently ignore other errors
+
+
 class Planner:
     """Represents a task planner wrapping unified planning library."""
 
@@ -334,13 +382,12 @@ class Planner:
                         )
                     except Empty:
                         continue
+
                 # The planner timed out.
                 if process.is_alive():
-                    # Kill the process if it is still running.
-                    process.terminate()
-                    process.join(2)
-                    if process.is_alive():
-                        process.kill()
+                    # Kill the entire process tree
+                    terminate_process_tree(process.pid)
+                    process.join(timeout=2)
                     # Return a timeout result if no result was found.
                     if self.last_upf_result is None:
                         yield PlannerResult.timeout(
@@ -350,6 +397,15 @@ class Planner:
                             running_mode,
                         )
                         return
+
+            # Ensure process is properly joined
+            if process is not None:
+                try:
+                    process.join(timeout=1)
+                    if process.is_alive():
+                        terminate_process_tree(process.pid)
+                except Exception:  # pylint: disable=broad-exception-caught
+                    pass
 
             if self.last_upf_result is None:
                 # No result was found.
@@ -372,12 +428,10 @@ class Planner:
 
         except Exception:  # pylint: disable=broad-exception-caught
             # An error occurred...
-            # Stop the process if it is still running.
+            # Stop the process tree if it is still running.
             if process is not None and process.is_alive():
-                process.terminate()
-                process.join(2)
-                if process.is_alive():
-                    process.kill()
+                terminate_process_tree(process.pid)
+                process.join(timeout=2)
             # Save the error in logs.
             log_path = self.get_log_file(problem, "error", running_mode)
             with open(log_path, "w", encoding="utf-8") as log_file:

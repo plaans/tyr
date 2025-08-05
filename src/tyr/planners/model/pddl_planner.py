@@ -4,7 +4,7 @@ import time
 from typing import IO, Callable, Dict, List, Optional, Tuple, Union
 
 from unified_planning.engines.pddl_anytime_planner import PDDLAnytimePlanner, Writer
-from unified_planning.engines.pddl_planner import run_command_posix_select
+from unified_planning.engines import pddl_planner
 from unified_planning.engines.results import (
     LogLevel,
     LogMessage,
@@ -97,7 +97,9 @@ class TyrPDDLPlanner(PDDLAnytimePlanner):
                 )
             process_start = time.time()
 
-            exec_res = run_command_posix_select(cmd, output_stream, timeout)
+            exec_res = pddl_planner.run_command_posix_select(
+                cmd, output_stream, timeout
+            )
             timeout_occurred, (proc_out, proc_err), retval = exec_res
 
             process_end = time.time()
@@ -131,11 +133,22 @@ class TyrPDDLPlanner(PDDLAnytimePlanner):
                 metrics["engine_internal_time"] = str(computation)
             else:
                 metrics["engine_internal_time"] = str(process_end - process_start)
-            timeout_occurred = (timeout_occurred or retval != 0) and (
-                computation >= timeout - 1
-                if timeout is not None and computation is not None
-                else False
-            )
+
+            # Improved timeout detection:
+            # 1. Check if run_command reported a timeout
+            # 2. Check if computation time (if available) exceeds timeout
+            # 3. Check if process time exceeds timeout when computation time is not available
+            if timeout_occurred:
+                # run_command already detected a timeout
+                pass
+            elif timeout is not None and computation is not None:
+                # Check if internal computation time suggests timeout
+                timeout_occurred = computation >= timeout - 1
+            elif timeout is not None and computation is None and retval != 0:
+                # No internal time available, but process failed - check wall time
+                actual_runtime = process_end - process_start
+                timeout_occurred = actual_runtime >= timeout - 1
+
             if timeout_occurred:
                 return PlanGenerationResult(
                     PlanGenerationResultStatus.TIMEOUT,

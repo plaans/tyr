@@ -4,6 +4,7 @@
 click
 joblib
 plotly
+psutil
 toml
 
 # Numpy is a dependency requires numpy as "anything new than certain version of numpy".
