@@ -517,8 +517,16 @@ class Planner:
                         queue.put((result, start, end))
             except Exception as error:  # pylint: disable=broad-exception-caught  # nosec: B110
                 # Create a picklable version of the exception
-                picklable_error = Exception(str(error))
-                picklable_error.__class__ = error.__class__
+                # Store the original exception type name and message
+                error_info = {
+                    "type": error.__class__.__name__,
+                    "module": error.__class__.__module__,
+                    "message": str(error),
+                    "args": error.args if hasattr(error, "args") else (),
+                }
+                # Create a generic Exception with the error info
+                picklable_error = Exception(f"{error.__class__.__name__}: {error}")
+                picklable_error.original_error_info = error_info
                 queue.put(picklable_error)
 
     def _solve_oneshot(  # pylint: disable = too-many-arguments, too-many-positional-arguments
@@ -547,8 +555,16 @@ class Planner:
                 queue.put((upf_result, start, end))
             except Exception as error:  # pylint: disable=broad-exception-caught  # nosec: B110
                 # Create a picklable version of the exception
-                picklable_error = Exception(str(error))
-                picklable_error.__class__ = error.__class__
+                # Store the original exception type name and message
+                error_info = {
+                    "type": error.__class__.__name__,
+                    "module": error.__class__.__module__,
+                    "message": str(error),
+                    "args": error.args if hasattr(error, "args") else (),
+                }
+                # Create a generic Exception with the error info
+                picklable_error = Exception(f"{error.__class__.__name__}: {error}")
+                picklable_error.original_error_info = error_info
                 queue.put(picklable_error)
 
     # pylint: disable = too-many-arguments, too-many-positional-arguments
