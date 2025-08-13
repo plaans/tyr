@@ -127,29 +127,26 @@ class TyrPDDLPlanner(PDDLAnytimePlanner):
                     self._get_plan(proc_out),
                     self._writer.get_item_named,
                 )
+            has_plan = plan is not None and len(str(plan).splitlines()) > 1
 
             metrics = {}
-            if (computation := self._get_computation_time(logs)) is not None:
-                metrics["engine_internal_time"] = str(computation)
-            else:
-                metrics["engine_internal_time"] = str(process_end - process_start)
+            computation = self._get_computation_time(logs)
+            if computation is None:
+                # If computation time is not provided, use the process time
+                computation = process_end - process_start
+            metrics["engine_internal_time"] = str(computation)
 
             # Improved timeout detection:
             # 1. Check if run_command reported a timeout
-            # 2. Check if computation time (if available) exceeds timeout
-            # 3. Check if process time exceeds timeout when computation time is not available
+            # 2. Check if computation time exceeds timeout
             if timeout_occurred:
                 # run_command already detected a timeout
                 pass
-            elif timeout is not None and computation is not None:
-                # Check if internal computation time suggests timeout
+            elif timeout is not None:
+                # Check if computation time suggests timeout
                 timeout_occurred = computation >= timeout - 1
-            elif timeout is not None and computation is None and retval != 0:
-                # No internal time available, but process failed - check wall time
-                actual_runtime = process_end - process_start
-                timeout_occurred = actual_runtime >= timeout - 1
 
-            if timeout_occurred:
+            if timeout_occurred and not has_plan:
                 return PlanGenerationResult(
                     PlanGenerationResultStatus.TIMEOUT,
                     plan=plan,
