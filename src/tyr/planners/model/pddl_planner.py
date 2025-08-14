@@ -178,5 +178,77 @@ class TyrPDDLPlanner(PDDLAnytimePlanner):
                 log_messages=[LogMessage(LogLevel.ERROR, str(e))],
             )
 
+    def check_for_plan_from_files(
+        self,
+        problem: AbstractProblem,
+        output_dir: str,
+        anytime: bool,
+    ) -> Optional[PlanGenerationResult]:
+        """
+        Check for plan files after process termination and parse if found.
+
+        Args:
+            problem: The problem being solved
+            output_dir: Directory where plan files are written
+            anytime: Whether the planner is in anytime mode
+
+        Returns:
+            PlanGenerationResult if a plan file is found and parsed successfully, None otherwise
+        """
+
+        self._writer = TyrPDDLWriter(
+            problem,
+            self._needs_requirements,
+            self._rewrite_bool_assignments,
+        )
+
+        plan = None
+        ext = self._file_extension()
+        domain_filename = os.path.join(output_dir, f"domain.{ext}")
+        problem_filename = os.path.join(output_dir, f"problem.{ext}")
+        plan_filename = os.path.join(output_dir, "output.plan")
+        domain_options = self._get_write_domain_options()
+        self._writer.write_domain(domain_filename, **domain_options)
+        self._writer.write_problem(problem_filename)
+
+        # Check for output.plan first
+        if os.path.isfile(plan_filename):
+            plan = self._plan_from_file(
+                problem,
+                plan_filename,
+                self._writer.get_item_named,
+            )
+        # Check for output.plan.1, output.plan.2, etc.
+        elif os.path.isfile(plan_filename + ".1"):
+            i = 2
+            # For anytime mode, find the latest plan file
+            if anytime:
+                while os.path.isfile(plan_filename + f".{i}"):
+                    i += 1
+            plan = self._plan_from_file(
+                problem,
+                plan_filename + f".{i - 1}",
+                self._writer.get_item_named,
+            )
+        has_plan = plan is not None and len(str(plan).splitlines()) > 1
+
+        metrics = {}
+        computation = self._get_computation_time([])
+        if computation is not None:
+            metrics["engine_internal_time"] = str(computation)
+
+        self._writer = None
+        if has_plan:
+            return PlanGenerationResult(
+                PlanGenerationResultStatus.SOLVED_SATISFICING,
+                plan=plan,
+                engine_name=self.name,
+                log_messages=[
+                    LogMessage(LogLevel.INFO, "Plan recovered after timeout")
+                ],
+                metrics=metrics,
+            )
+        return None
+
 
 __all__ = ["TyrPDDLPlanner"]
