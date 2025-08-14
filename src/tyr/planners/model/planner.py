@@ -23,6 +23,7 @@ from unified_planning.shortcuts import AbstractProblem, Engine
 from tyr.core.paths import TyrPaths
 from tyr.planners.database import Database
 from tyr.planners.model.config import PlannerConfig, RunningMode, SolveConfig
+from tyr.planners.model.pddl_planner import TyrPDDLPlanner
 from tyr.planners.model.pddl_writer import TyrPDDLWriter
 from tyr.planners.model.result import PlannerResult, PlannerResultStatus
 from tyr.problems import ProblemInstance
@@ -321,13 +322,16 @@ class Planner:
             yield PlannerResult.unsupported(problem, self, config, running_mode)
             return
 
-        # Clear the logs, logs the version to solve and reload the version from the logs.
+        # Clear the logs and logs the version to solve.
         shutil.rmtree(self.get_log_file(problem, "", running_mode).parent, True)
         self._log_problem_version(problem, version, running_mode)
-        dom_path = self.get_log_file(problem, "domain", running_mode, "pddl")
-        prb_path = self.get_log_file(problem, "problem", running_mode, "pddl")
-        version = PDDLReader().parse_problem(dom_path, prb_path)
-        version.name = problem.name
+
+        # Reload the version from the logs if it does not have control parameters.
+        if "ctrl_params" not in version_name:
+            dom_path = self.get_log_file(problem, "domain", running_mode, "pddl")
+            prb_path = self.get_log_file(problem, "problem", running_mode, "pddl")
+            version = PDDLReader().parse_problem(dom_path, prb_path)
+            version.name = problem.name
 
         # Limits the virtual memory of the current process.
         resource.setrlimit(resource.RLIMIT_AS, (config.memout, resource.RLIM_INFINITY))
@@ -390,6 +394,14 @@ class Planner:
                     terminate_process_tree(process.pid)
                     process.join(timeout=2)
                     # Return a timeout result if no result was found.
+                    if self.last_upf_result is None and isinstance(
+                        planner, TyrPDDLPlanner
+                    ):
+                        self._last_upf_result = planner.check_for_plan_from_files(
+                            version,
+                            log_path.parent,
+                            anytime=running_mode == RunningMode.ANYTIME,
+                        )
                     if self.last_upf_result is None:
                         yield PlannerResult.timeout(
                             problem,
@@ -408,6 +420,12 @@ class Planner:
                 except Exception:  # pylint: disable=broad-exception-caught  # nosec: B110
                     pass
 
+            if self.last_upf_result is None and isinstance(planner, TyrPDDLPlanner):
+                self._last_upf_result = planner.check_for_plan_from_files(
+                    version,
+                    log_path.parent,
+                    anytime=running_mode == RunningMode.ANYTIME,
+                )
             if self.last_upf_result is None:
                 # No result was found.
                 yield PlannerResult.timeout(
