@@ -224,8 +224,18 @@ install-tflap: install-venv
 
 # Install the NextFlap planner
 install-nextflap: install-venv
-    {{ python }} -m pip install up-nextflap
-    @just _register-planner nextflap
+    #!/bin/bash
+    just _install-planner-submodule nextflap
+    PYTHON_PATH="$(pwd)/{{ python }}"
+    VENV_PATH="$(pwd)/{{ PY_D }}"
+    cd {{ planners_dir }}/nextflap
+    # Create temporary python symlink to ensure script uses venv python  
+    mkdir -p ./temp_bin
+    ln -sf "$PYTHON_PATH" ./temp_bin/python
+    export PATH="$(pwd)/temp_bin:$PATH"
+    VIRTUAL_ENV="$VENV_PATH" PYTHON_CMD="$PYTHON_PATH" bash install.sh
+    rm -rf ./temp_bin
+    just _register-planner nextflap
 
 # ============================================================================ #
 #                                     Reset                                    #
