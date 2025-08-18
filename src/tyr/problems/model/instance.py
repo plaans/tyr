@@ -150,6 +150,9 @@ class ProblemInstance:
         if plan.kind == PlanKind.SEQUENTIAL_PLAN:
             return len(plan.actions)
 
+        if plan.kind == PlanKind.PARTIAL_ORDER_PLAN:
+            return len(plan.convert_to(PlanKind.SEQUENTIAL_PLAN, version).actions)
+
         return None
 
 
