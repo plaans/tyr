@@ -98,7 +98,9 @@ class AriesWarmUpPlanner(
                 output_stream=output_stream,
                 **params,
             )
-        if result is None or result.plan is None:
+        if (result is None or 
+            result.plan is None or 
+            result.status == PlanGenerationResultStatus.INTERNAL_ERROR):
             return warm_up_result
 
         # Add warm-up time to the Aries result's computation time
@@ -142,7 +144,9 @@ class AriesWarmUpPlanner(
             yield warm_up_result
             return
         for result in results:
-            if result is None or result.plan is None:
+            if (result is None or 
+                result.plan is None or 
+                result.status == PlanGenerationResultStatus.INTERNAL_ERROR):
                 yield warm_up_result
                 return
 
