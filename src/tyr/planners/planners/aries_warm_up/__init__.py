@@ -1,3 +1,4 @@
+from enum import Enum
 from fractions import Fraction
 from math import ceil
 import os
@@ -33,6 +34,14 @@ from tyr.planners.scanner import get_all_planners
 from tyr.problems.scanner import get_all_domains
 
 
+class WarmUpStrategy(Enum):
+    """Strategies for warm-up planning."""
+
+    FIRST_SOLUTION = "first_solution"
+    TIMEOUT_FALLBACK = "timeout_fallback"
+    OPTIMIZED_WARMSTART = "optimized_warmstart"
+
+
 class AriesWarmUpPlanner(
     engines.engine.Engine,
     mixins.OneshotPlannerMixin,
@@ -42,6 +51,8 @@ class AriesWarmUpPlanner(
 
     _params: Dict[str, str] = {}
     optimality_metric_required = False
+
+    # =============================== Core Methods =============================== #
 
     def __init__(self, **kwargs):
         self._params = {k: str(v) for k, v in kwargs.items()}
@@ -60,8 +71,102 @@ class AriesWarmUpPlanner(
     def supports(problem_kind) -> bool:
         return Aries.supports(problem_kind)
 
+    # ============================ Main Solver Methods =========================== #
+
+    def _solve(
+        self,
+        problem: AbstractProblem,
+        heuristic: Optional[
+            Callable[["up.model.state.ROState"], Optional[float]]
+        ] = None,
+        timeout: Optional[float] = None,
+        output_stream: Optional[IO[str]] = None,
+    ) -> PlanGenerationResult:
+        (
+            remaining_time,
+            params,
+            warm_up_result,
+            warm_up_time,
+        ) = self._setup_timeout_and_params(problem, timeout)
+        if remaining_time is None:
+            return warm_up_result
+        with OneshotPlanner(name="aries") as planner:
+            result = planner.solve(
+                problem,
+                heuristic=heuristic,
+                timeout=remaining_time,
+                output_stream=output_stream,
+                **params,
+            )
+        if result is None or result.plan is None:
+            return warm_up_result
+
+        # Add warm-up time to the Aries result's computation time
+        if warm_up_time is not None and result.metrics is not None:
+            if "engine_internal_time" in result.metrics:
+                aries_time = float(result.metrics["engine_internal_time"])
+                total_time = aries_time + warm_up_time
+                result.metrics["engine_internal_time"] = str(total_time)
+        elif warm_up_time is not None:
+            if result.metrics is None:
+                result.metrics = {}
+            result.metrics["engine_internal_time"] = str(warm_up_time)
+
+        return result
+
+    def _get_solutions(
+        self,
+        problem: AbstractProblem,
+        timeout: Optional[float] = None,
+        output_stream: Optional[IO[str]] = None,
+    ) -> Iterator[PlanGenerationResult]:
+        (
+            remaining_time,
+            params,
+            warm_up_result,
+            warm_up_time,
+        ) = self._setup_timeout_and_params(problem, timeout)
+        if remaining_time is None:
+            yield warm_up_result
+            return
+        with AnytimePlanner(name="aries") as planner:
+            results = list(
+                planner.get_solutions(  # pylint: disable=no-member
+                    problem,
+                    timeout=remaining_time,
+                    output_stream=output_stream,
+                    **params,
+                )
+            )
+        if results is None or len(results) == 0:
+            yield warm_up_result
+            return
+        for result in results:
+            if result is None or result.plan is None:
+                yield warm_up_result
+                return
+
+            # Add warm-up time to the Aries result's computation time
+            if warm_up_time is not None and result.metrics is not None:
+                if "engine_internal_time" in result.metrics:
+                    aries_time = float(result.metrics["engine_internal_time"])
+                    total_time = aries_time + warm_up_time
+                    result.metrics["engine_internal_time"] = str(total_time)
+            elif warm_up_time is not None:
+                if result.metrics is None:
+                    result.metrics = {}
+                result.metrics["engine_internal_time"] = str(warm_up_time)
+
+            yield result
+
+    # ====================== Database and Conversion Helpers ===================== #
+
     def _load_from_db(
-        self, problem: AbstractProblem, timeout: Optional[float] = None
+        self,
+        problem: AbstractProblem,
+        timeout: Optional[float] = None,
+        running_mode: RunningMode = RunningMode.ONESHOT,
+        max_computation_time: Optional[float] = None,
     ) -> Optional[PlannerResult]:
         db = Database()
         planner_name = os.environ["TYR_WARM_UP_PLANNER"]
@@ -77,7 +182,7 @@ class AriesWarmUpPlanner(
         solve_config = SolveConfig(
             jobs=1,
             memout=memout,
-            timeout=ceil(timeout * 1.05),
+            timeout=ceil(max_computation_time or timeout),
             timeout_offset=0,
             db_only=False,
             no_db_load=False,
@@ -89,10 +194,219 @@ class AriesWarmUpPlanner(
             planner,
             problem_instance,
             solve_config,
-            RunningMode.ONESHOT,
+            running_mode,
             keep_unsupported=True,
             not_run_by_default=True,
         )
+
+    def _convert_db_result_to_upf(
+        self,
+        warm_up_result: PlannerResult,
+        problem: AbstractProblem,
+        timeout: Optional[float] = None,
+    ) -> Tuple[Optional[float], Dict[str, str], PlanGenerationResult]:
+        """Convert database PlannerResult to the format expected by strategy methods."""
+        if timeout is None:
+            remaining_time = None
+        elif warm_up_result.computation_time is None:
+            remaining_time = timeout
+        else:
+            remaining_time = timeout - warm_up_result.computation_time
+
+        warm_up_result.planner = self
+        warm_up_result.from_database = False
+
+        if warm_up_result.plan is None or len(warm_up_result.plan.splitlines()) <= 1:
+            warm_up_result.plan = None
+            warm_up_result.status = PlannerResultStatus.TIMEOUT
+        if warm_up_result.plan is not None:
+            warm_up_result.plan = self._load_plan_from_str_with_time_scale(
+                problem, warm_up_result.plan, 10
+            )
+
+        if remaining_time is not None and remaining_time <= 0:
+            return None, {}, warm_up_result.to_upf()
+
+        params = self._params.copy()
+        if warm_up_result.plan is not None:
+            plan = str(warm_up_result.plan)
+            params["warm_start_plan"] = self._plan_from_str(problem, plan)
+        return remaining_time, params, warm_up_result.to_upf()
+
+    # ========================= Warm-Up Strategy Methods ========================= #
+
+    def _setup_timeout_and_params(
+        self,
+        problem: AbstractProblem,
+        timeout: Optional[float] = None,
+    ) -> Tuple[Optional[float], Dict[str, str], PlanGenerationResult, Optional[float]]:
+        """Main strategy dispatcher - selects and executes appropriate warm-up strategy."""
+        strategy_name = os.environ.get(
+            "TYR_WARM_UP_STRATEGY",
+            WarmUpStrategy.FIRST_SOLUTION.name,
+        )
+        strategy = WarmUpStrategy(strategy_name.lower())
+        time_ratio = float(os.environ.get("TYR_WARM_UP_TIME_RATIO", "0.5"))
+
+        if strategy == WarmUpStrategy.FIRST_SOLUTION:
+            return self._first_solution_strategy(problem, timeout)
+        if strategy == WarmUpStrategy.TIMEOUT_FALLBACK:
+            return self._timeout_fallback_strategy(problem, timeout, time_ratio)
+        if strategy == WarmUpStrategy.OPTIMIZED_WARMSTART:
+            return self._optimized_warmstart_strategy(problem, timeout, time_ratio)
+        raise ValueError(
+            f"Unknown warm-up strategy: {strategy_name}. "
+            f"Supported strategies: {[s.value for s in WarmUpStrategy]}"
+        )
+
+    def _first_solution_strategy(
+        self, problem: AbstractProblem, timeout: Optional[float] = None
+    ) -> Tuple[Optional[float], Dict[str, str], PlanGenerationResult, Optional[float]]:
+        """
+        First Solution Strategy:
+        Load first solution from database with computation_time < timeout,
+        then use remaining time for Aries optimization.
+        """
+        warm_up_result = self._load_from_db(
+            problem,
+            timeout,
+            RunningMode.ONESHOT,
+            max_computation_time=timeout,
+        )
+
+        if warm_up_result is None or warm_up_result.plan is None:
+            # No solution found within time constraint
+            return (
+                None,
+                {},
+                PlanGenerationResult(
+                    PlanGenerationResultStatus.TIMEOUT,
+                    plan=None,
+                    engine_name=self.name,
+                    log_messages=[
+                        LogMessage(
+                            LogLevel.INFO,
+                            "No warm-up solution found in first solution strategy",
+                        )
+                    ],
+                ),
+                None,
+            )
+
+        remaining_time, params, upf_result = self._convert_db_result_to_upf(
+            warm_up_result, problem, timeout
+        )
+        warm_up_time = (
+            warm_up_result.computation_time
+            if warm_up_result.computation_time is not None
+            else 0.0
+        )
+        return remaining_time, params, upf_result, warm_up_time
+
+    def _timeout_fallback_strategy(
+        self,
+        problem: AbstractProblem,
+        timeout: Optional[float] = None,
+        time_ratio: float = 0.5,
+    ) -> Tuple[Optional[float], Dict[str, str], PlanGenerationResult, Optional[float]]:
+        """
+        Timeout with Fallback Strategy:
+        Check database for solutions with computation_time < timeout*ratio.
+        If solution found, warm-start Aries with remaining time.
+        If no solution, run Aries from scratch with remaining time.
+        """
+        if timeout is None:
+            # Without timeout, just try to get a solution quickly
+            return self._first_solution_strategy(problem, None)
+
+        warm_up_timeout = timeout * time_ratio
+        remaining_time = timeout * (1 - time_ratio)
+
+        warm_up_result = self._load_from_db(
+            problem,
+            timeout,
+            RunningMode.ONESHOT,
+            max_computation_time=warm_up_timeout,
+        )
+
+        if warm_up_result is not None and warm_up_result.plan is not None:
+            # Solution found - warm-start Aries with remaining time
+            remaining_time, params, upf_result = self._convert_db_result_to_upf(
+                warm_up_result, problem, timeout
+            )
+            return remaining_time, params, upf_result, warm_up_timeout
+
+        # No solution found - run Aries from scratch with remaining time
+        return (
+            remaining_time,
+            self._params.copy(),
+            PlanGenerationResult(
+                PlanGenerationResultStatus.TIMEOUT,
+                plan=None,
+                engine_name=self.name,
+                log_messages=[
+                    LogMessage(
+                        LogLevel.INFO,
+                        f"No warm-up solution found within {warm_up_timeout}s",
+                    )
+                ],
+            ),
+            warm_up_timeout,
+        )
+
+    def _optimized_warmstart_strategy(
+        self,
+        problem: AbstractProblem,
+        timeout: Optional[float] = None,
+        time_ratio: float = 0.5,
+    ) -> Tuple[Optional[float], Dict[str, str], PlanGenerationResult, Optional[float]]:
+        """
+        Optimized Warm-Start Strategy:
+        Load best solution from ANYTIME database results
+        with computation_time < timeout*ratio,
+        then warm-start Aries with remaining time.
+        """
+        if timeout is None:
+            # Without timeout, try to get any ANYTIME solution
+            warm_up_timeout = None
+            remaining_time = None
+        else:
+            warm_up_timeout = timeout * time_ratio
+            remaining_time = timeout * (1 - time_ratio)
+
+        warm_up_result = self._load_from_db(
+            problem,
+            timeout,
+            RunningMode.ANYTIME,
+            max_computation_time=warm_up_timeout,
+        )
+
+        if warm_up_result is not None and warm_up_result.plan is not None:
+            # Best solution found - warm-start Aries with remaining time
+            remaining_time, params, upf_result = self._convert_db_result_to_upf(
+                warm_up_result, problem, timeout
+            )
+            return remaining_time, params, upf_result, warm_up_timeout
+
+        # No solution found - run Aries from scratch with remaining time
+        return (
+            remaining_time,
+            self._params.copy(),
+            PlanGenerationResult(
+                PlanGenerationResultStatus.TIMEOUT,
+                plan=None,
+                engine_name=self.name,
+                log_messages=[
+                    LogMessage(
+                        LogLevel.INFO,
+                        f"No optimized warm-up solution found within {warm_up_timeout}s",
+                    )
+                ],
+            ),
+            warm_up_timeout,
+        )
+
+    # ========================== Plan Conversion Methods ========================= #
 
     def _convert_plan_line_to_upf_format(self, line: str) -> str:
         action = (
@@ -182,54 +496,6 @@ class AriesWarmUpPlanner(
         plan = reader.parse_plan_string(problem, plan)
         return self._set_time_scale(problem, plan, time_scale)
 
-    def _setup_timeout_and_params(
-        self,
-        problem: AbstractProblem,
-        timeout: Optional[float] = None,
-    ) -> Tuple[Optional[float], Dict[str, str], PlanGenerationResult]:
-        warm_up_result = self._load_from_db(problem, timeout)
-        if warm_up_result is None:
-            # No warm up result found, stop here with an error.
-            return (
-                None,
-                {},
-                PlanGenerationResult(
-                    PlanGenerationResultStatus.INTERNAL_ERROR,
-                    plan=None,
-                    engine_name=self.name,
-                    log_messages=[
-                        LogMessage(LogLevel.ERROR, "Warm up result not found")
-                    ],
-                ),
-            )
-        if timeout is None:
-            remaining_time = None
-        elif warm_up_result.computation_time is None:
-            remaining_time = timeout
-        else:
-            remaining_time = timeout - warm_up_result.computation_time
-        warm_up_result.planner = self
-        warm_up_result.from_database = False
-
-        if warm_up_result.plan is None or len(warm_up_result.plan.splitlines()) <= 1:
-            warm_up_result.plan = None
-            warm_up_result.status = PlannerResultStatus.TIMEOUT
-        if warm_up_result.plan is not None:
-            warm_up_result.plan = self._load_plan_from_str_with_time_scale(
-                problem, warm_up_result.plan, 10
-            )
-
-        if remaining_time is not None and remaining_time <= 0:
-            # No time left for aries, stop here with the original result.
-            return None, {}, warm_up_result.to_upf()
-
-        # Solve the problem with the warm up plan and the remaining time.
-        params = self._params.copy()
-        if warm_up_result.plan is not None:
-            plan = str(warm_up_result.plan)
-            params["warm_start_plan"] = self._plan_from_str(problem, plan)
-        return remaining_time, params, warm_up_result
-
     def _plan_line_to_upf_format(self, line: str) -> str:
         line = line.strip().replace(",", " ").replace("(", " ").replace(": ", ": (")
         if ")" not in line:
@@ -240,59 +506,3 @@ class AriesWarmUpPlanner(
         reader = PDDLReader(problem.environment)
         plan = "\n".join(map(self._plan_line_to_upf_format, plan.splitlines()[1:]))
         return reader.parse_plan_string(problem, plan)
-
-    def _solve(
-        self,
-        problem: AbstractProblem,
-        heuristic: Optional[
-            Callable[["up.model.state.ROState"], Optional[float]]
-        ] = None,
-        timeout: Optional[float] = None,
-        output_stream: Optional[IO[str]] = None,
-    ) -> PlanGenerationResult:
-        remaining_time, params, warm_up_result = self._setup_timeout_and_params(
-            problem, timeout
-        )
-        if remaining_time is None:
-            return warm_up_result
-        with OneshotPlanner(name="aries") as planner:
-            result = planner.solve(
-                problem,
-                heuristic=heuristic,
-                timeout=remaining_time,
-                output_stream=output_stream,
-                **params,
-            )
-        if result is None or result.plan is None:
-            return warm_up_result
-        return result
-
-    def _get_solutions(
-        self,
-        problem: AbstractProblem,
-        timeout: Optional[float] = None,
-        output_stream: Optional[IO[str]] = None,
-    ) -> Iterator[PlanGenerationResult]:
-        remaining_time, params, warm_up_result = self._setup_timeout_and_params(
-            problem, timeout
-        )
-        if remaining_time is None:
-            yield warm_up_result
-            return
-        with AnytimePlanner(name="aries") as planner:
-            results = list(
-                planner.get_solutions(  # pylint: disable=no-member
-                    problem,
-                    timeout=remaining_time,
-                    output_stream=output_stream,
-                    **params,
-                )
-            )
-        if results is None or len(results) == 0:
-            yield warm_up_result
-            return
-        for result in results:
-            if result is None or result.plan is None:
-                yield warm_up_result
-                return
-            yield result
