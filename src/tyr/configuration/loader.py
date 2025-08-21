@@ -3,6 +3,8 @@ from typing import Any, Optional
 
 import yaml
 
+from .matrix_expander import expand_matrix_configurations
+
 
 def get_config_file(name: str, path: Optional[Path] = None) -> Path:
     """
@@ -30,7 +32,7 @@ def get_config_file(name: str, path: Optional[Path] = None) -> Path:
     return config_file
 
 
-def load_config(name: str, path: Optional[Path] = None) -> Any:
+def load_config(name: str, path: Optional[Path] = None, expand_matrix: bool = True) -> Any:
     """
     Loads a configuration file from the `tyr.configuration` module.
 
@@ -41,12 +43,19 @@ def load_config(name: str, path: Optional[Path] = None) -> Any:
         name (str): Name of the configuration file.
         path (Optional[Path], optional): Path to the file. Defaults to None.
             If provided, it will load the configuration from this file and ignore `name` parameter.
+        expand_matrix (bool, optional): Whether to expand matrix configurations. Defaults to True.
 
     Returns:
         Any: The content of the file.
     """
     with open(get_config_file(name, path), "r", encoding="utf-8") as file:
-        return yaml.safe_load(file)
+        content = yaml.safe_load(file)
+    
+    # Expand matrix configurations if requested and content is a list
+    if expand_matrix and isinstance(content, list):
+        content = expand_matrix_configurations(content)
+    
+    return content
 
 
 __all__ = ["load_config"]
