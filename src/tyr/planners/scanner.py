@@ -1,4 +1,6 @@
+from importlib import import_module
 from typing import List
+import warnings
 
 from tyr.configuration.loader import load_config
 from tyr.planners.model.config import PlannerConfig
@@ -12,7 +14,27 @@ def get_all_planner_configs() -> List[PlannerConfig]:
     """
     if (content := load_config("planners")) is None:
         return []
-    return [PlannerConfig(**p) for p in content]
+
+    configs: List[PlannerConfig] = []
+    for p in content:
+        config = PlannerConfig(**p)
+        # Check if planner with upf_engine is actually available
+        if config.upf_engine is not None:
+            try:
+                module_name, class_name = config.upf_engine.rsplit(".", 1)
+                module = import_module(module_name)
+                planner_class = getattr(module, class_name)
+                # Try to instantiate the planner to check if it's really available
+                planner_class()
+            except (ImportError, ModuleNotFoundError, AttributeError) as e:
+                warnings.warn(
+                    f"Planner '{config.name}' not available: {e}",
+                    ImportWarning,
+                    stacklevel=2,
+                )
+                continue
+        configs.append(config)
+    return configs
 
 
 def get_all_planners() -> List[Planner]:
