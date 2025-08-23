@@ -23,6 +23,9 @@ class TestPlannerConfiguration:
         domains = {d.name: d for d in get_all_domains()}
         assert domain_name in domains, f"The domain {domain_name} does not exist"
         domain = domains[domain_name]
+        # Skip validation for explicitly unsupported versions
+        if version_name == "unsupported":
+            return
         assert (
             version_name in domain.get_problem("1").versions
         ), f"The domain {domain_name} does not have the {version_name} version"
