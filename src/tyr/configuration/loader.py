@@ -32,7 +32,11 @@ def get_config_file(name: str, path: Optional[Path] = None) -> Path:
     return config_file
 
 
-def load_config(name: str, path: Optional[Path] = None, expand_matrix: bool = True) -> Any:
+def load_config(
+    name: str,
+    path: Optional[Path] = None,
+    expand_matrix: bool = True,
+) -> Any:
     """
     Loads a configuration file from the `tyr.configuration` module.
 
@@ -50,11 +54,11 @@ def load_config(name: str, path: Optional[Path] = None, expand_matrix: bool = Tr
     """
     with open(get_config_file(name, path), "r", encoding="utf-8") as file:
         content = yaml.safe_load(file)
-    
+
     # Expand matrix configurations if requested and content is a list
     if expand_matrix and isinstance(content, list):
         content = expand_matrix_configurations(content)
-    
+
     return content
 
 

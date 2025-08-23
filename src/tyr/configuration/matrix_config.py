@@ -1,9 +1,8 @@
 """Data models for matrix configuration definitions."""
 
+import re
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Union
-
-import re
 
 
 @dataclass
@@ -21,7 +20,7 @@ class MatrixValue:
         """Allow property access on matrix values."""
         if name in self.properties:
             return self.properties[name]
-        elif name == "value":
+        if name == "value":
             return self.value
         raise AttributeError(f"MatrixValue has no attribute '{name}'")
 
@@ -54,7 +53,7 @@ class MatrixDefinition:
             if not isinstance(values, list):
                 values = [values]
 
-            processed_values = []
+            processed_values: List[Union[str, int, float, MatrixValue]] = []
             for value in values:
                 if isinstance(value, dict) and "name" in value:
                     # Convert complex matrix value to MatrixValue
@@ -107,7 +106,7 @@ class MatrixConfiguration:
 
     def get_matrix_variables(self) -> Dict[str, List[Any]]:
         """Get matrix variables for expansion."""
-        if not self.has_matrix():
+        if self.matrix is None:
             return {}
         return self.matrix.variables
 
@@ -122,7 +121,7 @@ def validate_matrix_configuration(config: Dict[str, Any]) -> List[str]:
     Returns:
         List of validation error messages
     """
-    errors = []
+    errors: List[str] = []
 
     if "matrix" not in config:
         return errors  # Not a matrix config, nothing to validate
