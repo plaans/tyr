@@ -332,6 +332,9 @@ tyr *args:
 # Run the bench command.
 bench *args: (tyr "bench" args)
 
+# Run the list-planners command.
+list-planners *args: (tyr "list-planners" args)
+
 # Run the plot command.
 plot *args: (tyr "plot" args)
 
