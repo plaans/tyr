@@ -397,9 +397,10 @@ class Planner:
                     if self.last_upf_result is None and isinstance(
                         planner, TyrPDDLPlanner
                     ):
+                        # pylint: disable=no-member
                         self._last_upf_result = planner.check_for_plan_from_files(
                             version,
-                            log_path.parent,
+                            str(log_path.parent),
                             anytime=running_mode == RunningMode.ANYTIME,
                         )
                     if self.last_upf_result is None:
@@ -421,9 +422,10 @@ class Planner:
                     pass
 
             if self.last_upf_result is None and isinstance(planner, TyrPDDLPlanner):
+                # pylint: disable=no-member
                 self._last_upf_result = planner.check_for_plan_from_files(
                     version,
-                    log_path.parent,
+                    str(log_path.parent),
                     anytime=running_mode == RunningMode.ANYTIME,
                 )
             if self.last_upf_result is None:
@@ -544,7 +546,7 @@ class Planner:
                 }
                 # Create a generic Exception with the error info
                 picklable_error = Exception(f"{error.__class__.__name__}: {error}")
-                picklable_error.original_error_info = error_info
+                setattr(picklable_error, "original_error_info", error_info)
                 queue.put(picklable_error)
 
     def _solve_oneshot(  # pylint: disable = too-many-arguments, too-many-positional-arguments
@@ -582,7 +584,7 @@ class Planner:
                 }
                 # Create a generic Exception with the error info
                 picklable_error = Exception(f"{error.__class__.__name__}: {error}")
-                picklable_error.original_error_info = error_info
+                setattr(picklable_error, "original_error_info", error_info)
                 queue.put(picklable_error)
 
     # pylint: disable = too-many-arguments, too-many-positional-arguments

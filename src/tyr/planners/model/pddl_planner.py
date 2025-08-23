@@ -21,6 +21,8 @@ from tyr.planners.model.pddl_writer import TyrPDDLWriter
 class TyrPDDLPlanner(PDDLAnytimePlanner):
     """A local wrapper from unified planning PDDL Planner."""
 
+    _writer: Optional[TyrPDDLWriter]
+
     @property
     def name(self):
         base_name = self.__class__.__name__[:-7]
@@ -129,7 +131,8 @@ class TyrPDDLPlanner(PDDLAnytimePlanner):
                 )
             has_plan = plan is not None and len(str(plan).splitlines()) > 1
 
-            metrics = {}
+            metrics: Dict[str, str] = {}
+            # pylint: disable=assignment-from-none
             computation = self._get_computation_time(logs)
             if computation is None:
                 # If computation time is not provided, use the process time
@@ -232,7 +235,8 @@ class TyrPDDLPlanner(PDDLAnytimePlanner):
             )
         has_plan = plan is not None and len(str(plan).splitlines()) > 1
 
-        metrics = {}
+        metrics: Dict[str, str] = {}
+        # pylint: disable=assignment-from-none
         computation = self._get_computation_time([])
         if computation is not None:
             metrics["engine_internal_time"] = str(computation)

@@ -1,6 +1,6 @@
+import warnings
 from importlib import import_module
 from typing import List
-import warnings
 
 from tyr.configuration.loader import load_config
 from tyr.planners.model.config import PlannerConfig

@@ -64,7 +64,7 @@ EOF
     # Install Tyr
     apt install -y git
     # just --set PY_D . --set PY_T dev install-full
-    just --set PY_D . --set PY_T dev install-pip install-aries install-custom-domains install-optic install-lpg
+    just --set PY_D . --set PY_T dev install-pip install-custom-domains install-nextflap install-aries
     VERSION="$(just --set PY_D . tyr --version)"
     echo "VERSION: $VERSION" >> "$APPTAINER_LABELS"
 
