@@ -10,6 +10,7 @@ from unified_planning.engines.results import (
 from unified_planning.plans import Plan, PlanKind, TimeTriggeredPlan
 
 from tyr.planners.model.config import RunningMode, SolveConfig
+from tyr.planners.utils.plan_converter import normalize_plan_for_storage
 from tyr.problems import ProblemInstance
 
 if TYPE_CHECKING:
@@ -145,6 +146,9 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
                 )
 
             plan_quality = problem.get_quality_of_plan(result.plan, version_name)
+
+            # Normalize PartialOrderPlans to SequentialPlans for warm start compatibility
+            result.plan = normalize_plan_for_storage(result.plan, pb)
 
         return PlannerResult(
             planner,

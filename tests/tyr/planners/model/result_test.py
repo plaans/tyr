@@ -7,6 +7,7 @@ from unified_planning.engines.results import (
     PlanGenerationResult,
     PlanGenerationResultStatus,
 )
+from unified_planning.plans import PartialOrderPlan, SequentialPlan
 
 from tyr import PlannerResult, PlannerResultStatus, RunningMode
 
@@ -498,3 +499,39 @@ class TestPlannerResult:
             RunningMode.ONESHOT,
         )
         assert result == expected
+
+    def test_from_upf_normalizes_partial_order_plan(self):
+        """Test that PartialOrderPlan is normalized to SequentialPlan in from_upf."""
+        # Mock PartialOrderPlan
+        mock_pop = Mock(spec=PartialOrderPlan)
+        mock_sequential = Mock(spec=SequentialPlan)
+        mock_pop.convert_to.return_value = mock_sequential
+
+        # Mock UPF result with PartialOrderPlan
+        upf_result = PlanGenerationResult(
+            status=PlanGenerationResultStatus.SOLVED_SATISFICING,
+            plan=mock_pop,
+            engine_name="test_planner",
+        )
+
+        # Mock problem with version
+        mock_problem = Mock()
+        mock_pb = Mock()
+        mock_problem.versions = {"default": Mock(value=mock_pb)}
+        mock_problem.get_quality_of_plan.return_value = 1.0
+
+        # Mock planner and config
+        mock_planner = Mock()
+        mock_config = Mock()
+
+        result = PlannerResult.from_upf(
+            mock_planner,
+            mock_problem,
+            "default",
+            upf_result,
+            mock_config,
+            RunningMode.ONESHOT,
+        )
+
+        # Verify the plan was normalized
+        assert result.plan == mock_sequential

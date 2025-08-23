@@ -131,15 +131,15 @@ class ProblemInstance:
     def _get_makespan_of_plan(
         self, plan: Plan, version: AbstractProblem
     ) -> Optional[float]:
-        if plan.kind == PlanKind.HIERARCHICAL_PLAN:
+        def _handle_hierarchical():
             return self._get_makespan_of_plan(plan.action_plan, version)
 
-        if plan.kind == PlanKind.SCHEDULE:
+        def _handle_schedule():
             return float(
                 max(float(str(plan.assignment[a.end])) for a in plan.activities)
             )
 
-        if plan.kind == PlanKind.TIME_TRIGGERED_PLAN:
+        def _handle_time_triggered():
             if (
                 "CONTINUOUS_TIME" in version.kind.features
                 or "DISCRETE_TIME" in version.kind.features
@@ -147,13 +147,22 @@ class ProblemInstance:
                 return float(max(s + (d or 0) for (s, _, d) in plan.timed_actions))
             return len(plan.timed_actions)
 
-        if plan.kind == PlanKind.SEQUENTIAL_PLAN:
+        def _handle_sequential():
             return len(plan.actions)
 
-        if plan.kind == PlanKind.PARTIAL_ORDER_PLAN:
+        def _handle_partial_order():
             return len(plan.convert_to(PlanKind.SEQUENTIAL_PLAN, version).actions)
 
-        return None
+        handlers = {
+            PlanKind.HIERARCHICAL_PLAN: _handle_hierarchical,
+            PlanKind.SCHEDULE: _handle_schedule,
+            PlanKind.TIME_TRIGGERED_PLAN: _handle_time_triggered,
+            PlanKind.SEQUENTIAL_PLAN: _handle_sequential,
+            PlanKind.PARTIAL_ORDER_PLAN: _handle_partial_order,
+        }
+
+        handler = handlers.get(plan.kind)
+        return handler() if handler else None
 
 
 __all__ = ["ProblemInstance"]
