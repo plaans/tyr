@@ -2,13 +2,15 @@ from pathlib import Path
 import sqlite3
 
 
-def merge(db_folder: Path, out_db: str):
+def merge(db_folder: Path, out_db: str, batch_size: int = 50):
     """
-    Merge the contents of multiple SQLite database files into a single database.
+    Merge the contents of multiple SQLite database files into a single database
+    with incremental processing and deduplication.
 
     Args:
         db_folder (Path): The folder containing the SQLite database files to merge.
         out_db (str): The path to the output database file.
+        batch_size (int): Number of files to process in each batch.
     """
     # Get list of database files to process
     db_files = [
@@ -21,13 +23,13 @@ def merge(db_folder: Path, out_db: str):
     if total_files == 0:
         print("No database files found to merge.")
         return
-    print(f"Merging {total_files} database files into {out_db}")
+    print(f"Merging {total_files} database files into {out_db} (batch size: {batch_size})")
 
     # Connect to output database
     db_merged = sqlite3.connect(out_db)
     db_merged_cursor = db_merged.cursor()
 
-    # Create table schema
+    # Create table schema with UNIQUE constraint for deduplication
     db_merged_cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS "results" (
@@ -44,7 +46,10 @@ def merge(db_folder: Path, out_db: str):
             "timeout"	INTEGER NOT NULL,
             "creation"	TEXT NOT NULL,
             "plan"	TEXT,
-            PRIMARY KEY("id" AUTOINCREMENT)
+            PRIMARY KEY("id" AUTOINCREMENT),
+            UNIQUE("planner", "problem", "mode", "status", "computation", 
+                   "quality", "error msg", "jobs", "memout", "timeout", 
+                   "creation", "plan")
         );
         """
     )
@@ -56,83 +61,83 @@ def merge(db_folder: Path, out_db: str):
     db_merged_cursor.execute("PRAGMA cache_size = -64000")  # 64MB cache
 
     total_rows = 0
+    total_duplicates = 0
 
-    # Process each database file
-    for i, db_file in enumerate(db_files, 1):
-        print(f"Processing file {i}/{total_files}: {db_file.name}")
+    # Process database files in batches
+    for batch_start in range(0, total_files, batch_size):
+        batch_end = min(batch_start + batch_size, total_files)
+        batch_files = db_files[batch_start:batch_end]
+        
+        print(f"\n--- Processing batch {batch_start // batch_size + 1}/{(total_files - 1) // batch_size + 1} "
+              f"({len(batch_files)} files) ---")
+        
+        # Start transaction for this batch
+        db_merged_cursor.execute("BEGIN TRANSACTION")
+        
+        batch_rows = 0
+        batch_duplicates = 0
 
-        try:
-            # Connect to source database
-            db = sqlite3.connect(db_file)
-            db_cursor = db.cursor()
+        # Process each database file in the batch
+        for i, db_file in enumerate(batch_files, batch_start + 1):
+            print(f"Processing file {i}/{total_files}: {db_file.name}")
 
-            # Get all results from source database
-            db_cursor.execute(
-                """
-                SELECT
-                    "planner", "problem", "mode", "status", "computation", "quality",
-                    "error msg", "jobs", "memout", "timeout", "creation", "plan"
-                FROM results
-                """
-            )
-            results = db_cursor.fetchall()
+            try:
+                # Connect to source database
+                db = sqlite3.connect(db_file)
+                db_cursor = db.cursor()
 
-            # Batch insert all results
-            if results:
-                db_merged_cursor.executemany(
+                # Get all results from source database
+                db_cursor.execute(
                     """
-                    INSERT INTO "results" (
+                    SELECT
                         "planner", "problem", "mode", "status", "computation", "quality",
                         "error msg", "jobs", "memout", "timeout", "creation", "plan"
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """,
-                    results,
+                    FROM results
+                    """
                 )
-                total_rows += len(results)
-                print(f"  Added {len(results)} rows (total: {total_rows})")
+                results = db_cursor.fetchall()
 
-            db_cursor.close()
-            db.close()
+                # Insert results with deduplication
+                if results:
+                    for result in results:
+                        try:
+                            db_merged_cursor.execute(
+                                """
+                                INSERT OR IGNORE INTO "results" (
+                                    "planner", "problem", "mode", "status", "computation", "quality",
+                                    "error msg", "jobs", "memout", "timeout", "creation", "plan"
+                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                """,
+                                result,
+                            )
+                            if db_merged_cursor.rowcount == 0:
+                                batch_duplicates += 1
+                            else:
+                                batch_rows += 1
+                        except sqlite3.IntegrityError:
+                            # Duplicate entry
+                            batch_duplicates += 1
+                    
+                    print(f"  Added {len(results) - batch_duplicates} rows, skipped {batch_duplicates} duplicates")
 
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            print(f"Error processing {db_file}: {e}")
-            continue
+                db_cursor.close()
+                db.close()
 
-    # Commit all inserts
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                print(f"Error processing {db_file}: {e}")
+                continue
+        
+        # Commit the batch
+        db_merged_cursor.execute("COMMIT")
+        total_rows += batch_rows
+        total_duplicates += batch_duplicates
+        
+        print(f"Batch completed: {batch_rows} new rows, {batch_duplicates} duplicates skipped")
+        print(f"Running total: {total_rows} rows, {total_duplicates} duplicates skipped")
+
+    # Final commit
     db_merged.commit()
-    print(f"Inserted {total_rows} total rows")
-
-    # Create temporary index for efficient deduplication
-    print("Creating temporary index for deduplication...")
-    db_merged_cursor.execute(
-        """
-        CREATE INDEX IF NOT EXISTS temp_dedup_idx ON results (
-            "planner", "problem", "mode", "status", "computation", "quality",
-            "error msg", "jobs", "memout", "timeout", "creation", "plan"
-        )
-        """
-    )
-
-    # Remove duplicate entries (only run once at the end)
-    print("Removing duplicate entries...")
-    db_merged_cursor.execute(
-        """
-        DELETE FROM "results"
-        WHERE rowid NOT IN (
-            SELECT MIN(rowid)
-            FROM "results"
-            GROUP BY
-                "planner", "problem", "mode", "status", "computation", "quality",
-                "error msg", "jobs", "memout", "timeout", "creation", "plan"
-        )
-        """
-    )
-
-    duplicates_removed = db_merged_cursor.rowcount
-    print(f"Removed {duplicates_removed} duplicate entries")
-
-    # Drop the temporary index
-    db_merged_cursor.execute("DROP INDEX IF EXISTS temp_dedup_idx")
+    print(f"\nMerge completed: {total_rows} total rows inserted, {total_duplicates} duplicates skipped")
 
     # Get final count
     db_merged_cursor.execute("SELECT COUNT(*) FROM results")
@@ -159,4 +164,11 @@ if __name__ == "__main__":
     BASE = Path(__file__).parent
     folder = Path(sys.argv[1]) if len(sys.argv) > 1 else BASE / "databases"
     output = sys.argv[2] if len(sys.argv) > 2 else (BASE / "merged.sqlite3").as_posix()
-    merge(folder, output)
+    batch_size = int(sys.argv[3]) if len(sys.argv) > 3 else 50
+    
+    print(f"Merging databases from: {folder}")
+    print(f"Output database: {output}")
+    print(f"Batch size: {batch_size}")
+    print("-" * 50)
+    
+    merge(folder, output, batch_size)
