@@ -194,7 +194,7 @@ class AriesWarmUpPlanner(
             unify_epsilons=False,
         )
 
-        return db.load_planner_result(
+        return db.load_warm_up_planner_result(
             planner,
             problem_instance,
             solve_config,
