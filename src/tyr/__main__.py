@@ -74,6 +74,7 @@ DEFAULT_CONFIG = {
     "unify_epsilons": False,
     "user_mail": None,
     "verbose": 0,
+    "warm_up_db_path": None,
 }
 
 
@@ -138,6 +139,11 @@ db_path_option = click.option(
     "--db-path",
     type=str,
     help="Path to the SQLite database file.",
+)
+warm_up_db_path_option = click.option(
+    "--warm-up-db-path",
+    type=str,
+    help="Path to the SQLite warm-up database file (for warm-up planners).",
 )
 domains_filter = click.option(
     "-d",
@@ -274,18 +280,20 @@ def planners_group_filter(x: int):
 @out_option
 @logs_path_option
 @db_path_option
+@warm_up_db_path_option
 @config_option
 @pass_context
-def cli(ctx: CliContext, verbose, quiet, out, logs_path, db_path, config):
-    update_context(ctx, verbose, quiet, out, logs_path, db_path, config)
+def cli(ctx: CliContext, verbose, quiet, out, logs_path, db_path, warm_up_db_path, config):
+    update_context(ctx, verbose, quiet, out, logs_path, db_path, warm_up_db_path, config)
 
 
-def update_context(ctx, verbose, quiet, out, logs_path, db_path, config):
+def update_context(ctx, verbose, quiet, out, logs_path, db_path, warm_up_db_path, config):
     ctx.verbosity += verbose - quiet
     ctx.out.extend(out)
     ctx.config = config
     TyrPaths().logs = logs_path or TyrPaths().logs
     TyrPaths().db = db_path or TyrPaths().db
+    TyrPaths().warm_up_db = warm_up_db_path or TyrPaths().warm_up_db
 
 
 # ============================================================================ #
@@ -302,6 +310,7 @@ def update_context(ctx, verbose, quiet, out, logs_path, db_path, config):
 @out_option
 @logs_path_option
 @db_path_option
+@warm_up_db_path_option
 @config_option
 @timeout_option
 @timeout_offset_option
@@ -325,6 +334,7 @@ def cli_bench(
     out,
     logs_path: str,
     db_path: str,
+    warm_up_db_path: str,
     config,
     timeout: int,
     timeout_offset: int,
@@ -348,6 +358,7 @@ def cli_bench(
         "out": out,
         "logs_path": logs_path,
         "db_path": db_path,
+        "warm_up_db_path": warm_up_db_path,
         "timeout": timeout,
         "timeout_offset": timeout_offset,
         "memout": memout,
@@ -371,6 +382,7 @@ def cli_bench(
         conf["out"],
         conf["logs_path"],
         conf["db_path"],
+        conf["warm_up_db_path"],
         config,
     )
 
@@ -471,6 +483,7 @@ def cli_plot(
         conf["out"],
         conf["logs_path"],
         conf["db_path"],
+        conf["warm_up_db_path"],
         config,
     )
 
@@ -565,6 +578,7 @@ def cli_slurm(
         conf["out"],
         conf["logs_path"],
         conf["db_path"],
+        conf["warm_up_db_path"],
         config,
     )
 
@@ -665,6 +679,7 @@ def cli_solve(
         conf["out"],
         conf["logs_path"],
         conf["db_path"],
+        conf["warm_up_db_path"],
         config,
     )
 
@@ -794,6 +809,7 @@ def cli_table(
         conf["out"],
         conf["logs_path"],
         conf["db_path"],
+        conf["warm_up_db_path"],
         config,
     )
 
@@ -957,6 +973,7 @@ def cli_vbp(
         conf["out"],
         conf["logs_path"],
         conf["db_path"],
+        conf["warm_up_db_path"],
         config,
     )
     print(conf["groups"])
@@ -1042,6 +1059,7 @@ def cli_list_planners(
         conf["out"],
         conf["logs_path"],
         conf["db_path"],
+        conf["warm_up_db_path"],
         config,
     )
 

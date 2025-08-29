@@ -12,6 +12,7 @@ class TyrPaths(Singleton):
         super().__init__()
         self._logs = self.ROOT_DIR / "logs"
         self._db = self.ROOT_DIR / "db.sqlite3"
+        self._warm_up_db = None
 
     @property
     def logs(self):
@@ -32,6 +33,16 @@ class TyrPaths(Singleton):
     def db(self, value):
         """Set the path to the SQLite database file."""
         self._db = Path(value).resolve().absolute()
+
+    @property
+    def warm_up_db(self):
+        """Return the path to the warm-up SQLite database file."""
+        return self._warm_up_db
+
+    @warm_up_db.setter
+    def warm_up_db(self, value):
+        """Set the path to the warm-up SQLite database file."""
+        self._warm_up_db = Path(value).resolve().absolute() if value else None
 
 
 __all__ = ["TyrPaths"]
