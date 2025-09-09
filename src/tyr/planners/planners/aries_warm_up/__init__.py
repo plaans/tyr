@@ -286,13 +286,15 @@ class AriesWarmUpPlanner(
             return result
             
         except Exception as e:
-            print(f"ERROR: Exception in _load_from_db:")
+            print(f"WARNING: Exception in _load_from_db, returning None:")
             print(f"  problem.name: {getattr(problem, 'name', 'UNKNOWN')}")
             print(f"  planner_name: {os.environ.get('TYR_WARM_UP_PLANNER', 'NOT_SET')}")
             print(f"  Error: {type(e).__name__}: {e}")
-            import traceback
-            traceback.print_exc()
-            raise
+            if debug_mode:
+                import traceback
+                traceback.print_exc()
+            # Return None so normal planning will proceed
+            return None
 
     def _convert_db_result_to_upf(
         self,
@@ -341,13 +343,17 @@ class AriesWarmUpPlanner(
                     if debug_mode:
                         print(f"DEBUG: Plan conversion successful")
                 except Exception as plan_error:
-                    print(f"ERROR: Failed to convert plan with time scale:")
+                    print(f"WARNING: Failed to convert plan with time scale, will ignore warm-start:")
                     print(f"  Problem: {problem.name}")
                     print(f"  Plan preview: {warm_up_result.plan[:200]}...")
                     print(f"  Error: {type(plan_error).__name__}: {plan_error}")
-                    import traceback
-                    traceback.print_exc()
-                    raise
+                    if debug_mode:
+                        import traceback
+                        traceback.print_exc()
+                    # Set plan to None so it won't be used for warm-start
+                    warm_up_result.plan = None
+                    if debug_mode:
+                        print(f"DEBUG: Plan set to None, continuing without warm-start")
 
             if remaining_time is not None and remaining_time <= 0:
                 if debug_mode:
@@ -362,12 +368,15 @@ class AriesWarmUpPlanner(
                         print(f"DEBUG: Creating warm_start_plan parameter from plan")
                     params["warm_start_plan"] = self._plan_from_str(problem, plan)
                 except Exception as plan_param_error:
-                    print(f"ERROR: Failed to create warm_start_plan parameter:")
+                    print(f"WARNING: Failed to create warm_start_plan parameter, falling back to normal planning:")
                     print(f"  Problem: {problem.name}")
                     print(f"  Error: {type(plan_param_error).__name__}: {plan_param_error}")
-                    import traceback
-                    traceback.print_exc()
-                    raise
+                    if debug_mode:
+                        import traceback
+                        traceback.print_exc()
+                    # Don't add warm_start_plan parameter - let Aries plan from scratch
+                    if debug_mode:
+                        print(f"DEBUG: Continuing with normal planning without warm-start")
                     
             if debug_mode:
                 print(f"DEBUG: _convert_db_result_to_upf completed successfully")
@@ -376,12 +385,29 @@ class AriesWarmUpPlanner(
             return remaining_time, params, warm_up_result.to_upf()
             
         except Exception as e:
-            print(f"ERROR: Exception in _convert_db_result_to_upf:")
+            print(f"WARNING: Exception in _convert_db_result_to_upf, falling back to normal planning:")
             print(f"  problem.name: {getattr(problem, 'name', 'UNKNOWN')}")
             print(f"  Error: {type(e).__name__}: {e}")
-            import traceback
-            traceback.print_exc()
-            raise
+            if debug_mode:
+                import traceback
+                traceback.print_exc()
+            # Return fallback result - normal planning with remaining time
+            return (
+                timeout,
+                self._params.copy(),
+                PlanGenerationResult(
+                    PlanGenerationResultStatus.TIMEOUT,
+                    plan=None,
+                    engine_name=self.name,
+                    log_messages=[
+                        LogMessage(
+                            LogLevel.INFO,
+                            f"Warm-start conversion failed, proceeding with normal planning",
+                        )
+                    ],
+                ),
+                None,
+            )
 
     # ========================= Warm-Up Strategy Methods ========================= #
 
@@ -433,13 +459,30 @@ class AriesWarmUpPlanner(
             raise ValueError(error_msg)
             
         except Exception as e:
-            print(f"ERROR: Exception in _setup_timeout_and_params:")
+            print(f"WARNING: Exception in _setup_timeout_and_params, falling back to normal planning:")
             print(f"  problem.name: {getattr(problem, 'name', 'UNKNOWN')}")
             print(f"  strategy_name: {os.environ.get('TYR_WARM_UP_STRATEGY', 'NOT_SET')}")
             print(f"  Error: {type(e).__name__}: {e}")
-            import traceback
-            traceback.print_exc()
-            raise
+            if debug_mode:
+                import traceback
+                traceback.print_exc()
+            # Return fallback - normal planning with all available time
+            return (
+                timeout,
+                self._params.copy(),
+                PlanGenerationResult(
+                    PlanGenerationResultStatus.TIMEOUT,
+                    plan=None,
+                    engine_name=self.name,
+                    log_messages=[
+                        LogMessage(
+                            LogLevel.INFO,
+                            f"Warm-start strategy failed, proceeding with normal planning",
+                        )
+                    ],
+                ),
+                None,
+            )
 
     def _first_solution_strategy(
         self, problem: AbstractProblem, timeout: Optional[float] = None
