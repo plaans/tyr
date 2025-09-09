@@ -373,7 +373,36 @@ class Planner:
                     try:
                         result = queue.get(timeout=0.1)
                         if isinstance(result, Exception):
-                            raise result
+                            # Enhanced error logging with context information
+                            error_context = {
+                                'planner': self.name,
+                                'problem': problem.name if hasattr(problem, 'name') else str(problem),
+                                'running_mode': running_mode.name if hasattr(running_mode, 'name') else str(running_mode),
+                                'version_name': version_name,
+                                'upf_planner_name': upf_planner_name,
+                                'process_alive': process.is_alive(),
+                                'queue_empty': queue.empty(),
+                                'original_error_type': type(result).__name__,
+                                'original_error_str': str(result)
+                            }
+                            
+                            print(f"ERROR: Child process exception in {self.name}:")
+                            print(f"  Problem: {error_context['problem']}")
+                            print(f"  Mode: {error_context['running_mode']}")
+                            print(f"  Version: {error_context['version_name']}")
+                            print(f"  Process alive: {error_context['process_alive']}")
+                            print(f"  Original error: {error_context['original_error_type']}: {error_context['original_error_str']}")
+                            
+                            # If the exception has a traceback, include it
+                            if hasattr(result, '__traceback__') and result.__traceback__ is not None:
+                                print(f"  Traceback from child process:")
+                                traceback.print_exception(type(result), result, result.__traceback__)
+                            
+                            # Re-raise the original exception with added context
+                            raise RuntimeError(
+                                f"Child process error in {self.name} for problem {error_context['problem']} "
+                                f"(mode: {error_context['running_mode']}): {error_context['original_error_type']}: {error_context['original_error_str']}"
+                            ) from result
                         self._last_upf_result, start, end = result
                         if running_mode == RunningMode.ONESHOT:
                             break
@@ -536,14 +565,32 @@ class Planner:
                             result.plan = result.plan.action_plan
                         queue.put((result, start, end))
             except Exception as error:  # pylint: disable=broad-exception-caught  # nosec: B110
-                # Create a picklable version of the exception
-                # Store the original exception type name and message
+                # Enhanced child process error reporting with full traceback
+                import traceback as tb
+                tb_lines = tb.format_exception(type(error), error, error.__traceback__)
+                tb_string = ''.join(tb_lines)
+                
+                # Store comprehensive error information
                 error_info = {
                     "type": error.__class__.__name__,
                     "module": error.__class__.__module__,
                     "message": str(error),
                     "args": error.args if hasattr(error, "args") else (),
+                    "traceback": tb_string,
+                    "planner_name": getattr(planner, 'name', 'unknown'),
+                    "version_name": getattr(version, 'name', 'unknown'),
+                    "timeout": timeout,
+                    "method": "_solve_anytime"
                 }
+                
+                # Log error in child process for immediate debugging
+                print(f"ERROR in child process (_solve_anytime):")
+                print(f"  Planner: {error_info['planner_name']}")
+                print(f"  Version: {error_info['version_name']}")
+                print(f"  Error: {error_info['type']}: {error_info['message']}")
+                print(f"  Traceback:")
+                print(tb_string)
+                
                 # Create a generic Exception with the error info
                 picklable_error = Exception(f"{error.__class__.__name__}: {error}")
                 setattr(picklable_error, "original_error_info", error_info)
@@ -574,14 +621,32 @@ class Planner:
                     upf_result.plan = upf_result.plan.action_plan
                 queue.put((upf_result, start, end))
             except Exception as error:  # pylint: disable=broad-exception-caught  # nosec: B110
-                # Create a picklable version of the exception
-                # Store the original exception type name and message
+                # Enhanced child process error reporting with full traceback
+                import traceback as tb
+                tb_lines = tb.format_exception(type(error), error, error.__traceback__)
+                tb_string = ''.join(tb_lines)
+                
+                # Store comprehensive error information
                 error_info = {
                     "type": error.__class__.__name__,
                     "module": error.__class__.__module__,
                     "message": str(error),
                     "args": error.args if hasattr(error, "args") else (),
+                    "traceback": tb_string,
+                    "planner_name": getattr(planner, 'name', 'unknown'),
+                    "version_name": getattr(version, 'name', 'unknown'),
+                    "timeout": timeout,
+                    "method": "_solve_oneshot"
                 }
+                
+                # Log error in child process for immediate debugging
+                print(f"ERROR in child process (_solve_oneshot):")
+                print(f"  Planner: {error_info['planner_name']}")
+                print(f"  Version: {error_info['version_name']}")
+                print(f"  Error: {error_info['type']}: {error_info['message']}")
+                print(f"  Traceback:")
+                print(tb_string)
+                
                 # Create a generic Exception with the error info
                 picklable_error = Exception(f"{error.__class__.__name__}: {error}")
                 setattr(picklable_error, "original_error_info", error_info)

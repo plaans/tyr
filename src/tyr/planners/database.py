@@ -319,9 +319,9 @@ class Database(Singleton):
         if table_name == "warm_up_plans":
             # For warm-up database, we don't have memout column
             request = f"""
-                        SELECT planner, problem, mode, status, computation, quality, 
+                        SELECT NULL as id, planner, problem, mode, status, computation, quality, 
                                NULL as "error msg", 1 as jobs, 0 as memout, 0 as timeout,
-                               creation, plan, NULL as id
+                               creation, plan
                         FROM "{table_name}"
                         WHERE "planner"=? AND "problem"=? AND "mode"=?
                         ORDER BY "creation" DESC
