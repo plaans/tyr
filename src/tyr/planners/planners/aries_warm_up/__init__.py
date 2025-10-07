@@ -21,7 +21,6 @@ When TYR_DEBUG_WARM_UP is enabled, the planner will log detailed information abo
 
 from enum import Enum
 from fractions import Fraction
-from math import ceil
 import os
 import re
 import resource
@@ -49,7 +48,7 @@ from unified_planning.shortcuts import (
 
 from tyr.planners.database import Database
 from tyr.planners.model.config import RunningMode, SolveConfig
-from tyr.planners.model.result import PlannerResult, PlannerResultStatus
+from tyr.planners.model.result import PlannerResult
 from tyr.planners.planners.aries.planning.unified.plugin.up_aries import Aries
 from tyr.planners.scanner import get_all_planners
 from tyr.problems.scanner import get_all_domains
@@ -178,141 +177,222 @@ class AriesWarmUpPlanner(
         if remaining_time is None:
             yield warm_up_result
             return
-        with AnytimePlanner(name="aries") as planner:
-            results = list(
-                planner.get_solutions(  # pylint: disable=no-member
+
+        debug_mode = os.environ.get("TYR_DEBUG_WARM_UP", "").lower() in ("true", "1", "yes")
+
+        try:
+            with AnytimePlanner(name="aries") as planner:
+                # Yield results iteratively as they arrive instead of collecting them all
+                has_yielded = False
+                for result in planner.get_solutions(  # pylint: disable=no-member
                     problem,
                     timeout=remaining_time,
                     output_stream=output_stream,
                     **params,
-                )
-            )
-        if results is None or len(results) == 0:
-            yield warm_up_result
-            return
-        for result in results:
-            if (result is None or 
-                result.plan is None or 
-                result.status == PlanGenerationResultStatus.INTERNAL_ERROR):
+                ):
+                    if result is None or result.plan is None or result.status == PlanGenerationResultStatus.INTERNAL_ERROR:
+                        if debug_mode:
+                            print(f"DEBUG: Skipping invalid result from Aries")
+                        continue
+
+                    # Add warm-up time to the Aries result's computation time
+                    if warm_up_time is not None and result.metrics is not None:
+                        if "engine_internal_time" in result.metrics:
+                            aries_time = float(result.metrics["engine_internal_time"])
+                            total_time = aries_time + warm_up_time
+                            result.metrics["engine_internal_time"] = str(total_time)
+                    elif warm_up_time is not None:
+                        if result.metrics is None:
+                            result.metrics = {}
+                        result.metrics["engine_internal_time"] = str(warm_up_time)
+
+                    yield result
+                    has_yielded = True
+
+                # If no valid results were yielded, yield the warm-up result
+                if not has_yielded:
+                    if debug_mode:
+                        print(f"DEBUG: No valid results from Aries, yielding warm-up result")
+                    yield warm_up_result
+
+        except Exception as e:
+            # Handle gRPC errors and other exceptions gracefully
+            error_type = type(e).__name__
+            if debug_mode:
+                print(f"WARNING: Exception in _get_solutions (anytime mode): {error_type}: {e}")
+                import traceback
+                traceback.print_exc()
+
+            # For gRPC errors, yield the warm-up result as fallback
+            if "grpc" in error_type.lower() or "MultiThreadedRendezvous" in error_type:
+                if debug_mode:
+                    print(f"DEBUG: gRPC connection error, yielding warm-up result as fallback")
                 yield warm_up_result
-                return
+            else:
+                # For other errors, re-raise
+                raise
 
-            # Add warm-up time to the Aries result's computation time
-            if warm_up_time is not None and result.metrics is not None:
-                if "engine_internal_time" in result.metrics:
-                    aries_time = float(result.metrics["engine_internal_time"])
-                    total_time = aries_time + warm_up_time
-                    result.metrics["engine_internal_time"] = str(total_time)
-            elif warm_up_time is not None:
-                if result.metrics is None:
-                    result.metrics = {}
-                result.metrics["engine_internal_time"] = str(warm_up_time)
+    # ====================== Base Planner Execution ===================== #
 
-            yield result
+    def _save_warmup_results(self, warm_up_results: list[PlannerResult], problem: AbstractProblem):
+        """Save warm-up results to the database with the warm-up planner name.
 
-    # ====================== Database and Conversion Helpers ===================== #
+        Args:
+            warm_up_results: List of results from the base planner (can include intermediate results)
+            problem: The problem being solved
+        """
+        try:
+            debug_mode = os.environ.get("TYR_DEBUG_WARM_UP", "").lower() in ("true", "1", "yes")
+            if debug_mode:
+                print(f"DEBUG: Saving {len(warm_up_results)} warm-up result(s) to database")
+                print(f"  Planner name: {self.name}")
+                print(f"  Problem: {problem.name}")
 
-    def _load_from_db(
+            # Update the planner reference to this warm-up planner and save each result
+            from dataclasses import replace
+            db = Database()
+
+            for idx, warm_up_result in enumerate(warm_up_results):
+                if debug_mode:
+                    print(f"DEBUG: Saving result {idx + 1}/{len(warm_up_results)} - Status: {warm_up_result.status}")
+
+                warmup_result_to_save = replace(warm_up_result, planner=self, from_database=False)
+                db.save_planner_result(warmup_result_to_save)
+
+            if debug_mode:
+                print(f"DEBUG: Successfully saved all {len(warm_up_results)} warm-up result(s)")
+
+        except Exception as e:
+            print(f"WARNING: Failed to save warm-up results to database:")
+            print(f"  Error: {type(e).__name__}: {e}")
+            debug_mode = os.environ.get("TYR_DEBUG_WARM_UP", "").lower() in ("true", "1", "yes")
+            if debug_mode:
+                import traceback
+                traceback.print_exc()
+            # Continue even if saving fails
+
+    def _run_base_planner(
         self,
         problem: AbstractProblem,
         timeout: Optional[float] = None,
         running_mode: RunningMode = RunningMode.ONESHOT,
-        max_computation_time: Optional[float] = None,
-    ) -> Optional[PlannerResult]:
+    ) -> Optional[Tuple[list[PlannerResult], PlannerResult, float]]:
+        """Run the base planner and return all results.
+
+        Args:
+            problem: The problem to solve
+            timeout: Maximum time allowed for the base planner
+            running_mode: Whether to run in oneshot or anytime mode
+
+        Returns:
+            Tuple of (all_results, last_result, actual_computation_time) or None if failed
+        """
         try:
             debug_mode = os.environ.get("TYR_DEBUG_WARM_UP", "").lower() in ("true", "1", "yes")
             if debug_mode:
-                print(f"DEBUG: _load_from_db called:")
+                print(f"DEBUG: _run_base_planner called:")
                 print(f"  problem.name: {problem.name}")
                 print(f"  timeout: {timeout}")
                 print(f"  running_mode: {running_mode}")
-                print(f"  max_computation_time: {max_computation_time}")
 
-            db = Database()
+            # Get the base planner
             planner_name = os.environ["TYR_WARM_UP_PLANNER"]
-            
+
             if debug_mode:
-                print(f"DEBUG: Loading planner '{planner_name}'")
-            
+                print(f"DEBUG: Getting planner '{planner_name}'")
+
             planner = [p for p in get_all_planners() if p.name == planner_name].pop()
+
+            # Parse problem name to get domain and problem instance
             domain_name = problem.name.split(":")[0]
             domain = [d for d in get_all_domains() if d.name == domain_name].pop()
             problem_id = int(problem.name.split(":")[1])
-            
+
             if debug_mode:
                 print(f"DEBUG: Parsed problem - domain: '{domain_name}', id: {problem_id}")
-                
+
             problem_instance = domain.get_problem(problem_id)
             if problem_instance is None:
                 error_msg = f"Problem {problem.name} not found in domain {domain_name}"
                 print(f"ERROR: {error_msg}")
                 raise ValueError(error_msg)
-                
+
+            # Create solve config
             memout = resource.getrlimit(resource.RLIMIT_AS)[0]
-            timeout = int(timeout or 24 * 60 * 60)  # 24 hours by default
-            
+            base_timeout = int(timeout or 24 * 60 * 60)  # 24 hours by default
+
             if debug_mode:
-                print(f"DEBUG: Creating SolveConfig - memout: {memout}, timeout: {timeout}")
-                
+                print(f"DEBUG: Creating SolveConfig - memout: {memout}, timeout: {base_timeout}")
+
             solve_config = SolveConfig(
                 jobs=1,
                 memout=memout,
-                timeout=ceil(max_computation_time or timeout),
+                timeout=base_timeout,
                 timeout_offset=0,
                 db_only=False,
-                no_db_load=False,
-                no_db_save=False,
+                no_db_load=True,  # Don't load from DB, always run fresh
+                no_db_save=True,  # Don't save with base planner name - we'll save with warm-up name
                 unify_epsilons=False,
             )
 
             if debug_mode:
-                print(f"DEBUG: Loading warm-up planner result from database")
-                
-            result = db.load_warm_up_planner_result(
-                planner,
-                problem_instance,
-                solve_config,
-                running_mode,
-                keep_unsupported=True,
-                not_run_by_default=True,
-            )
-            
+                print(f"DEBUG: Running base planner '{planner_name}' in {running_mode} mode")
+
+            # Run the base planner and collect ALL results
+            import time
+            start_time = time.time()
+            results = list(planner.solve(problem_instance, solve_config, running_mode))
+            actual_time = time.time() - start_time
+
+            if not results:
+                if debug_mode:
+                    print(f"DEBUG: No results from base planner")
+                return None
+
+            # Get the last result (best for anytime, only for oneshot)
+            last_result = results[-1]
+
             if debug_mode:
-                if result:
-                    print(f"DEBUG: Database result found - status: {result.status}, plan length: {len(result.plan or '')}")
-                else:
-                    print(f"DEBUG: No database result found")
-                    
-            return result
-            
+                print(f"DEBUG: Base planner returned {len(results)} result(s)")
+                print(f"DEBUG: Last result - status: {last_result.status}, actual_time: {actual_time}")
+                if last_result.plan:
+                    print(f"DEBUG: Base planner found a plan")
+
+            # Save ALL results to database with warm-up planner name
+            self._save_warmup_results(results, problem)
+
+            return results, last_result, actual_time
+
         except Exception as e:
-            print(f"WARNING: Exception in _load_from_db, returning None:")
+            print(f"WARNING: Exception in _run_base_planner, returning None:")
             print(f"  problem.name: {getattr(problem, 'name', 'UNKNOWN')}")
             print(f"  planner_name: {os.environ.get('TYR_WARM_UP_PLANNER', 'NOT_SET')}")
             print(f"  Error: {type(e).__name__}: {e}")
+            debug_mode = os.environ.get("TYR_DEBUG_WARM_UP", "").lower() in ("true", "1", "yes")
             if debug_mode:
                 import traceback
                 traceback.print_exc()
-            # Return None so normal planning will proceed
+            # Return None so Aries will run without warm-start
             return None
 
-    def _convert_db_result_to_upf(
+    def _convert_planner_result_to_upf(
         self,
         warm_up_result: PlannerResult,
         problem: AbstractProblem,
         timeout: Optional[float] = None,
     ) -> Tuple[Optional[float], Dict[str, str], PlanGenerationResult]:
-        """Convert database PlannerResult to the format expected by strategy methods."""
+        """Convert PlannerResult to the format expected by strategy methods."""
         try:
             debug_mode = os.environ.get("TYR_DEBUG_WARM_UP", "").lower() in ("true", "1", "yes")
             if debug_mode:
-                print(f"DEBUG: _convert_db_result_to_upf called:")
+                print(f"DEBUG: _convert_planner_result_to_upf called:")
                 print(f"  problem.name: {problem.name}")
                 print(f"  timeout: {timeout}")
                 print(f"  warm_up_result.status: {warm_up_result.status}")
                 print(f"  warm_up_result.computation_time: {warm_up_result.computation_time}")
-                print(f"  warm_up_result.plan length: {len(warm_up_result.plan or '')}")
-                
+                plan_repr = str(warm_up_result.plan) if warm_up_result.plan else ""
+                print(f"  warm_up_result.plan length: {len(plan_repr)}")
+
             if timeout is None:
                 remaining_time = None
             elif warm_up_result.computation_time is None:
@@ -323,50 +403,81 @@ class AriesWarmUpPlanner(
             if debug_mode:
                 print(f"DEBUG: Calculated remaining_time: {remaining_time}")
 
-            warm_up_result.planner = self
-            warm_up_result.from_database = False
+            # Check if we have a valid plan
+            has_plan = warm_up_result.plan is not None
+            if has_plan and isinstance(warm_up_result.plan, str):
+                # Plan from database is a string - check if it's valid
+                has_plan = len(warm_up_result.plan.splitlines()) > 1
 
-            if warm_up_result.plan is None or len(warm_up_result.plan.splitlines()) <= 1:
-                warm_up_result.plan = None
-                warm_up_result.status = PlannerResultStatus.TIMEOUT
+            if not has_plan:
                 if debug_mode:
-                    print(f"DEBUG: Plan is empty or too short, setting to None")
-            else:
+                    print(f"DEBUG: No valid plan from base planner")
+                return (
+                    remaining_time,
+                    self._params.copy(),
+                    PlanGenerationResult(
+                        PlanGenerationResultStatus.TIMEOUT,
+                        plan=None,
+                        engine_name=self.name,
+                        log_messages=[
+                            LogMessage(
+                                LogLevel.INFO,
+                                "No solution from base planner",
+                            )
+                        ],
+                    ),
+                    None,
+                )
+
+            # Handle plan conversion based on type
+            plan_for_warmstart = None
+            if isinstance(warm_up_result.plan, Plan):
+                # Plan object from fresh planner run - use directly
                 if debug_mode:
-                    print(f"DEBUG: Converting plan with time scale 10")
-                    print(f"DEBUG: Original plan preview: {warm_up_result.plan[:200]}...")
-                
+                    print(f"DEBUG: Using Plan object directly for warm-start")
                 try:
-                    warm_up_result.plan = self._load_plan_from_str_with_time_scale(
+                    plan_for_warmstart = self._set_time_scale(problem, warm_up_result.plan, 10)
+                    if debug_mode:
+                        print(f"DEBUG: Plan time scale conversion successful")
+                except Exception as plan_error:
+                    print(f"WARNING: Failed to convert plan time scale, will ignore warm-start:")
+                    print(f"  Problem: {problem.name}")
+                    print(f"  Error: {type(plan_error).__name__}: {plan_error}")
+                    if debug_mode:
+                        import traceback
+                        traceback.print_exc()
+            elif isinstance(warm_up_result.plan, str):
+                # Plan string from database - parse it
+                if debug_mode:
+                    print(f"DEBUG: Converting plan string with time scale 10")
+                    print(f"DEBUG: Original plan preview: {warm_up_result.plan[:200]}...")
+                try:
+                    plan_for_warmstart = self._load_plan_from_str_with_time_scale(
                         problem, warm_up_result.plan, 10
                     )
                     if debug_mode:
-                        print(f"DEBUG: Plan conversion successful")
+                        print(f"DEBUG: Plan string conversion successful")
                 except Exception as plan_error:
-                    print(f"WARNING: Failed to convert plan with time scale, will ignore warm-start:")
+                    print(f"WARNING: Failed to convert plan string, will ignore warm-start:")
                     print(f"  Problem: {problem.name}")
                     print(f"  Plan preview: {warm_up_result.plan[:200]}...")
                     print(f"  Error: {type(plan_error).__name__}: {plan_error}")
                     if debug_mode:
                         import traceback
                         traceback.print_exc()
-                    # Set plan to None so it won't be used for warm-start
-                    warm_up_result.plan = None
-                    if debug_mode:
-                        print(f"DEBUG: Plan set to None, continuing without warm-start")
 
             if remaining_time is not None and remaining_time <= 0:
                 if debug_mode:
                     print(f"DEBUG: No remaining time, returning early")
-                return None, {}, warm_up_result.to_upf()
+                return None, {}, warm_up_result.to_upf(), None
 
             params = self._params.copy()
-            if warm_up_result.plan is not None:
+            if plan_for_warmstart is not None:
                 try:
-                    plan = str(warm_up_result.plan)
+                    plan_str = str(plan_for_warmstart)
                     if debug_mode:
                         print(f"DEBUG: Creating warm_start_plan parameter from plan")
-                    params["warm_start_plan"] = self._plan_from_str(problem, plan)
+                    params["warm_start_plan"] = self._plan_from_str(problem, plan_str)
                 except Exception as plan_param_error:
                     print(f"WARNING: Failed to create warm_start_plan parameter, falling back to normal planning:")
                     print(f"  Problem: {problem.name}")
@@ -377,17 +488,18 @@ class AriesWarmUpPlanner(
                     # Don't add warm_start_plan parameter - let Aries plan from scratch
                     if debug_mode:
                         print(f"DEBUG: Continuing with normal planning without warm-start")
-                    
+
             if debug_mode:
-                print(f"DEBUG: _convert_db_result_to_upf completed successfully")
+                print(f"DEBUG: _convert_planner_result_to_upf completed successfully")
                 print(f"DEBUG: Final params keys: {list(params.keys())}")
-                
-            return remaining_time, params, warm_up_result.to_upf()
+
+            return remaining_time, params, warm_up_result.to_upf(), warm_up_result.computation_time
             
         except Exception as e:
-            print(f"WARNING: Exception in _convert_db_result_to_upf, falling back to normal planning:")
+            print(f"WARNING: Exception in _convert_planner_result_to_upf, falling back to normal planning:")
             print(f"  problem.name: {getattr(problem, 'name', 'UNKNOWN')}")
             print(f"  Error: {type(e).__name__}: {e}")
+            debug_mode = os.environ.get("TYR_DEBUG_WARM_UP", "").lower() in ("true", "1", "yes")
             if debug_mode:
                 import traceback
                 traceback.print_exc()
@@ -489,21 +601,25 @@ class AriesWarmUpPlanner(
     ) -> Tuple[Optional[float], Dict[str, str], PlanGenerationResult, Optional[float]]:
         """
         First Solution Strategy:
-        Load first solution from database with computation_time < timeout,
+        Run base planner in oneshot mode with full timeout,
         then use remaining time for Aries optimization.
         """
-        warm_up_result = self._load_from_db(
+        debug_mode = os.environ.get("TYR_DEBUG_WARM_UP", "").lower() in ("true", "1", "yes")
+
+        # Run base planner in oneshot mode with full timeout
+        result = self._run_base_planner(
             problem,
             timeout,
             RunningMode.ONESHOT,
-            max_computation_time=timeout,
         )
 
-        if warm_up_result is None or warm_up_result.plan is None:
-            # No solution found within time constraint
+        if result is None:
+            # Base planner failed - run Aries from scratch with full timeout
+            if debug_mode:
+                print(f"DEBUG: Base planner failed, running Aries from scratch")
             return (
-                None,
-                {},
+                timeout,
+                self._params.copy(),
                 PlanGenerationResult(
                     PlanGenerationResultStatus.TIMEOUT,
                     plan=None,
@@ -511,22 +627,25 @@ class AriesWarmUpPlanner(
                     log_messages=[
                         LogMessage(
                             LogLevel.INFO,
-                            "No warm-up solution found in first solution strategy",
+                            "Base planner failed in first solution strategy",
                         )
                     ],
                 ),
                 None,
             )
 
-        remaining_time, params, upf_result = self._convert_db_result_to_upf(
+        # Unpack all results (already saved by _run_base_planner)
+        all_results, warm_up_result, actual_time = result
+
+        # Convert result for Aries warm-start
+        remaining_time, params, upf_result, warm_up_time = self._convert_planner_result_to_upf(
             warm_up_result, problem, timeout
         )
-        warm_up_time = (
-            warm_up_result.computation_time
-            if warm_up_result.computation_time is not None
-            else 0.0
-        )
-        return remaining_time, params, upf_result, warm_up_time
+
+        if debug_mode:
+            print(f"DEBUG: First solution strategy - {len(all_results)} result(s) saved, warm_up_time: {warm_up_time}, remaining: {remaining_time}")
+
+        return remaining_time, params, upf_result, warm_up_time or actual_time
 
     def _timeout_fallback_strategy(
         self,
@@ -536,10 +655,12 @@ class AriesWarmUpPlanner(
     ) -> Tuple[Optional[float], Dict[str, str], PlanGenerationResult, Optional[float]]:
         """
         Timeout with Fallback Strategy:
-        Check database for solutions with computation_time < timeout*ratio.
+        Run base planner in oneshot mode with timeout*ratio.
         If solution found, warm-start Aries with remaining time.
         If no solution, run Aries from scratch with remaining time.
         """
+        debug_mode = os.environ.get("TYR_DEBUG_WARM_UP", "").lower() in ("true", "1", "yes")
+
         if timeout is None:
             # Without timeout, just try to get a solution quickly
             return self._first_solution_strategy(problem, None)
@@ -547,21 +668,38 @@ class AriesWarmUpPlanner(
         warm_up_timeout = timeout * time_ratio
         remaining_time = timeout * (1 - time_ratio)
 
-        warm_up_result = self._load_from_db(
+        if debug_mode:
+            print(f"DEBUG: Fallback strategy - warm_up_timeout: {warm_up_timeout}, remaining: {remaining_time}")
+
+        # Run base planner in oneshot mode with allocated timeout
+        result = self._run_base_planner(
             problem,
-            timeout,
+            warm_up_timeout,
             RunningMode.ONESHOT,
-            max_computation_time=warm_up_timeout,
         )
 
-        if warm_up_result is not None and warm_up_result.plan is not None:
-            # Solution found - warm-start Aries with remaining time
-            remaining_time, params, upf_result = self._convert_db_result_to_upf(
-                warm_up_result, problem, timeout
-            )
-            return remaining_time, params, upf_result, warm_up_timeout
+        if result is not None:
+            # Unpack all results (already saved by _run_base_planner)
+            all_results, warm_up_result, actual_time = result
+
+            # Check if we got a valid plan
+            if warm_up_result.plan is not None:
+                # Solution found - warm-start Aries with remaining time
+                if debug_mode:
+                    print(f"DEBUG: Base planner found solution ({len(all_results)} result(s) saved), warm-starting Aries")
+
+                # Recalculate remaining time based on actual execution time
+                remaining_time = timeout - actual_time
+
+                remaining_time, params, upf_result, _ = self._convert_planner_result_to_upf(
+                    warm_up_result, problem, timeout
+                )
+                return remaining_time, params, upf_result, actual_time
 
         # No solution found - run Aries from scratch with remaining time
+        if debug_mode:
+            print(f"DEBUG: No solution from base planner, running Aries from scratch")
+
         return (
             remaining_time,
             self._params.copy(),
@@ -587,10 +725,11 @@ class AriesWarmUpPlanner(
     ) -> Tuple[Optional[float], Dict[str, str], PlanGenerationResult, Optional[float]]:
         """
         Optimized Warm-Start Strategy:
-        Load best solution from ANYTIME database results
-        with computation_time < timeout*ratio,
-        then warm-start Aries with remaining time.
+        Run base planner in anytime mode with timeout*ratio,
+        use best solution to warm-start Aries with remaining time.
         """
+        debug_mode = os.environ.get("TYR_DEBUG_WARM_UP", "").lower() in ("true", "1", "yes")
+
         if timeout is None:
             # Without timeout, try to get any ANYTIME solution
             warm_up_timeout = None
@@ -599,21 +738,39 @@ class AriesWarmUpPlanner(
             warm_up_timeout = timeout * time_ratio
             remaining_time = timeout * (1 - time_ratio)
 
-        warm_up_result = self._load_from_db(
+        if debug_mode:
+            print(f"DEBUG: Optimized strategy - warm_up_timeout: {warm_up_timeout}, remaining: {remaining_time}")
+
+        # Run base planner in anytime mode with allocated timeout
+        result = self._run_base_planner(
             problem,
-            timeout,
+            warm_up_timeout,
             RunningMode.ANYTIME,
-            max_computation_time=warm_up_timeout,
         )
 
-        if warm_up_result is not None and warm_up_result.plan is not None:
-            # Best solution found - warm-start Aries with remaining time
-            remaining_time, params, upf_result = self._convert_db_result_to_upf(
-                warm_up_result, problem, timeout
-            )
-            return remaining_time, params, upf_result, warm_up_timeout
+        if result is not None:
+            # Unpack all results (already saved by _run_base_planner)
+            all_results, warm_up_result, actual_time = result
+
+            # Check if we got a valid plan
+            if warm_up_result.plan is not None:
+                # Best solution found - warm-start Aries with remaining time
+                if debug_mode:
+                    print(f"DEBUG: Base planner found optimized solution ({len(all_results)} result(s) saved), warm-starting Aries")
+
+                # Recalculate remaining time based on actual execution time
+                if timeout is not None:
+                    remaining_time = timeout - actual_time
+
+                remaining_time, params, upf_result, _ = self._convert_planner_result_to_upf(
+                    warm_up_result, problem, timeout
+                )
+                return remaining_time, params, upf_result, actual_time
 
         # No solution found - run Aries from scratch with remaining time
+        if debug_mode:
+            print(f"DEBUG: No optimized solution from base planner, running Aries from scratch")
+
         return (
             remaining_time,
             self._params.copy(),
