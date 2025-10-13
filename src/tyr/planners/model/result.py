@@ -130,7 +130,10 @@ class PlannerResult:  # pylint: disable = too-many-instance-attributes
                 "CONTINUOUS_TIME" in pb.kind.features
                 or "DISCRETE_TIME" in pb.kind.features
             )
-            if is_temp and config.unify_epsilons:
+            # Skip STN conversion for hierarchical problems as HTN plans contain
+            # task decompositions that cannot be converted to STN format
+            is_hierarchical = pb.kind.has_hierarchical()
+            if is_temp and config.unify_epsilons and not is_hierarchical:
                 if pb.epsilon is None:
                     pb.epsilon = Fraction(1, 100)
 
