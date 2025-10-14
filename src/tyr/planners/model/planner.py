@@ -17,6 +17,7 @@ from unified_planning.environment import get_environment
 from unified_planning.exceptions import UPException
 from unified_planning.grpc.proto_writer import ProtobufWriter
 from unified_planning.io.pddl_reader import PDDLReader
+from unified_planning.model.scheduling import SchedulingProblem
 from unified_planning.plans import PlanKind
 from unified_planning.shortcuts import AbstractProblem, Engine
 
@@ -327,7 +328,8 @@ class Planner:
         self._log_problem_version(problem, version, running_mode)
 
         # Reload the version from the logs if it does not have control parameters.
-        if "ctrl_params" not in version_name:
+        # Skip reloading for scheduling problems as they don't have PDDL representation.
+        if "ctrl_params" not in version_name and not isinstance(version, SchedulingProblem):
             dom_path = self.get_log_file(problem, "domain", running_mode, "pddl")
             prb_path = self.get_log_file(problem, "problem", running_mode, "pddl")
             version = PDDLReader().parse_problem(dom_path, prb_path)
@@ -511,29 +513,31 @@ class Planner:
     ) -> None:
         # pylint: disable = broad-exception-caught
 
-        # Export the problem in PDDL format.
-        try:
-            dom_path = self.get_log_file(problem, "domain", running_mode, "pddl")
-            prb_path = self.get_log_file(problem, "problem", running_mode, "pddl")
-            TyrPDDLWriter(version, needs_requirements=True).write_domain(
-                dom_path.as_posix(), all_support=True
-            )
-            TyrPDDLWriter(version, needs_requirements=True).write_problem(prb_path)
-        except UPException as error:
-            err_path = self.get_log_file(problem, "pddl_export_error", running_mode)
-            err_path.write_text(str(error))
+        # Export the problem in PDDL format (skip for scheduling problems).
+        if not isinstance(version, SchedulingProblem):
+            try:
+                dom_path = self.get_log_file(problem, "domain", running_mode, "pddl")
+                prb_path = self.get_log_file(problem, "problem", running_mode, "pddl")
+                TyrPDDLWriter(version, needs_requirements=True).write_domain(
+                    dom_path.as_posix(), all_support=True
+                )
+                TyrPDDLWriter(version, needs_requirements=True).write_problem(prb_path)
+            except UPException as error:
+                err_path = self.get_log_file(problem, "pddl_export_error", running_mode)
+                err_path.write_text(str(error))
 
-        # Export the problem in UPF binary format.
-        try:
-            pb = PDDLReader().parse_problem(dom_path, prb_path)
-            b_writer = ProtobufWriter()
-            pb_msg = b_writer.convert(pb)
-            bin_path = self.get_log_file(problem, "problem", running_mode, "binpb")
-            with open(bin_path, "wb") as file:
-                file.write(pb_msg.SerializeToString())
-        except Exception as error:
-            err_path = self.get_log_file(problem, "bin_export_error", running_mode)
-            err_path.write_text(str(error))
+        # Export the problem in UPF binary format (skip for scheduling problems).
+        if not isinstance(version, SchedulingProblem):
+            try:
+                pb = PDDLReader().parse_problem(dom_path, prb_path)
+                b_writer = ProtobufWriter()
+                pb_msg = b_writer.convert(pb)
+                bin_path = self.get_log_file(problem, "problem", running_mode, "binpb")
+                with open(bin_path, "wb") as file:
+                    file.write(pb_msg.SerializeToString())
+            except Exception as error:
+                err_path = self.get_log_file(problem, "bin_export_error", running_mode)
+                err_path.write_text(str(error))
 
         # Export the problem in TXT format.
         txt_path = self.get_log_file(problem, "problem", running_mode, "txt")
