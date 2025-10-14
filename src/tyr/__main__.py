@@ -16,6 +16,7 @@ from tyr import (  # type: ignore
     run_table,
 )
 from tyr.__version__ import __version__
+from tyr.cli.list_domains.runner import run_list_domains
 from tyr.cli.list_planners.runner import run_list_planners
 from tyr.cli.plot.runner import run_plot
 from tyr.cli.slurm.runner import run_slurm
@@ -1064,6 +1065,70 @@ def cli_list_planners(
     )
 
     run_list_planners(
+        ctx,
+        verbose=conf["verbose"] > 0,
+        filter_pattern=conf["filter_pattern"],
+    )
+
+
+# ============================================================================ #
+#                                List Domains                                  #
+# ============================================================================ #
+
+
+@cli.command(
+    "list-domains",
+    help="List all available domains and their configurations.",
+)
+@verbose_option
+@quiet_option
+@out_option
+@logs_path_option
+@db_path_option
+@config_option
+@click.option(
+    "--filter",
+    "filter_pattern",
+    type=str,
+    help="Regex pattern to filter domain names.",
+)
+@pass_context
+def cli_list_domains(
+    ctx: CliContext,
+    verbose: int,
+    quiet: int,
+    out,
+    logs_path: str,
+    db_path: str,
+    config,
+    filter_pattern: str,
+):
+    config = config or ctx.config
+    cli_config = {
+        "verbose": verbose,
+        "quiet": quiet,
+        "out": out,
+        "logs_path": logs_path,
+        "db_path": db_path,
+        "filter_pattern": filter_pattern,
+    }
+    conf = merge_configs(
+        cli_config,
+        yaml_config(config, "list-domains"),
+        DEFAULT_CONFIG,
+    )
+    update_context(
+        ctx,
+        conf["verbose"],
+        conf["quiet"],
+        conf["out"],
+        conf["logs_path"],
+        conf["db_path"],
+        conf["warm_up_db_path"],
+        config,
+    )
+
+    run_list_domains(
         ctx,
         verbose=conf["verbose"] > 0,
         filter_pattern=conf["filter_pattern"],

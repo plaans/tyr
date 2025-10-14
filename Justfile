@@ -380,6 +380,9 @@ bench *args: (tyr "bench" args)
 # Run the list-planners command.
 list-planners *args: (tyr "list-planners" args)
 
+# Run the list-domains command.
+list-domains *args: (tyr "list-domains" args)
+
 # Run the plot command.
 plot *args: (tyr "plot" args)
 
