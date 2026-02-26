@@ -25,14 +25,21 @@ class TestApptainerPlanner:
         domain = str(cwd / "logs/mock-config/foo/2-oneshot/domain.pddl")
         problem = str(cwd / "logs/mock-config/foo/2-oneshot/problem.pddl")
         plan = str(cwd / "logs/mock-config/foo/2-oneshot/plan.txt")
-        expected = (
-            "./shortcuts/planners/model/file.sif "
-            "logs/mock-config/foo/2-oneshot/domain.pddl "
-            "logs/mock-config/foo/2-oneshot/problem.pddl "
-            "logs/mock-config/foo/2-oneshot/plan.txt"
+
+        # Calculate expected absolute paths
+        planners_root = (
+            Path(__file__).resolve().parent.parent.parent.parent.parent
+            / "src"
+            / "tyr"
+            / "planners"
         )
+        sif_path = planners_root / "planners" / "model" / "file.sif"
+        domain_abs = Path(domain).resolve().as_posix()
+        problem_abs = Path(problem).resolve().as_posix()
+        plan_abs = Path(plan).resolve().as_posix()
+        expected = [sif_path.as_posix(), domain_abs, problem_abs, plan_abs]
         result = planner._get_cmd(domain, problem, plan)
-        assert result == expected.split()
+        assert result == expected
 
     def test_get_anytime_cmd(self, planner: MockPlanner):
         from pathlib import Path
@@ -41,14 +48,21 @@ class TestApptainerPlanner:
         domain = str(cwd / "logs/mock-config/foo/2-oneshot/domain.pddl")
         problem = str(cwd / "logs/mock-config/foo/2-oneshot/problem.pddl")
         plan = str(cwd / "logs/mock-config/foo/2-oneshot/plan.txt")
-        expected = (
-            "./shortcuts/planners/model/file.sif "
-            "logs/mock-config/foo/2-oneshot/domain.pddl "
-            "logs/mock-config/foo/2-oneshot/problem.pddl "
-            "logs/mock-config/foo/2-oneshot/plan.txt"
+
+        # Calculate expected absolute paths
+        planners_root = (
+            Path(__file__).resolve().parent.parent.parent.parent.parent
+            / "src"
+            / "tyr"
+            / "planners"
         )
+        sif_path = planners_root / "planners" / "model" / "file.sif"
+        domain_abs = Path(domain).resolve().as_posix()
+        problem_abs = Path(problem).resolve().as_posix()
+        plan_abs = Path(plan).resolve().as_posix()
+        expected = [sif_path.as_posix(), domain_abs, problem_abs, plan_abs]
         result = planner._get_anytime_cmd(domain, problem, plan)
-        assert result == expected.split()
+        assert result == expected
 
     @patch("tyr.planners.model.apptainer_planner.TyrPDDLPlanner._plan_from_str")
     def test_get_plan_from_str(self, super_mock: Mock, planner: MockPlanner):

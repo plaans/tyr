@@ -10,23 +10,74 @@ from pathlib import Path
 from queue import Empty
 from typing import Generator, Optional, Tuple
 
+import psutil
 import unified_planning.shortcuts as upf
 from unified_planning.engines import PlanGenerationResult, PlanGenerationResultStatus
 from unified_planning.environment import get_environment
 from unified_planning.exceptions import UPException
 from unified_planning.grpc.proto_writer import ProtobufWriter
 from unified_planning.io.pddl_reader import PDDLReader
+from unified_planning.model.scheduling import SchedulingProblem
 from unified_planning.plans import PlanKind
 from unified_planning.shortcuts import AbstractProblem, Engine
 
 from tyr.core.paths import TyrPaths
 from tyr.planners.database import Database
 from tyr.planners.model.config import PlannerConfig, RunningMode, SolveConfig
+from tyr.planners.model.pddl_planner import TyrPDDLPlanner
 from tyr.planners.model.pddl_writer import TyrPDDLWriter
 from tyr.planners.model.result import PlannerResult, PlannerResultStatus
 from tyr.problems import ProblemInstance
 
 warnings.filterwarnings("ignore", category=UserWarning)
+
+
+# pylint: disable=too-many-branches
+def terminate_process_tree(pid: Optional[int]) -> None:
+    """Terminate a process and all its descendants."""
+
+    try:
+        parent = psutil.Process(pid)
+        if not parent.is_running():
+            return
+
+        children = parent.children(recursive=True)
+
+        # Terminate all children first in reverse order
+        for child in reversed(children):
+            try:
+                if child.is_running():
+                    child.terminate()
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                pass
+
+        # Give them a brief moment to terminate before forcing a kill
+        if children:
+            alive = psutil.wait_procs(children, timeout=1)[1]
+
+            for child in alive:
+                try:
+                    if child.is_running():
+                        child.kill()
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    pass
+
+        # Now handle the parent process
+        try:
+            if parent.is_running():
+                parent.terminate()
+                parent.wait(timeout=1)
+        except (psutil.NoSuchProcess, psutil.TimeoutExpired):
+            try:
+                if parent.is_running():
+                    parent.kill()
+                    parent.wait(timeout=1)
+            except (psutil.NoSuchProcess, psutil.TimeoutExpired):
+                pass
+    except psutil.NoSuchProcess:
+        pass  # Process already dead
+    except Exception:  # pylint: disable=broad-exception-caught  # nosec: B110
+        pass  # Silently ignore other errors
 
 
 class Planner:
@@ -267,18 +318,22 @@ class Planner:
 
         # Get the version to solve.
         version_name, version = self.get_version(problem)
-        if version_name is None or version is None:
+        if version_name is None or version is None or version_name == "unsupported":
             # No version found, the problem is not supported.
             yield PlannerResult.unsupported(problem, self, config, running_mode)
             return
 
-        # Clear the logs, logs the version to solve and reload the version from the logs.
+        # Clear the logs and logs the version to solve.
         shutil.rmtree(self.get_log_file(problem, "", running_mode).parent, True)
         self._log_problem_version(problem, version, running_mode)
-        dom_path = self.get_log_file(problem, "domain", running_mode, "pddl")
-        prb_path = self.get_log_file(problem, "problem", running_mode, "pddl")
-        version = PDDLReader().parse_problem(dom_path, prb_path)
-        version.name = problem.name
+
+        # Reload the version from the logs if it does not have control parameters.
+        # Skip reloading for scheduling problems as they don't have PDDL representation.
+        if "ctrl_params" not in version_name and not isinstance(version, SchedulingProblem):
+            dom_path = self.get_log_file(problem, "domain", running_mode, "pddl")
+            prb_path = self.get_log_file(problem, "problem", running_mode, "pddl")
+            version = PDDLReader().parse_problem(dom_path, prb_path)
+            version.name = problem.name
 
         # Limits the virtual memory of the current process.
         resource.setrlimit(resource.RLIMIT_AS, (config.memout, resource.RLIM_INFINITY))
@@ -320,7 +375,36 @@ class Planner:
                     try:
                         result = queue.get(timeout=0.1)
                         if isinstance(result, Exception):
-                            raise result
+                            # Enhanced error logging with context information
+                            error_context = {
+                                'planner': self.name,
+                                'problem': problem.name if hasattr(problem, 'name') else str(problem),
+                                'running_mode': running_mode.name if hasattr(running_mode, 'name') else str(running_mode),
+                                'version_name': version_name,
+                                'upf_planner_name': upf_planner_name,
+                                'process_alive': process.is_alive(),
+                                'queue_empty': queue.empty(),
+                                'original_error_type': type(result).__name__,
+                                'original_error_str': str(result)
+                            }
+                            
+                            print(f"ERROR: Child process exception in {self.name}:")
+                            print(f"  Problem: {error_context['problem']}")
+                            print(f"  Mode: {error_context['running_mode']}")
+                            print(f"  Version: {error_context['version_name']}")
+                            print(f"  Process alive: {error_context['process_alive']}")
+                            print(f"  Original error: {error_context['original_error_type']}: {error_context['original_error_str']}")
+                            
+                            # If the exception has a traceback, include it
+                            if hasattr(result, '__traceback__') and result.__traceback__ is not None:
+                                print(f"  Traceback from child process:")
+                                traceback.print_exception(type(result), result, result.__traceback__)
+                            
+                            # Re-raise the original exception with added context
+                            raise RuntimeError(
+                                f"Child process error in {self.name} for problem {error_context['problem']} "
+                                f"(mode: {error_context['running_mode']}): {error_context['original_error_type']}: {error_context['original_error_str']}"
+                            ) from result
                         self._last_upf_result, start, end = result
                         if running_mode == RunningMode.ONESHOT:
                             break
@@ -334,14 +418,22 @@ class Planner:
                         )
                     except Empty:
                         continue
+
                 # The planner timed out.
                 if process.is_alive():
-                    # Kill the process if it is still running.
-                    process.terminate()
-                    process.join(2)
-                    if process.is_alive():
-                        process.kill()
+                    # Kill the entire process tree
+                    terminate_process_tree(process.pid)
+                    process.join(timeout=2)
                     # Return a timeout result if no result was found.
+                    if self.last_upf_result is None and isinstance(
+                        planner, TyrPDDLPlanner
+                    ):
+                        # pylint: disable=no-member
+                        self._last_upf_result = planner.check_for_plan_from_files(
+                            version,
+                            str(log_path.parent),
+                            anytime=running_mode == RunningMode.ANYTIME,
+                        )
                     if self.last_upf_result is None:
                         yield PlannerResult.timeout(
                             problem,
@@ -351,6 +443,22 @@ class Planner:
                         )
                         return
 
+            # Ensure process is properly joined
+            if process is not None:
+                try:
+                    process.join(timeout=1)
+                    if process.is_alive():
+                        terminate_process_tree(process.pid)
+                except Exception:  # pylint: disable=broad-exception-caught  # nosec: B110
+                    pass
+
+            if self.last_upf_result is None and isinstance(planner, TyrPDDLPlanner):
+                # pylint: disable=no-member
+                self._last_upf_result = planner.check_for_plan_from_files(
+                    version,
+                    str(log_path.parent),
+                    anytime=running_mode == RunningMode.ANYTIME,
+                )
             if self.last_upf_result is None:
                 # No result was found.
                 yield PlannerResult.timeout(
@@ -372,12 +480,10 @@ class Planner:
 
         except Exception:  # pylint: disable=broad-exception-caught
             # An error occurred...
-            # Stop the process if it is still running.
+            # Stop the process tree if it is still running.
             if process is not None and process.is_alive():
-                process.terminate()
-                process.join(2)
-                if process.is_alive():
-                    process.kill()
+                terminate_process_tree(process.pid)
+                process.join(timeout=2)
             # Save the error in logs.
             log_path = self.get_log_file(problem, "error", running_mode)
             with open(log_path, "w", encoding="utf-8") as log_file:
@@ -407,29 +513,31 @@ class Planner:
     ) -> None:
         # pylint: disable = broad-exception-caught
 
-        # Export the problem in PDDL format.
-        try:
-            dom_path = self.get_log_file(problem, "domain", running_mode, "pddl")
-            prb_path = self.get_log_file(problem, "problem", running_mode, "pddl")
-            TyrPDDLWriter(version, needs_requirements=True).write_domain(
-                dom_path.as_posix(), all_support=True
-            )
-            TyrPDDLWriter(version, needs_requirements=True).write_problem(prb_path)
-        except UPException as error:
-            err_path = self.get_log_file(problem, "pddl_export_error", running_mode)
-            err_path.write_text(str(error))
+        # Export the problem in PDDL format (skip for scheduling problems).
+        if not isinstance(version, SchedulingProblem):
+            try:
+                dom_path = self.get_log_file(problem, "domain", running_mode, "pddl")
+                prb_path = self.get_log_file(problem, "problem", running_mode, "pddl")
+                TyrPDDLWriter(version, needs_requirements=True).write_domain(
+                    dom_path.as_posix(), all_support=True
+                )
+                TyrPDDLWriter(version, needs_requirements=True).write_problem(prb_path)
+            except UPException as error:
+                err_path = self.get_log_file(problem, "pddl_export_error", running_mode)
+                err_path.write_text(str(error))
 
-        # Export the problem in UPF binary format.
-        try:
-            pb = PDDLReader().parse_problem(dom_path, prb_path)
-            b_writer = ProtobufWriter()
-            pb_msg = b_writer.convert(pb)
-            bin_path = self.get_log_file(problem, "problem", running_mode, "binpb")
-            with open(bin_path, "wb") as file:
-                file.write(pb_msg.SerializeToString())
-        except Exception as error:
-            err_path = self.get_log_file(problem, "bin_export_error", running_mode)
-            err_path.write_text(str(error))
+        # Export the problem in UPF binary format (skip for scheduling problems).
+        if not isinstance(version, SchedulingProblem):
+            try:
+                pb = PDDLReader().parse_problem(dom_path, prb_path)
+                b_writer = ProtobufWriter()
+                pb_msg = b_writer.convert(pb)
+                bin_path = self.get_log_file(problem, "problem", running_mode, "binpb")
+                with open(bin_path, "wb") as file:
+                    file.write(pb_msg.SerializeToString())
+            except Exception as error:
+                err_path = self.get_log_file(problem, "bin_export_error", running_mode)
+                err_path.write_text(str(error))
 
         # Export the problem in TXT format.
         txt_path = self.get_log_file(problem, "problem", running_mode, "txt")
@@ -460,8 +568,37 @@ class Planner:
                         ):
                             result.plan = result.plan.action_plan
                         queue.put((result, start, end))
-            except Exception as error:  # pylint: disable=broad-exception-caught
-                queue.put(error)
+            except Exception as error:  # pylint: disable=broad-exception-caught  # nosec: B110
+                # Enhanced child process error reporting with full traceback
+                import traceback as tb
+                tb_lines = tb.format_exception(type(error), error, error.__traceback__)
+                tb_string = ''.join(tb_lines)
+                
+                # Store comprehensive error information
+                error_info = {
+                    "type": error.__class__.__name__,
+                    "module": error.__class__.__module__,
+                    "message": str(error),
+                    "args": error.args if hasattr(error, "args") else (),
+                    "traceback": tb_string,
+                    "planner_name": getattr(planner, 'name', 'unknown'),
+                    "version_name": getattr(version, 'name', 'unknown'),
+                    "timeout": timeout,
+                    "method": "_solve_anytime"
+                }
+                
+                # Log error in child process for immediate debugging
+                print(f"ERROR in child process (_solve_anytime):")
+                print(f"  Planner: {error_info['planner_name']}")
+                print(f"  Version: {error_info['version_name']}")
+                print(f"  Error: {error_info['type']}: {error_info['message']}")
+                print(f"  Traceback:")
+                print(tb_string)
+                
+                # Create a generic Exception with the error info
+                picklable_error = Exception(f"{error.__class__.__name__}: {error}")
+                setattr(picklable_error, "original_error_info", error_info)
+                queue.put(picklable_error)
 
     def _solve_oneshot(  # pylint: disable = too-many-arguments, too-many-positional-arguments
         self,
@@ -487,8 +624,37 @@ class Planner:
                 ):
                     upf_result.plan = upf_result.plan.action_plan
                 queue.put((upf_result, start, end))
-            except Exception as error:  # pylint: disable=broad-exception-caught
-                queue.put(error)
+            except Exception as error:  # pylint: disable=broad-exception-caught  # nosec: B110
+                # Enhanced child process error reporting with full traceback
+                import traceback as tb
+                tb_lines = tb.format_exception(type(error), error, error.__traceback__)
+                tb_string = ''.join(tb_lines)
+                
+                # Store comprehensive error information
+                error_info = {
+                    "type": error.__class__.__name__,
+                    "module": error.__class__.__module__,
+                    "message": str(error),
+                    "args": error.args if hasattr(error, "args") else (),
+                    "traceback": tb_string,
+                    "planner_name": getattr(planner, 'name', 'unknown'),
+                    "version_name": getattr(version, 'name', 'unknown'),
+                    "timeout": timeout,
+                    "method": "_solve_oneshot"
+                }
+                
+                # Log error in child process for immediate debugging
+                print(f"ERROR in child process (_solve_oneshot):")
+                print(f"  Planner: {error_info['planner_name']}")
+                print(f"  Version: {error_info['version_name']}")
+                print(f"  Error: {error_info['type']}: {error_info['message']}")
+                print(f"  Traceback:")
+                print(tb_string)
+                
+                # Create a generic Exception with the error info
+                picklable_error = Exception(f"{error.__class__.__name__}: {error}")
+                setattr(picklable_error, "original_error_info", error_info)
+                queue.put(picklable_error)
 
     # pylint: disable = too-many-arguments, too-many-positional-arguments
     def _handle_upf_result(

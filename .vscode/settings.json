@@ -30,5 +30,6 @@
     "python.testing.pytestEnabled": true,
     "conventionalCommits.scopes": [
         "planners"
-    ]
+    ],
+    "esbonio.server.enabled": false
 }

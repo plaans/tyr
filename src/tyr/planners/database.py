@@ -36,6 +36,24 @@ class Database(Singleton):
         finally:
             conn.close()
 
+    @contextmanager
+    def warm_up_database(self):
+        """Create a connection to the warm-up database.
+
+        Yields:
+            Connection: The cursor to communicate with the warm-up database.
+        """
+        warm_up_db_path = TyrPaths().warm_up_db
+        if warm_up_db_path is None:
+            # Fallback to main database if no warm-up database specified
+            warm_up_db_path = TyrPaths().db
+        
+        conn = sqlite3.connect(warm_up_db_path)
+        try:
+            yield conn
+        finally:
+            conn.close()
+
     def _create_table(self):
         with self.database() as conn:
             conn.cursor().execute(
@@ -233,9 +251,60 @@ class Database(Singleton):
         force_before_timeout: bool = False,
         not_run_by_default: bool = False,
     ) -> Optional["PlannerResult"]:
+        """Load planner result from main database."""
+        return self._load_planner_result_from_db(
+            self.database,
+            "results",
+            planner,
+            problem,
+            config,
+            running_mode,
+            keep_unsupported,
+            force_before_timeout,
+            not_run_by_default,
+        )
+
+    # pylint: disable = too-many-arguments, too-many-positional-arguments, too-many-locals
+    def load_warm_up_planner_result(
+        self,
+        planner: "Planner",
+        problem: ProblemInstance,
+        config: "SolveConfig",
+        running_mode: "RunningMode",
+        keep_unsupported: bool = False,
+        force_before_timeout: bool = False,
+        not_run_by_default: bool = False,
+    ) -> Optional["PlannerResult"]:
+        """Load planner result from warm-up database."""
+        return self._load_planner_result_from_db(
+            self.warm_up_database,
+            "warm_up_plans",
+            planner,
+            problem,
+            config,
+            running_mode,
+            keep_unsupported,
+            force_before_timeout,
+            not_run_by_default,
+        )
+
+    def _load_planner_result_from_db(
+        self,
+        db_context,
+        table_name: str,
+        planner: "Planner",
+        problem: ProblemInstance,
+        config: "SolveConfig",
+        running_mode: "RunningMode",
+        keep_unsupported: bool = False,
+        force_before_timeout: bool = False,
+        not_run_by_default: bool = False,
+    ) -> Optional["PlannerResult"]:
         """Loads the planner result matching the given attributes if any.
 
         Args:
+            db_context: The database context manager (database or warm_up_database).
+            table_name (str): Name of the table to query.
             planner (Planner): The planner.
             problem (ProblemInstance): The problem instance.
             config (SolveConfig): The configuration used to solve the problem.
@@ -247,18 +316,33 @@ class Database(Singleton):
         Returns:
             Optional[PlannerResult]: The planner result if present, otherwise None.
         """
-        request = """
-                    SELECT * FROM "results"
-                    WHERE "planner"=? AND "problem"=? AND "mode"=? AND "memout"=?
-                    ORDER BY "creation" DESC
-                    LIMIT 1;
-                    """
-        params = [planner.name, problem.name, running_mode.name, config.memout]
-        if force_before_timeout:
+        if table_name == "warm_up_plans":
+            # For warm-up database, we don't have memout column
+            request = f"""
+                        SELECT NULL as id, planner, problem, mode, status, computation, quality, 
+                               NULL as "error msg", 1 as jobs, 0 as memout, 0 as timeout,
+                               creation, plan
+                        FROM "{table_name}"
+                        WHERE "planner"=? AND "problem"=? AND "mode"=?
+                        ORDER BY "creation" DESC
+                        LIMIT 1;
+                        """
+            params = [planner.name, problem.name, running_mode.name]
+        else:
+            # For main database
+            request = f"""
+                        SELECT * FROM "{table_name}"
+                        WHERE "planner"=? AND "problem"=? AND "mode"=? AND "memout"=?
+                        ORDER BY "creation" DESC
+                        LIMIT 1;
+                        """
+            params = [planner.name, problem.name, running_mode.name, config.memout]
+        
+        if force_before_timeout and table_name != "warm_up_plans":
             request = request.replace('"memout"=?', '"memout"=? AND "computation"<=?')
             params.append(config.timeout + config.timeout_offset)
 
-        with self.database() as conn:
+        with db_context() as conn:
             resp = conn.cursor().execute(request, params).fetchone()
         return self._handle_db_response(
             resp,

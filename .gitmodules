@@ -3,7 +3,7 @@
 	url = https://github.com/plaans/aries.git
 [submodule "src/tyr/planners/planners/optic"]
 	path = src/tyr/planners/planners/optic
-	url = https://github.com/plaans/tyr-optic.git
+	url = git@github.com:plaans/tyr-optic.git
 	branch = master
 [submodule "src/tyr/planners/planners/pandapi"]
 	path = src/tyr/planners/planners/pandapi
@@ -35,3 +35,6 @@
 [submodule "src/tyr/planners/planners/tflap"]
 	path = src/tyr/planners/planners/tflap
 	url = https://github.com/plaans/tyr-tflap.git
+[submodule "src/tyr/planners/planners/nextflap"]
+	path = src/tyr/planners/planners/nextflap
+	url = https://github.com/plaans/tyr-nextflap.git

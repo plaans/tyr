@@ -83,8 +83,13 @@ install-venv:
     if test ! -e {{ PY_D }}; then python{{ PY_V }} -m venv {{ PY_D }}; fi
 
 # Install Python dependencies
-install-pip: install-venv
-    {{ python }} -m pip install -r requirements/{{ PY_T }}.txt
+install-pip no_cache="false": install-venv
+    #!/bin/bash
+    if [ "{{ no_cache }}" = "true" ]; then
+        {{ python }} -m pip install --no-cache-dir -r requirements/{{ PY_T }}.txt
+    else
+        {{ python }} -m pip install -r requirements/{{ PY_T }}.txt
+    fi
 alias install := install-pip
 
 # Install Python dependencies, planners, and domains
@@ -219,8 +224,66 @@ install-tflap: install-venv
 
 # Install the NextFlap planner
 install-nextflap: install-venv
-    {{ python }} -m pip install up-nextflap
-    @just _register-planner nextflap
+    #!/bin/bash
+    just _install-planner-submodule nextflap
+    if [ "{{ PY_D }}" = "." ]; then \
+        PYTHON_PATH="$(which python)"; \
+    else \
+        PYTHON_PATH="$(pwd)/{{ python }}"; \
+    fi; \
+    VENV_PATH="$(pwd)/{{ PY_D }}"; \
+    cd {{ planners_dir }}/nextflap; \
+    mkdir -p ./temp_bin; \
+    ln -sf "$PYTHON_PATH" ./temp_bin/python; \
+    export PATH="$(pwd)/temp_bin:$PATH"; \
+    VIRTUAL_ENV="$VENV_PATH" PYTHON_CMD="$PYTHON_PATH" bash install.sh; \
+    rm -rf ./temp_bin; \
+    just _register-planner nextflap
+
+
+# ============================================================================ #
+#                             Container Planners                               #
+# ============================================================================ #
+
+
+# Container-specific planner installations (skip git submodule operations)
+
+# Install the LPG planner (container version)
+install-lpg-container:
+    {{ python }} -m pip install -e {{ planners_dir }}/lpg
+    @just _register-planner-lpg
+
+# Install the Optic planner (container version) 
+install-optic-container:
+    @just _register-planner optic
+
+# Install the NextFlap planner (container version)
+install-nextflap-container: install-venv
+    #!/bin/bash
+    if [ "{{ PY_D }}" = "." ]; then \
+        PYTHON_PATH="$(which python)"; \
+    else \
+        PYTHON_PATH="$(pwd)/{{ python }}"; \
+    fi; \
+    VENV_PATH="$(pwd)/{{ PY_D }}"; \
+    cd {{ planners_dir }}/nextflap; \
+    mkdir -p ./temp_bin; \
+    ln -sf "$PYTHON_PATH" ./temp_bin/python; \
+    export PATH="$(pwd)/temp_bin:$PATH"; \
+    VIRTUAL_ENV="$VENV_PATH" PYTHON_CMD="$PYTHON_PATH" bash install.sh; \
+    rm -rf ./temp_bin; \
+    just _register-planner nextflap
+
+# Install the Aries planner (container version)
+install-aries-container: install-venv
+    cargo build --release --bin up-server --manifest-path {{ planners_dir }}/aries/Cargo.toml
+    cp {{ planners_dir }}/aries/target/release/up-server {{ planners_dir }}/aries/planning/unified/plugin/up_aries/bin/up-aries_linux_amd64
+    {{ python }} -m pip install -r {{ planners_dir }}/aries/planning/unified/requirements.txt
+    @just _register-planner-aries
+
+# Install custom domains (container version)
+install-custom-domains-container:
+    @echo "Skipping git submodule for custom domains in container"
 
 # ============================================================================ #
 #                                     Reset                                    #
@@ -313,6 +376,12 @@ tyr *args:
 
 # Run the bench command.
 bench *args: (tyr "bench" args)
+
+# Run the list-planners command.
+list-planners *args: (tyr "list-planners" args)
+
+# Run the list-domains command.
+list-domains *args: (tyr "list-domains" args)
 
 # Run the plot command.
 plot *args: (tyr "plot" args)

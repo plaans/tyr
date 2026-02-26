@@ -1,5 +1,5 @@
 # pylint: disable = missing-function-docstring, too-many-arguments
-# pylint: disable = too-many-positional-arguments, too-many-locals
+# pylint: disable = too-many-positional-arguments, too-many-locals, too-many-lines
 
 from pathlib import Path
 from typing import List, Optional
@@ -16,6 +16,8 @@ from tyr import (  # type: ignore
     run_table,
 )
 from tyr.__version__ import __version__
+from tyr.cli.list_domains.runner import run_list_domains
+from tyr.cli.list_planners.runner import run_list_planners
 from tyr.cli.plot.runner import run_plot
 from tyr.cli.slurm.runner import run_slurm
 from tyr.cli.vbp.runner import run_vbp
@@ -32,6 +34,7 @@ DEFAULT_CONFIG = {
     "db_only": False,
     "db_path": "",
     "domains": [],
+    "filter_pattern": None,
     "fs": False,
     "jobs": 1,
     "latex": False,
@@ -72,6 +75,7 @@ DEFAULT_CONFIG = {
     "unify_epsilons": False,
     "user_mail": None,
     "verbose": 0,
+    "warm_up_db_path": None,
 }
 
 
@@ -136,6 +140,11 @@ db_path_option = click.option(
     "--db-path",
     type=str,
     help="Path to the SQLite database file.",
+)
+warm_up_db_path_option = click.option(
+    "--warm-up-db-path",
+    type=str,
+    help="Path to the SQLite warm-up database file (for warm-up planners).",
 )
 domains_filter = click.option(
     "-d",
@@ -272,18 +281,20 @@ def planners_group_filter(x: int):
 @out_option
 @logs_path_option
 @db_path_option
+@warm_up_db_path_option
 @config_option
 @pass_context
-def cli(ctx: CliContext, verbose, quiet, out, logs_path, db_path, config):
-    update_context(ctx, verbose, quiet, out, logs_path, db_path, config)
+def cli(ctx: CliContext, verbose, quiet, out, logs_path, db_path, warm_up_db_path, config):
+    update_context(ctx, verbose, quiet, out, logs_path, db_path, warm_up_db_path, config)
 
 
-def update_context(ctx, verbose, quiet, out, logs_path, db_path, config):
+def update_context(ctx, verbose, quiet, out, logs_path, db_path, warm_up_db_path, config):
     ctx.verbosity += verbose - quiet
     ctx.out.extend(out)
     ctx.config = config
     TyrPaths().logs = logs_path or TyrPaths().logs
     TyrPaths().db = db_path or TyrPaths().db
+    TyrPaths().warm_up_db = warm_up_db_path or TyrPaths().warm_up_db
 
 
 # ============================================================================ #
@@ -300,6 +311,7 @@ def update_context(ctx, verbose, quiet, out, logs_path, db_path, config):
 @out_option
 @logs_path_option
 @db_path_option
+@warm_up_db_path_option
 @config_option
 @timeout_option
 @timeout_offset_option
@@ -323,6 +335,7 @@ def cli_bench(
     out,
     logs_path: str,
     db_path: str,
+    warm_up_db_path: str,
     config,
     timeout: int,
     timeout_offset: int,
@@ -346,6 +359,7 @@ def cli_bench(
         "out": out,
         "logs_path": logs_path,
         "db_path": db_path,
+        "warm_up_db_path": warm_up_db_path,
         "timeout": timeout,
         "timeout_offset": timeout_offset,
         "memout": memout,
@@ -369,6 +383,7 @@ def cli_bench(
         conf["out"],
         conf["logs_path"],
         conf["db_path"],
+        conf["warm_up_db_path"],
         config,
     )
 
@@ -469,6 +484,7 @@ def cli_plot(
         conf["out"],
         conf["logs_path"],
         conf["db_path"],
+        conf["warm_up_db_path"],
         config,
     )
 
@@ -563,6 +579,7 @@ def cli_slurm(
         conf["out"],
         conf["logs_path"],
         conf["db_path"],
+        conf["warm_up_db_path"],
         config,
     )
 
@@ -663,6 +680,7 @@ def cli_solve(
         conf["out"],
         conf["logs_path"],
         conf["db_path"],
+        conf["warm_up_db_path"],
         config,
     )
 
@@ -792,6 +810,7 @@ def cli_table(
         conf["out"],
         conf["logs_path"],
         conf["db_path"],
+        conf["warm_up_db_path"],
         config,
     )
 
@@ -955,6 +974,7 @@ def cli_vbp(
         conf["out"],
         conf["logs_path"],
         conf["db_path"],
+        conf["warm_up_db_path"],
         config,
     )
     print(conf["groups"])
@@ -984,6 +1004,134 @@ def cli_vbp(
         conf["latex_horizontal_space"],
         conf["latex_pos"],
         conf["latex_star"],
+    )
+
+
+# ============================================================================ #
+#                                List Planners                                #
+# ============================================================================ #
+
+
+@cli.command(
+    "list-planners",
+    help="List all available planners and their configurations.",
+)
+@verbose_option
+@quiet_option
+@out_option
+@logs_path_option
+@db_path_option
+@config_option
+@click.option(
+    "--filter",
+    "filter_pattern",
+    type=str,
+    help="Regex pattern to filter planner names.",
+)
+@pass_context
+def cli_list_planners(
+    ctx: CliContext,
+    verbose: int,
+    quiet: int,
+    out,
+    logs_path: str,
+    db_path: str,
+    config,
+    filter_pattern: str,
+):
+    config = config or ctx.config
+    cli_config = {
+        "verbose": verbose,
+        "quiet": quiet,
+        "out": out,
+        "logs_path": logs_path,
+        "db_path": db_path,
+        "filter_pattern": filter_pattern,
+    }
+    conf = merge_configs(
+        cli_config,
+        yaml_config(config, "list-planners"),
+        DEFAULT_CONFIG,
+    )
+    update_context(
+        ctx,
+        conf["verbose"],
+        conf["quiet"],
+        conf["out"],
+        conf["logs_path"],
+        conf["db_path"],
+        conf["warm_up_db_path"],
+        config,
+    )
+
+    run_list_planners(
+        ctx,
+        verbose=conf["verbose"] > 0,
+        filter_pattern=conf["filter_pattern"],
+    )
+
+
+# ============================================================================ #
+#                                List Domains                                  #
+# ============================================================================ #
+
+
+@cli.command(
+    "list-domains",
+    help="List all available domains and their configurations.",
+)
+@verbose_option
+@quiet_option
+@out_option
+@logs_path_option
+@db_path_option
+@config_option
+@click.option(
+    "--filter",
+    "filter_pattern",
+    type=str,
+    help="Regex pattern to filter domain names.",
+)
+@pass_context
+def cli_list_domains(
+    ctx: CliContext,
+    verbose: int,
+    quiet: int,
+    out,
+    logs_path: str,
+    db_path: str,
+    config,
+    filter_pattern: str,
+):
+    config = config or ctx.config
+    cli_config = {
+        "verbose": verbose,
+        "quiet": quiet,
+        "out": out,
+        "logs_path": logs_path,
+        "db_path": db_path,
+        "filter_pattern": filter_pattern,
+    }
+    conf = merge_configs(
+        cli_config,
+        yaml_config(config, "list-domains"),
+        DEFAULT_CONFIG,
+    )
+    update_context(
+        ctx,
+        conf["verbose"],
+        conf["quiet"],
+        conf["out"],
+        conf["logs_path"],
+        conf["db_path"],
+        conf["warm_up_db_path"],
+        config,
+    )
+
+    run_list_domains(
+        ctx,
+        verbose=conf["verbose"] > 0,
+        filter_pattern=conf["filter_pattern"],
     )
 
 

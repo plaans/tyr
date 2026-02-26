@@ -4,7 +4,9 @@
 click
 joblib
 plotly
+psutil
 toml
+PyYAML
 
 # Numpy is a dependency requires numpy as "anything new than certain version of numpy".
 # An error occured with numpy 2.0.0 released on June 16th 2024.
@@ -12,4 +14,5 @@ toml
 numpy==1.*
 
 # Unified Planning
-git+https://github.com/aiplan4eu/unified-planning.git@da70a38#egg=unified_planning
+git+https://github.com/aiplan4eu/unified-planning.git@5cbad5539d8f39394b57b021e046b0f8f223ab55#egg=unified_planning
+grpcio-tools

@@ -1,8 +1,7 @@
 Bootstrap: docker
-From: python:3.12-slim
+From: python:3.12-bookworm
 
 %files
-    .git/* .git/
     .gitmodules
     requirements/* requirements/
     src/* src/
@@ -26,6 +25,37 @@ From: python:3.12-slim
     apt install -y build-essential curl
     curl https://sh.rustup.rs | sh -s -- --no-modify-path -y
     . "$HOME/.cargo/env"
+    
+    # Install dependencies for NextFLAP
+    # Install newer Z3 version from source to fix API compatibility with NextFLAP
+    apt install -y cmake pkg-config python3-distutils
+    cd /tmp
+    wget https://github.com/Z3Prover/z3/archive/z3-4.12.2.tar.gz
+    tar -xzf z3-4.12.2.tar.gz
+    cd z3-z3-4.12.2
+    python3 scripts/mk_make.py
+    cd build
+    make -j$(nproc)
+    make install
+    ldconfig
+    # Create pkg-config file for Z3
+    mkdir -p /usr/local/lib/pkgconfig
+    cat > /usr/local/lib/pkgconfig/z3.pc << 'EOF'
+prefix=/usr/local
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: z3
+Description: The Z3 Theorem Prover
+Version: 4.12.2
+Libs: -L${libdir} -lz3
+Cflags: -I${includedir}
+EOF
+    # Update PKG_CONFIG_PATH to include the new pkg-config directory
+    export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
+    cd /
+    rm -rf /tmp/z3*
 
     # Install Just
     cargo install just
@@ -33,7 +63,7 @@ From: python:3.12-slim
     # Install Tyr
     apt install -y git
     # just --set PY_D . --set PY_T dev install-full
-    just --set PY_D . --set PY_T dev install-pip install-aries install-custom-domains install-optic install-lpg
+    just --set PY_D . --set PY_T dev install-pip install-custom-domains-container install-lpg-container install-optic-container install-nextflap-container install-aries-container
     VERSION="$(just --set PY_D . tyr --version)"
     echo "VERSION: $VERSION" >> "$APPTAINER_LABELS"
 
